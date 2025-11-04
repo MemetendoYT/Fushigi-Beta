@@ -134,7 +134,7 @@ namespace Fushigi.ui.widgets
                 if (ImGui.Checkbox("Hide Activity", ref privateDRPC))
                     UserSettings.SetPrivateDRPC(privateDRPC);
 
-                Tooltip.Show("Whether or not to hide the course name in the Discord RPC.\nReload required to work.");
+                Tooltip.Show("Whether or not to hide information about the course in the Discord RPC.\nReload required to work.");
 
                 ImGui.Unindent();
 
