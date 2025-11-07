@@ -967,20 +967,15 @@ namespace Fushigi.ui.widgets
             ImGui.BeginTabBar("SelectActorAndLayerWindow");
             if (ImGui.BeginTabItem("Add Actor"))
             {
+                if (!ParamDB.isReloading)
+                {
                     if (mSelectedActor == null)
                     {
                         ImGui.InputText("Search", ref mAddActorSearchQuery, 256);
 
-                    var filteredActors = ImmutableList<string>.Empty;
-                    try
-                    {
-                        filteredActors = ParamDB.GetActors().ToImmutableList();
-                    }
-                    catch
-                    {
-                        return;
-                    }
-                    if (mAddActorSearchQuery != "")
+                        var filteredActors = ParamDB.GetActors().ToImmutableList();
+
+                        if (mAddActorSearchQuery != "")
                         {
                             filteredActors = FuzzySharp.Process.ExtractAll(mAddActorSearchQuery, ParamDB.GetActors(), cutoff: 65)
                                 .OrderByDescending(result => result.Score)
@@ -1027,6 +1022,7 @@ namespace Fushigi.ui.widgets
 
                             ImGui.EndListBox();
                         }
+                    }
                     else
                         AddSelectedActorWithLayer();
                 }
@@ -1113,7 +1109,8 @@ namespace Fushigi.ui.widgets
                 {
                     break;
                 }
-                    
+
+
 
                 var actor = new CourseActor(mSelectedActor, area.mRootHash, mSelectedLayer);
 
