@@ -107,6 +107,7 @@ namespace Fushigi.param
                 sRails = JsonConvert.DeserializeObject<Dictionary<string, Component>>(File.ReadAllText("rails.json"));
                 sRailParamList = JsonConvert.DeserializeObject<Dictionary<string, ParamList>>(File.ReadAllText("railParams.json"));
                 sIsInit = true;
+                isReloading = false;
             }
         }
 
@@ -134,6 +135,7 @@ namespace Fushigi.param
 
         public static void Load(IProgress<(string operationName, float? progress)> progress)
         {
+            isReloading = true;
             /* if we have already been initialized, we skip this process */
             if (sIsInit)
             {
@@ -432,5 +434,6 @@ namespace Fushigi.param
         static Dictionary<string, Component>? sRails = new Dictionary<string, Component>();
         static Dictionary<string, ParamList>? sRailParamList = new Dictionary<string, ParamList>();
         public static bool sIsInit = false;
+        public static bool isReloading = false;
     }
 }
