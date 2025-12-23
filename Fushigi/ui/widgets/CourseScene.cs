@@ -61,6 +61,7 @@ namespace Fushigi.ui.widgets
         public static uint courseInfoSize;
         static Dictionary<string, List<ulong>> mCopiedLinks = [];
         public string previousWord = "";
+        public static bool refreshTranslation = false;
         private ImmutableList<string> filteredActors = ImmutableList<string>.Empty;
         private ImmutableList<string> englishActors = ImmutableList<string>.Empty;
 
@@ -962,7 +963,7 @@ namespace Fushigi.ui.widgets
  
                     ImGui.InputText("Search", ref mAddActorSearchQuery, 256);
 
-                    if (previousWord != mAddActorSearchQuery || previousWord == "")
+                    if (previousWord != mAddActorSearchQuery || previousWord == "" || refreshTranslation)
                     {
                         previousWord = mAddActorSearchQuery;
                         filteredActors = ParamDB.GetEnglishActors(Translate.EnglishNames).ToImmutableList();

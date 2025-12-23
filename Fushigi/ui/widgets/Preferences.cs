@@ -135,7 +135,10 @@ namespace Fushigi.ui.widgets
                 Tooltip.Show("Enable half tile editng for BGUnits, also affects the placement of rails as well.");
 
                 if (ImGui.Checkbox("Enable Actor Translation", ref enableTranslation))
+                {
                     UserSettings.SetEnableTranslation(enableTranslation);
+                    CourseScene.refreshTranslation = true;
+                }
 
                 Tooltip.Show("Translates all the actor names to English");
 
