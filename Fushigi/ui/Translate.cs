@@ -14,7 +14,7 @@ public static class Translate
 
     public static void LoadEnglishNames()
     {
-        var json = File.ReadAllText("EnglishNames.json");
+        var json = File.ReadAllText("res/EnglishNames.json");
         EnglishNames = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
         ReverseMap = EnglishNames.ToDictionary(
             kvp => kvp.Value,
