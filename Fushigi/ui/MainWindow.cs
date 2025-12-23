@@ -25,6 +25,7 @@ namespace Fushigi.ui
         private readonly ImFontPtr mIconFont;
 
         private static readonly Dictionary<int, RawImage> Icons = [];
+        public static bool reloadIni = false;
 
         public MainWindow()
         {
@@ -307,7 +308,6 @@ namespace Fushigi.ui
                     ImGui.Separator();
 
                     /* Saves the currently loaded course */
-
                     var text_color = mSelectedCourseScene == null ?
                          ImGui.GetStyle().Colors[(int)ImGuiCol.TextDisabled] :
                          ImGui.GetStyle().Colors[(int)ImGuiCol.Text];
@@ -368,7 +368,7 @@ namespace Fushigi.ui
                     /* end File menu */
                     ImGui.EndMenu();
                 }
-
+            
                 if (ImGui.BeginMenu("Edit"))
                 {
 
@@ -383,7 +383,11 @@ namespace Fushigi.ui
                     if (ImGui.MenuItem("Place Goal Setup"))
                         mSelectedCourseScene?.PlaceGoalSetup();
 
+                  
                     ImGui.Separator();
+
+                    if (ImGui.MenuItem("Reset User Interface"))
+                        MainWindow.reloadIni = true;
 
                     if (ImGui.MenuItem("Regenerate Parameter Database", ParamDB.sIsInit))
                     {
@@ -422,8 +426,11 @@ namespace Fushigi.ui
                 _ = StartupRoutine();
             }
 
+
+
             DrawMainMenu();
 
+ 
             if (!string.IsNullOrEmpty(RomFS.GetRoot()) &&
                 !string.IsNullOrEmpty(UserSettings.GetModRomFSPath()))
             {
@@ -436,6 +443,13 @@ namespace Fushigi.ui
             mModalHost.DrawHostedModals();
 
             //Update viewport from any framebuffers being used
+            if (MainWindow.reloadIni)
+            {
+                ImGui.LoadIniSettingsFromDisk("res/imgui-default.ini");
+                MainWindow.reloadIni = false;
+            }
+
+
             gl.Viewport(mWindow.FramebufferSize);
 
             /* render our ImGUI controller */

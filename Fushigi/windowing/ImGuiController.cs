@@ -7,7 +7,7 @@ using Silk.NET.Input;
 using Silk.NET.Maths;
 
 using Silk.NET.OpenGL;
-
+using Fushigi.ui;
 using Silk.NET.Windowing;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
@@ -241,7 +241,6 @@ public class ImGuiController : IDisposable
 
         _frameBegun = true;
         ImGuiNET.ImGui.NewFrame();
-
         if (oldCtx != Context)
         {
             ImGuiNET.ImGui.SetCurrentContext(oldCtx);
