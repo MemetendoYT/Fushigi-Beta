@@ -966,6 +966,7 @@ namespace Fushigi.ui.widgets
                     if (previousWord != mAddActorSearchQuery || previousWord == "" || refreshTranslation)
                     {
                         previousWord = mAddActorSearchQuery;
+                        refreshTranslation = false;
                         filteredActors = ParamDB.GetEnglishActors(Translate.EnglishNames).ToImmutableList();
 
                         englishActors = ImmutableList<string>.Empty;
