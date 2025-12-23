@@ -965,13 +965,13 @@ namespace Fushigi.ui.widgets
                     if (previousWord != mAddActorSearchQuery || previousWord == "")
                     {
                         previousWord = mAddActorSearchQuery;
-                        filteredActors = ParamDB.GetActors().ToImmutableList();
+                        filteredActors = ParamDB.GetEnglishActors(Translate.EnglishNames).ToImmutableList();
 
                         englishActors = ImmutableList<string>.Empty;
 
                         if (UserSettings.GetEnableTranslation())
                             englishActors = ParamDB.GetEnglishActors(Translate.EnglishNames).ToImmutableList();
-
+                            
                         if (mAddActorSearchQuery != "")
                         { 
                                 filteredActors = FuzzySharp.Process.ExtractAll(mAddActorSearchQuery, ParamDB.GetActors(), cutoff: 70)
