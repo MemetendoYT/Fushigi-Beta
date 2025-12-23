@@ -967,9 +967,14 @@ namespace Fushigi.ui.widgets
                     {
                         previousWord = mAddActorSearchQuery;
                         refreshTranslation = false;
-                        filteredActors = ParamDB.GetEnglishActors(Translate.EnglishNames).ToImmutableList();
+                        if(UserSettings.GetEnableTranslation())
+                            filteredActors = ParamDB.GetEnglishActors(Translate.EnglishNames).ToImmutableList();
+                        else
+                        {
+                            filteredActors = ParamDB.GetActors().ToImmutableList();
+                        }
 
-                        englishActors = ImmutableList<string>.Empty;
+                            englishActors = ImmutableList<string>.Empty;
 
                         if (UserSettings.GetEnableTranslation())
                             englishActors = ParamDB.GetEnglishActors(Translate.EnglishNames).ToImmutableList();
