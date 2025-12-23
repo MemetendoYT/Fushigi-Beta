@@ -25,6 +25,7 @@ namespace Fushigi.util
             public bool HideDeletingLinkedActorsPopup;
             public bool UseNewCamera;
             public bool EnableHalfTile;
+            public bool EnableTranslation;
             public bool PrivateDRPC;
 
             public Settings()
@@ -40,6 +41,7 @@ namespace Fushigi.util
                 HideDeletingLinkedActorsPopup = false;
                 UseNewCamera = true;
                 EnableHalfTile = false;
+                EnableTranslation = true;
             }
         }
 
@@ -137,7 +139,12 @@ namespace Fushigi.util
             AppSettings.EnableHalfTile = value;
             Save();
         }
-        
+
+        public static void SetEnableTranslation(bool value)
+        {
+            AppSettings.EnableTranslation = value;
+            Save();
+        }
         public static void SetPrivateDRPC(bool value)
         {
             AppSettings.PrivateDRPC = value;
@@ -167,6 +174,11 @@ namespace Fushigi.util
         public static bool GetEnableHalfTile()
         {
             return AppSettings.EnableHalfTile;
+        }
+
+        public static bool GetEnableTranslation()
+        {
+            return AppSettings.EnableTranslation;
         }
 
         public static bool GetPrivateDRPC()

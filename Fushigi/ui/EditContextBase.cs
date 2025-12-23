@@ -37,7 +37,6 @@ namespace Fushigi.ui
 
         public ICommittable BeginBatchAction()
         {
-            CourseAreaEditContext.saveStatus = false;
             mCurrentActionBatch ??= [];
             var batchAction = new BatchAction(this);
             mNestedBatchActions.Push(batchAction);
@@ -53,8 +52,7 @@ namespace Fushigi.ui
             }
 
             mUndoHandler.AddToUndo(action);
-            Update?.Invoke();
-            CourseAreaEditContext.saveStatus = false;
+            //Update?.Invoke();
         }
 
         public void Deselect(object obj)
@@ -146,7 +144,6 @@ namespace Fushigi.ui
 
         public void Undo()
         {
-            CourseAreaEditContext.saveStatus = false;
             mUndoHandler.Undo();
             Update?.Invoke();
         }

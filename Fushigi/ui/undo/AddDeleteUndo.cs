@@ -1,41 +1,40 @@
-﻿namespace Fushigi.ui.undo
+﻿using System;
+
+namespace Fushigi.ui.undo
 {
     public static class ListUndoExtensions
     {
         public static IRevertable RevertableAdd<T>(this IList<T> list, T item, string actionName = "Unnamed Action")
         {
-            CourseAreaEditContext.saveStatus = false;
             list.Add(item);
             return new InsertIntoListUndo<T>(list, list.Count-1, actionName);
         }
 
         public static IRevertable RevertableInsert<T>(this IList<T> list, T item, int index, string actionName = "Unnamed Action")
         {
-            CourseAreaEditContext.saveStatus = false;
             list.Insert(index, item);
             return new InsertIntoListUndo<T>(list, index, actionName);
         }
 
         public static IRevertable RevertableRemove<T>(this IList<T> list, T item, string actionName = "Unnamed Action")
         {
-            CourseAreaEditContext.saveStatus = false;
             int index = list.IndexOf(item);
             return list.RevertableRemoveAt(index, actionName);
         }
 
         public static IRevertable RevertableRemoveAt<T>(this IList<T> list, int index, string actionName = "Unnamed Action")
         {
-            CourseAreaEditContext.saveStatus = false;
-            var item = list[index];
-            list.RemoveAt(index);
-            return new RemoveFromListUndo<T>(list, item, index, actionName);
+                var item = list[index];
+                list.RemoveAt(index);
+                return new RemoveFromListUndo<T>(list, item, index, actionName);
+
         }
     }
 
     file class InsertIntoListUndo<T>(IList<T> list, int index, string name) : IRevertable
     {
-        public string Name => name;
 
+        public string Name => name;
         public IRevertable Revert() => list.RevertableRemoveAt(index);
     }
 

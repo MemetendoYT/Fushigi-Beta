@@ -28,6 +28,7 @@ namespace Fushigi.ui.widgets
                 var useNewCamera = UserSettings.GetUseNewCamera();
                 var backupFreqMinutes = UserSettings.GetBackupFreqMinutes();
                 var enableHalfTile = UserSettings.GetEnableHalfTile();
+                var enableTranslation = UserSettings.GetEnableTranslation();
                 var privateDRPC = UserSettings.GetPrivateDRPC();
 
                 ImGui.Indent();
@@ -132,6 +133,11 @@ namespace Fushigi.ui.widgets
                     UserSettings.SetEnableHalfTile(enableHalfTile);
 
                 Tooltip.Show("Enable half tile editng for BGUnits, also affects the placement of rails as well.");
+
+                if (ImGui.Checkbox("Enable Actor Translation", ref enableTranslation))
+                    UserSettings.SetEnableTranslation(enableTranslation);
+
+                Tooltip.Show("Translates all the actor names to English");
 
                 if (ImGui.Checkbox("Hide Activity", ref privateDRPC))
                     UserSettings.SetPrivateDRPC(privateDRPC);

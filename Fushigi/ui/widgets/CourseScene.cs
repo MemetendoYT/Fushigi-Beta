@@ -1,5 +1,4 @@
-using Fasterflect;
-using NumVec = System.Numerics.Vector3;
+﻿using Fasterflect;
 using Fushigi.Byml;
 using Fushigi.course;
 using Fushigi.gl;
@@ -20,9 +19,14 @@ using System.Collections;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using NumVec = System.Numerics.Vector3;
+
+
 
 namespace Fushigi.ui.widgets
 {
@@ -56,6 +60,9 @@ namespace Fushigi.ui.widgets
         public static uint oldCourseInfoSize;
         public static uint courseInfoSize;
         static Dictionary<string, List<ulong>> mCopiedLinks = [];
+        public string previousWord = "";
+        private ImmutableList<string> filteredActors = ImmutableList<string>.Empty;
+        private ImmutableList<string> englishActors = ImmutableList<string>.Empty;
 
         // this is a very bad fix bc im waiting
         // to work on jupahe's editor instead of
@@ -202,6 +209,7 @@ namespace Fushigi.ui.widgets
         //     }
         // }
         // readonly LayerSorter layerSort = new();
+    
 
         public static async Task<CourseScene> Create(Course course, 
             GLTaskScheduler glScheduler, 
@@ -209,6 +217,9 @@ namespace Fushigi.ui.widgets
             IProgress<(string operationName, float? progress)> progress)
         {
             var cs = new CourseScene(course, glScheduler, popupModalHost);
+
+            //if (UserSettings.GetEnableTranslation()) 
+            Translate.LoadEnglishNames();
 
             foreach (var area in course.GetAreas())
             {
@@ -961,71 +972,119 @@ namespace Fushigi.ui.widgets
         }
 
          private void SelectActorAndLayerPanel()
- {
-     ImGui.Begin("Actors and Layers");
+         {
+            ImGui.Begin("Actors and Layers");
 
-     ImGui.BeginTabBar("SelectActorAndLayerWindow");
-     
-     if (ImGui.BeginTabItem("Add Actor"))
-     {
-             if (mSelectedActor == null)
-             {
-                 ImGui.InputText("Search", ref mAddActorSearchQuery, 256);
+            ImGui.BeginTabBar("SelectActorAndLayerWindow");
 
-                 var filteredActors = ParamDB.GetActors().ToImmutableList();
+            if (ImGui.BeginTabItem("Add Actor"))
+            {
+                string jpActor = "";
+                if (mSelectedActor == null)
+                {
+ 
+                    ImGui.InputText("Search", ref mAddActorSearchQuery, 256);
 
-                 if (mAddActorSearchQuery != "")
-                 {
-                     filteredActors = FuzzySharp.Process.ExtractAll(mAddActorSearchQuery, ParamDB.GetActors(), cutoff: 65)
+                    if (previousWord != mAddActorSearchQuery || previousWord == "")
+                    {
+                        previousWord = mAddActorSearchQuery;
+                        filteredActors = ParamDB.GetActors().ToImmutableList();
+
+                        englishActors = ImmutableList<string>.Empty;
+
+                        if (UserSettings.GetEnableTranslation())
+                            englishActors = ParamDB.GetEnglishActors(Translate.EnglishNames).ToImmutableList();
+
+                        if (mAddActorSearchQuery != "")
+                        { 
+                                filteredActors = FuzzySharp.Process.ExtractAll(mAddActorSearchQuery, ParamDB.GetActors(), cutoff: 70)
+                                  .OrderByDescending(result => result.Score)
+                                  .Select(result => result.Value)
+                                  .ToImmutableList();
+
+                            if (UserSettings.GetEnableTranslation())
+                            {
+                                englishActors = FuzzySharp.Process.ExtractAll(mAddActorSearchQuery, ParamDB.GetEnglishActors(Translate.EnglishNames), cutoff: 70)
+                                .OrderByDescending(result => result.Score)
+                                .Select(result => result.Value)
+                                .ToImmutableList();
+                            
+                                var translated = new List<string>();
+
+                                foreach (var actor in filteredActors)
+                                {
+                                    translated.Add(Translate.FetchTranslatedName(actor));
+                                }
+
+                                filteredActors = translated.Concat(englishActors).Distinct().ToImmutableList();
+                            }
+                        }
+                    }
+
+                    ImGui.BeginChild("ActorScroll", ImGui.GetContentRegionAvail());
+
+                    if (ImGui.BeginTable("##ActorsAndLayers", 2,
+                        ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.Resizable))
+                    {
+                        foreach (var actor in filteredActors)
+                        {
+                            ImGui.TableNextRow();
+                            ImGui.TableSetColumnIndex(0);
+                            ImGui.Selectable(actor);
+                            jpActor = actor;
+                            if (UserSettings.GetEnableTranslation())
+                                jpActor = Translate.reverseTranslate(actor);
+
+                            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(0))
+                                mSelectedActor = jpActor;
+
+                            if (UserSettings.GetEnableTranslation())
+                            {
+                                ImGui.TableSetColumnIndex(1);
+                                ImGui.BeginDisabled();
+                                ImGui.Text(jpActor);
+                                ImGui.EndDisabled();
+                            }
+                        }
+
+                        ImGui.EndTable();
+                    }
+
+                    ImGui.EndChild();
+                }
+                else if (mSelectedLayer == null)
+                {
+                    // Your original layer selection UI in Add Actor tab
+                    ImGui.InputText("Search", ref mAddLayerSearchQuery, 256);
+
+                    var fileteredLayers = mLayersVisibility.Keys.ToArray().ToImmutableList();
+
+                    if (mAddLayerSearchQuery != "")
+                    {
+                        fileteredLayers = FuzzySharp.Process.ExtractAll(mAddLayerSearchQuery, [.. mLayersVisibility.Keys], cutoff: 65)
                          .OrderByDescending(result => result.Score)
                          .Select(result => result.Value)
                          .ToImmutableList();
-                 }
+                    }
 
-                 if (ImGui.BeginListBox("Select the actor you want to add.", ImGui.GetContentRegionAvail()))
-                 {
-                     foreach (string actor in filteredActors)
-                     {
-                         ImGui.Selectable(actor);
+                    if (ImGui.BeginListBox("Select the layer you want to add the actor to.", ImGui.GetContentRegionAvail()))
+                    {
+                        foreach (string layer in fileteredLayers)
+                        {
+                            ImGui.Selectable(layer);
 
-                         if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(0))
-                             mSelectedActor = actor;
-                     }
+                            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(0))
+                                mSelectedLayer = layer;
+                        }
 
-                     ImGui.EndListBox();
-                 }
-             }
-             else if (mSelectedLayer == null)
-             {
-                 ImGui.InputText("Search", ref mAddLayerSearchQuery, 256);
+                        ImGui.EndListBox();
+                    }
+                }
+                else
+                    AddSelectedActorWithLayer();
 
-                 var fileteredLayers = mLayersVisibility.Keys.ToArray().ToImmutableList();
-
-                 if (mAddLayerSearchQuery != "")
-                 {
-                     fileteredLayers = FuzzySharp.Process.ExtractAll(mAddLayerSearchQuery, [.. mLayersVisibility.Keys], cutoff: 65)
-                         .OrderByDescending(result => result.Score)
-                         .Select(result => result.Value)
-                         .ToImmutableList();
-                 }
-
-                 if (ImGui.BeginListBox("Select the layer you want to add the actor to.", ImGui.GetContentRegionAvail()))
-                 {
-                     foreach (string layer in fileteredLayers)
-                     {
-                         ImGui.Selectable(layer);
-
-                         if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(0))
-                             mSelectedLayer = layer;
-                     }
-
-                     ImGui.EndListBox();
-                 }
-             }
-             else
-                 AddSelectedActorWithLayer();
-         ImGui.EndTabItem();
-     }
+                ImGui.EndTabItem();
+            }
 
             if (ImGui.BeginTabItem("Add Layer"))
             {
@@ -1098,11 +1157,15 @@ namespace Fushigi.ui.widgets
             NumVec? pos;
             KeyboardModifier modifier;
             using var tokenSource = new CancellationTokenSource();
+            string actorName = mSelectedActor;
+            if (UserSettings.GetEnableTranslation())
+                actorName = Translate.FetchTranslatedName(actorName);
+
             do
             {
                 ImGui.SetWindowFocus(area.mAreaName);
                 (pos, modifier) = await viewport.PickPosition(
-                    $"Placing actor {mSelectedActor} -- Hold SHIFT to place multiple", mSelectedLayer, tokenSource);
+                    $"Placing actor {actorName} -- Hold SHIFT to place multiple", mSelectedLayer, tokenSource);
                 if (!pos.TryGetValue(out var posVec))
                 {
                     break;
@@ -1493,27 +1556,25 @@ namespace Fushigi.ui.widgets
                 }
 
                 #region Actor UI
-                string actorName = mSelectedActor.mPackName;
+                string actorName = mSelectedActor.mPackName ;
                 string name = mSelectedActor.mName;
 
                 if (ImGui.BeginTable("Props", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.Resizable))
                 {
                     ImGui.TableNextRow();
-                    ImGui.TableSetColumnIndex(0);
+                        ImGui.TableSetColumnIndex(0);
                         ImGui.AlignTextToFramePadding();
                         string packName = mSelectedActor.mPackName;
+                        string englishName = packName;
 
-                        ImGui.Text("Actor Name");
+                    if (UserSettings.GetEnableTranslation())
+                        englishName = Translate.FetchTranslatedName(englishName);
+               
+
+                    ImGui.Text("Actor Name");
                         ImGui.TableNextColumn();
                         ImGui.PushItemWidth(ImGui.GetColumnWidth() - ImGui.GetStyle().ScrollbarSize);
-                        if (ImGui.InputText("##Actor Name", ref packName, 256, ImGuiInputTextFlags.EnterReturnsTrue))
-                        {
-                            if (ParamDB.GetActors().Contains(packName))
-                            {
-                                mSelectedActor.mPackName = packName;
-                                mSelectedActor.InitializeDefaultDynamicParams();
-                            }
-                        }
+                        ImGui.InputText("##Actor Hash", ref englishName, 256, ImGuiInputTextFlags.ReadOnly);
                         ImGui.PopItemWidth();
 
                     ImGui.TableNextColumn();
@@ -2811,11 +2872,15 @@ namespace Fushigi.ui.widgets
 
             if (ImGui.Button("Remove Rail"))
             {
-                var selected = editContext.GetSelectedObjects<CourseRail>();
-                foreach (var rail in selected)
-                    editContext.DeleteRail(rail);
+                if(railHolder.mRails.Count > 0) { 
+                    var selected = editContext.GetSelectedObjects<CourseRail>();
+                    foreach (var rail in selected)
+                        editContext.DeleteRail(rail);
+                }   
             }
 
+            CourseRail railToDelete = null;
+            bool removeRail = false;
             foreach (CourseRail rail in railHolder.mRails)
             {
                 var rail_node_flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.DefaultOpen;
@@ -2840,7 +2905,10 @@ namespace Fushigi.ui.widgets
                             editContext.ReverseRailPoints(rail);
 
                         if (ImGui.MenuItem("Remove Rail"))
-                            editContext.DeleteRail(rail);
+                        {
+                            railToDelete = rail;
+                            removeRail = true;
+                        }
 
                         ImGui.EndPopup();
                     }
@@ -2873,6 +2941,11 @@ namespace Fushigi.ui.widgets
 
                     ImGui.TreePop();
                 }
+            }
+            if (removeRail)
+            {
+                editContext.DeleteRail(railToDelete);
+                removeRail = false;
             }
         }
 
@@ -2927,7 +3000,12 @@ namespace Fushigi.ui.widgets
                 ImGui.TableNextRow();
 
                 string actorName = actor.mPackName;
+
+                if(UserSettings.GetEnableTranslation()) 
+                    actorName = Translate.FetchTranslatedName(actorName);
+
                 string name = actor.mName;
+                
                 ulong actorHash = actor.mHash;
                 bool isSelected = editContext.IsSelected(actor);
 
@@ -3145,14 +3223,20 @@ namespace Fushigi.ui.widgets
                 {
                     foreach (CourseActor actor in actorArray.mActors)
                     {
+  
                         string actorName = actor.mPackName;
                         string name = actor.mName;
+
+                        if (UserSettings.GetEnableTranslation()) 
+                        {
+                            actorName = Translate.FetchTranslatedName(actorName);
+                        }
+
                         ulong actorHash = actor.mHash;
                         string actorLayer = actor.mLayer;
 
                         //Check if the node is within the necessary search filter requirements if search is used
-                        bool HasText = actor.mName.IndexOf(mActorSearchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                       actor.mPackName.IndexOf(mActorSearchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        bool HasText = actorName.IndexOf(mActorSearchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
                                        actorHash.ToString().Equals(mActorSearchText);
 
                         if (isSearch && !HasText)

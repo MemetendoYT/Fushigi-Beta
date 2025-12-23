@@ -726,10 +726,15 @@ namespace Fushigi.ui.widgets
                 mHoveredObject = null;
 
             CourseActor? hoveredActor = mHoveredObject as CourseActor;
+            string actorName;
+            if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
+            { //prevents tooltip flickering
+                actorName = hoveredActor.mPackName;
+                if(UserSettings.GetEnableTranslation())
+                    actorName = Translate.FetchTranslatedName(actorName);
 
-            if (hoveredActor != null &&
-                mObjectPickingRequest == null && mPositionPickingRequest == null) //prevents tooltip flickering
-                ImGui.SetTooltip($"{hoveredActor.mPackName}\n{hoveredActor.mName}");
+                ImGui.SetTooltip($"{actorName}\n{hoveredActor.mName}");
+            }
 
             if (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == KeyboardModifier.CtrlCmd)
             {
@@ -801,8 +806,11 @@ namespace Fushigi.ui.widgets
             KeyboardModifier modifier;
             if (CopiedObjects is not CourseActor[] actors) return;
             string msg;
-            if (actors.Length == 1)
-                msg = $"Placing actor {actors[0].mPackName}";
+            string actorName;
+            if (actors.Length == 1) {
+                actorName = actors[0].mPackName;
+                msg = $"Placing actor {actorName}";
+            }
             else
                 msg = $"Placing {actors.Length} actors";
             msg += " -- Hold SHIFT to place multiple";
@@ -1602,7 +1610,6 @@ namespace Fushigi.ui.widgets
                     }
 
                     string name = actor.mPackName;
-
                     isHovered = MathUtil.HitTestConvexPolygonPoint(s_actorRectPolygon, ImGui.GetMousePos());
 
                     if (name.Contains("Area"))

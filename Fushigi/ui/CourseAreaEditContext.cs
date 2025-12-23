@@ -128,6 +128,7 @@ namespace Fushigi.ui
         {
             var link = area.mLinkHolder.mLinks[index];
             LogDeleting<CourseLink>($": {link.mSource} -{link.mLinkName}-> {link.mDest}");
+            
             CommitAction(
                 area.mLinkHolder.mLinks.RevertableRemoveAt(index, 
                 $"{IconUtil.ICON_TRASH} Delete {link.mLinkName} Link")
@@ -309,7 +310,7 @@ namespace Fushigi.ui
 
         private void LogAdding<T>(string? extraText = null)
         {
-            string text = $"Adding {typeof(T).Name()}";
+            string text = $"Adding fungle fungle {typeof(T).Name()}";
             if (extraText != null)
                 text += $" {extraText}";
             Logger.Logger.LogMessage("CourseAreaEditContext", text);

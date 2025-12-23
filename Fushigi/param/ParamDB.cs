@@ -133,6 +133,13 @@ namespace Fushigi.param
 
         public static string[] GetActors() => sActors.Keys.ToArray();
 
+        public static string[] GetEnglishActors(Dictionary<string, string> englishNames)
+        {
+            return sActors.Keys
+                .Select(key => englishNames.TryGetValue(key, out var eng) ? eng : key)
+                .ToArray();
+        }
+
         public static void Load(IProgress<(string operationName, float? progress)> progress)
         {
             /* if we have already been initialized, we skip this process */

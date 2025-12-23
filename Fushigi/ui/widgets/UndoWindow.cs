@@ -36,7 +36,10 @@ namespace Fushigi.ui.widgets
                 {
                     var op = context.GetUndoStack().Reverse().ElementAt(i);
                     bool selected = context.GetLastAction() == op;
-                    if (ImGui.Selectable(op.Name+"##"+i, selected))
+                        string actorName = op.Name;
+                    if (UserSettings.GetEnableTranslation())
+                        actorName = Translate.translateHistoryData(op.Name);
+                    if (ImGui.Selectable(actorName+"##"+i, selected))
                     {
                         for(var a = context.GetUndoStack().Count()-1; a > i; a--)
                         {
@@ -47,9 +50,14 @@ namespace Fushigi.ui.widgets
                 for (var i = 0; i < context.GetRedoUndoStack().Count(); i++)
                 {
                     var op = context.GetRedoUndoStack().ElementAt(i);
+
+                    string actorName = op.Name;
+                    if (UserSettings.GetEnableTranslation())
+                        actorName = Translate.translateHistoryData(op.Name);
+
                     ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle().Colors[(int)ImGuiCol.TextDisabled]);
                     ImGui.PushID(i);
-                    if (ImGui.Selectable(op.Name+"##"+i))
+                    if (ImGui.Selectable(actorName+"##"+i))
                     {
                         for(var a = 0; a <=  i; a++)
                         {

@@ -40,7 +40,6 @@ namespace Fushigi.course
             mPackName = BymlUtil.GetNodeData<string>(actorNode["Gyaml"]);
             mType = GetActorTypeFromGyaml(mPackName);
             mLayer = BymlUtil.GetNodeData<string>(actorNode["Layer"]);
-
             mTranslation = BymlUtil.GetVector3FromArray(actorNode["Translate"] as BymlArrayNode);
             mRotation = BymlUtil.GetVector3FromArray(actorNode["Rotate"] as BymlArrayNode);
             mScale = BymlUtil.GetVector3FromArray(actorNode["Scale"] as BymlArrayNode);
