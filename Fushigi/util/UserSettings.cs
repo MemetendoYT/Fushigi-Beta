@@ -27,6 +27,7 @@ namespace Fushigi.util
             public bool EnableHalfTile;
             public bool EnableTranslation;
             public bool PrivateDRPC;
+            public string Theme;
 
             public Settings()
             {
@@ -42,6 +43,7 @@ namespace Fushigi.util
                 UseNewCamera = true;
                 EnableHalfTile = false;
                 EnableTranslation = true;
+                Theme = "Theme";
             }
         }
 
@@ -189,6 +191,17 @@ namespace Fushigi.util
         public static void AppendModPath(string modname, string path)
         {
             AppSettings.ModPaths.Add(modname, path);
+        }
+
+        public static string GetTheme()
+        {
+            return AppSettings.Theme ?? "Theme";
+        }
+        
+        public static void SetTheme(string theme)
+        {
+            AppSettings.Theme = theme;
+            Save();
         }
 
         public static void AppendRecentCourse(string courseName)

@@ -12,11 +12,23 @@ namespace Fushigi.ui.widgets
         static readonly Vector4 errCol = new Vector4(1f, 0, 0, 1);
         static bool romfsTouched = false;
         static bool modRomfsTouched = false;
+        static string curTheme = null;
 
         public static void Draw(ref bool continueDisplay, GLTaskScheduler glTaskScheduler,
             IPopupModalHost modalHost)
         {
             ImGui.SetNextWindowSize(new Vector2(700, 300), ImGuiCond.Once);
+            if (curTheme == null)
+            {
+                curTheme = UserSettings.GetTheme();
+                // Apply theme on load
+                switch (curTheme)
+                {
+                    case "Dark (Default)": ImGui.StyleColorsDark(); break;
+                    case "Classic": ImGui.StyleColorsClassic(); break;
+                    case "Light": ImGui.StyleColorsLight(); break;
+                }
+            }
             if (ImGui.Begin("Preferences", ImGuiWindowFlags.NoDocking))
             {
                 var romfs = UserSettings.GetRomFSPath();
@@ -146,6 +158,31 @@ namespace Fushigi.ui.widgets
                     UserSettings.SetPrivateDRPC(privateDRPC);
 
                 Tooltip.Show("Whether or not to hide information about the course in the Discord RPC.\nReload required to work.");
+
+                if (ImGui.BeginCombo("Themes", curTheme))
+                {
+                    if (ImGui.Selectable("Dark (Default)", curTheme == "Dark (Default)"))
+                    {
+                        ImGui.StyleColorsDark();
+                        curTheme = "Dark (Default)";
+                        UserSettings.SetTheme(curTheme);
+                    }
+                    if (ImGui.Selectable("Classic", curTheme == "Classic"))
+                    {
+                        ImGui.StyleColorsClassic();
+                        curTheme = "Classic";
+                        UserSettings.SetTheme(curTheme);
+                    }
+                    if (ImGui.Selectable("Light", curTheme == "Light"))
+                    {
+                        ImGui.StyleColorsLight();
+                        curTheme = "Light";
+                        UserSettings.SetTheme(curTheme);
+                    }
+                    ImGui.EndCombo();
+                }
+
+                Tooltip.Show("Change the UI theme.");
 
                 ImGui.Unindent();
 
