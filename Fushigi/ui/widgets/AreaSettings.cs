@@ -12,8 +12,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Fushigi.ui.widgets
@@ -147,7 +149,7 @@ namespace Fushigi.ui.widgets
             // Window
             if (ImGui.Begin("Area Settings", ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse))
             {
-               
+
                 // Close Button
                 if (ImGui.Button("Close"))
                 {
@@ -208,10 +210,10 @@ namespace Fushigi.ui.widgets
                     }
                     ImGui.EndTabBar();
                 }
-                
+
                 ImGui.End();
             }
-            
+
         }
 
         private static void DrawAppearanceSettings(AreaParam areaParam)
@@ -229,7 +231,7 @@ namespace Fushigi.ui.widgets
                 ImGui.TableSetColumnIndex(1);
                 value = skinParam.FieldA;
                 int index = Tilesets.Values.ToList().IndexOf(value);
-                if (ImGui.Combo("##FieldA", ref index, Tilesets.Keys.ToArray(), Tilesets.Count(), 10)) 
+                if (ImGui.Combo("##FieldA", ref index, Tilesets.Keys.ToArray(), Tilesets.Count(), 10))
                     skinParam.FieldA = Tilesets.Values.ToArray()[index];
 
                 ImGui.TableNextColumn();
@@ -258,7 +260,7 @@ namespace Fushigi.ui.widgets
                     skinParam.DisableBgUnitDecoA = disableBgUnitDecoA;
                 }
 
-                ImGui.EndTable(); 
+                ImGui.EndTable();
             }
 
             ImGui.SeparatorText("Level Palettes");
@@ -287,8 +289,11 @@ namespace Fushigi.ui.widgets
                     for (int i = 0; i < transPal.Count; i++)
                     {
                         var palette = transPal[i];
+                        palette = parsePalette(palette);
+                        string[] parts = palette.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         if (ImGui.InputText($"##TransitionPalette{i}", ref palette, 1024))
-                            transPal[i] = palette;
+                            palette = revertPalette(palette);
+                        transPal[i] = palette;
                     }
                 }
 
@@ -302,7 +307,6 @@ namespace Fushigi.ui.widgets
                 {
                     if (wonderPal is null) { wonderPal = new List<string>(); }
                     wonderPal.Add("");
-                    areaParam.EnvPaletteSetting.WonderPaletteList = wonderPal;
                 }
 
                 if (wonderPal is not null)
@@ -310,8 +314,11 @@ namespace Fushigi.ui.widgets
                     for (int i = 0; i < wonderPal.Count; i++)
                     {
                         var palette = wonderPal[i];
+                        palette = parsePalette(palette);
+
                         if (ImGui.InputText($"##WonderPalette{i}", ref palette, 1024))
                         {
+                            palette = revertPalette(palette);
                             wonderPal[i] = palette;
                         }
                     }
@@ -335,8 +342,10 @@ namespace Fushigi.ui.widgets
                     for (int i = 0; i < eventPal.Count; i++)
                     {
                         var palette = eventPal[i];
+                        parsePalette(palette);
                         if (ImGui.InputText($"##EventPalette{i}", ref palette, 1024))
                         {
+                            palette = revertPalette(palette);
                             eventPal[i] = palette;
                         }
                     }
@@ -540,7 +549,18 @@ namespace Fushigi.ui.widgets
                     areaParam.IsNotCallWaterEnvSE = isNotCallWaterEnvSE;
             }
         }
+        public static string parsePalette(string palette)
+        {
+            palette = palette.Replace("Work/Gyml/Gfx/EnvPaletteParam/", "");
+            palette = palette.Replace(".game__gfx__EnvPaletteParam.gyml", "");
+            return palette;
+        }
 
+        public static string revertPalette(string palette)
+        {
+            palette = "Work/Gyml/Gfx/EnvPaletteParam/" + palette + ".game__gfx__EnvPaletteParam.gyml";
+            return palette;
+        }
         private static void DrawMiscSettings(AreaParam areaParam)
         {
             if (ImGui.BeginTable("##MiscSettings", 2))

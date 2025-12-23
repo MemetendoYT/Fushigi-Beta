@@ -328,34 +328,11 @@ namespace Fushigi.ui.widgets
 
         public bool HasUnsavedChanges()
         {
-            BymlHashTable c_croot = course.mCourseInfo.Serialize();
-            var c_cbyml = new Byml.Byml(c_croot);
-            var c_csize = AreaParam.GetDecompressedSize(c_cbyml);
-            courseInfoSize = c_csize;
-
-            areaParamSize = 0;
-            foreach (var area in course.GetAreas())
-            {
-                BymlHashTable current_root = area.mAreaParams.Serialize();
-                var current_byml = new Byml.Byml(current_root);
-                var current_size = AreaParam.GetDecompressedSize(current_byml);
-                areaParamSize += current_size;
-            }
-                foreach (var area in course.GetAreas())
-            {
-    
-                if (areaParamSize != oldAreaParamSize || courseInfoSize != oldCourseInfoSize)
-                {
-                    CourseAreaEditContext.saveStatus = false;
-                }
-
-                if (!CourseAreaEditContext.saveStatus)
-                    return true;
+            if (!CourseAreaEditContext.saveStatus)
+                return true;
+            else
+                return false;
         }
-            return false;
-            
-        }
-
         double backupTime = 0;
 
         public void DrawUI(GL gl, double deltaSeconds)
