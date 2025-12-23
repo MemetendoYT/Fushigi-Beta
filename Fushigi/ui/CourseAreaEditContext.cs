@@ -310,7 +310,7 @@ namespace Fushigi.ui
 
         private void LogAdding<T>(string? extraText = null)
         {
-            string text = $"Adding fungle fungle {typeof(T).Name()}";
+            string text = $"Adding {typeof(T).Name()}";
             if (extraText != null)
                 text += $" {extraText}";
             Logger.Logger.LogMessage("CourseAreaEditContext", text);
