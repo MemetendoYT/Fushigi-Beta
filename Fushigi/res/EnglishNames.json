@@ -1,4 +1,5 @@
 {
+  "EnemyHacchin": "Stingby",
   "AdditionalCullingAabbArea": "Culling Area",
   "AirWall": "Invisible Wall",
   "AirWallRight": "Invisible Wall (Only Facing Right)",
@@ -140,8 +141,8 @@
   "EnemyBubble": "Lava Bubble",
   "EnemyCanChan": "Gold Metal Gamboo",
   "EnemyCanChanRed": "Silver Metal Gamboo",
-  "EnemyChaseDoor": "Noknok",
-  "EnemyChaseDoorWeak": "Noknok (Unused Variation)",
+  "EnemyChaseDoor": "Noknok (Unused Variation)",
+  "EnemyChaseDoorWeak": "Noknok",
   "EnemyChoroChu": "Revver",
   "EnemyDarkNokonoko": "Rift Koopa Troopa",
   "EnemyDirectPutBigFirePackun": "Big Grounded Fire Piranha Plant",
