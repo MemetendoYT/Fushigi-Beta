@@ -64,6 +64,7 @@ namespace Fushigi.ui.widgets
         public static bool refreshTranslation = false;
         private ImmutableList<string> filteredActors = ImmutableList<string>.Empty;
         private ImmutableList<string> englishActors = ImmutableList<string>.Empty;
+        private CourseArea areaToFocus = null;
 
         // this is a very bad fix bc im waiting
         // to work on jupahe's editor instead of
@@ -387,198 +388,183 @@ namespace Fushigi.ui.widgets
 
             bool status = ImGui.Begin("Viewports", ImGuiWindowFlags.NoNav);
 
-            ImGui.DockSpace(0x100, ImGui.GetContentRegionAvail());
-
-            for (int i = 0; i < course.GetAreaCount(); i++)
+            if (ImGui.BeginTabBar("ViewportTabs"))
             {
-                var area = course.GetArea(i);
-                var viewport = viewports[area];
-
-                ImGui.SetNextWindowDockID(0x100, ImGuiCond.Once);
-
-                //paletteWindow.Load(gl, area.mAreaParams, area.mInitEnvPalette);
-                //paletteWindow.Render();
-
-                if (ImGui.Begin(area.GetName(), ImGuiWindowFlags.NoNav))
+                for (int i = 0; i < course.GetAreaCount(); i++)
                 {
-                    if (ImGui.BeginChild("viewport_menu_bar", new Vector2(ImGui.GetWindowWidth(), 30)))
+                    var area = course.GetArea(i);
+                    var viewport = viewports[area];
+
+  
+                    if (ImGui.BeginTabItem(area.GetName()))
                     {
-                        Vector2 icon_size = new Vector2(25, 25);
-
-                        ImGui.PushStyleColor(ImGuiCol.Button, 0);
-
-                        if (ImGui.Button(IconUtil.ICON_ARCHIVE, icon_size))
+                        if (areaToFocus == area)
                         {
-                            showCourseSettings = true;
-                        }
-                        ImGui.SetItemTooltip("Edit Course Settings");
-
-                        ImGui.SameLine();
-
-                        if (ImGui.Button(IconUtil.ICON_FILE_IMPORT, icon_size))
-                        {
-                            showAreaSettings = true;
-                        }
-                        ImGui.SetItemTooltip("Edit Area Settings");
-                        ImGui.SameLine();
-
-                        ImGui.TextColored(new Vector4(0.5f, 0.5f, 0.5f, 1.0f), "|");
-
-                        ImGui.SameLine();
-
-                        if (ImGui.Button(viewport.PlayAnimations ? IconUtil.ICON_STOP : IconUtil.ICON_PLAY, icon_size))
-                            viewport.PlayAnimations = !viewport.PlayAnimations;
-
-                        ImGui.SameLine();
-
-                        if (ImguiHelper.DrawTextToggle(IconUtil.ICON_BORDER_ALL, viewport.ShowGrid, icon_size))
-                            viewport.ShowGrid = !viewport.ShowGrid;
-
-                        ImGui.SameLine();
-
-                        string current_palette = area.mInitEnvPalette == null ? "" : area.mInitEnvPalette.Name;
-
-                        void SelectPalette(string name, string palette)
-                        {
-                            if (string.IsNullOrEmpty(palette))
-                                return;
-
-                            palette = palette.Replace("Work/Gyml/Gfx/EnvPaletteParam/", "");
-                            palette = palette.Replace(".game__gfx__EnvPaletteParam.gyml", "");
-
-                            bool selected = current_palette == name;
-                            if (ImGui.Selectable($"{name} : {palette}", selected))
-                                viewport.EnvironmentData.TransitionEnvPalette(current_palette, palette);
-
-                            if (selected)
-                                ImGui.SetItemDefaultFocus();
+                            ImGui.SetItemDefaultFocus();
+                            activeViewport = viewport;  
+                            selectedArea = area;
+                            areaToFocus = null;
                         }
 
-                        // Area Settings windows
-                        if (showAreaSettings)
-                            AreaSettings.Draw(ref showAreaSettings, mPopupModalHost, area.mAreaParams);
+                        ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
 
-                        // Course Settings windows
-                        if (showCourseSettings)
-                            CourseSettings.Draw(ref showCourseSettings, mPopupModalHost, course.mCourseInfo, course.mMapAnalysisInfo, course.mStageLoadInfo);
 
-                        // Palette Picker
-                        var flags = ImGuiComboFlags.NoArrowButton | ImGuiComboFlags.WidthFitPreview;
-                        if (ImGui.BeginCombo($"##EnvPalette", $"{IconUtil.ICON_PALETTE}", flags))
+                        if (ImGui.BeginChild("viewport_menu_bar", new Vector2(ImGui.GetWindowWidth(), 30)))
                         {
-                            SelectPalette($"Default Palette", area.mAreaParams.EnvPaletteSetting.InitPaletteBaseName);
+                            Vector2 icon_size = new Vector2(25, 25);
 
-                            if (area.mAreaParams.EnvPaletteSetting.WonderPaletteList != null)
+                            ImGui.PushStyleColor(ImGuiCol.Button, 0);
+
+                            if (ImGui.Button(IconUtil.ICON_ARCHIVE, icon_size))
+                                showCourseSettings = true;
+                            ImGui.SetItemTooltip("Edit Course Settings");
+
+                            ImGui.SameLine();
+
+                            if (ImGui.Button(IconUtil.ICON_FILE_IMPORT, icon_size))
+                                showAreaSettings = true;
+                            ImGui.SetItemTooltip("Edit Area Settings");
+
+                            ImGui.SameLine();
+                            ImGui.TextColored(new Vector4(0.5f, 0.5f, 0.5f, 1.0f), "|");
+                            ImGui.SameLine();
+
+                            if (ImGui.Button(viewport.PlayAnimations ? IconUtil.ICON_STOP : IconUtil.ICON_PLAY, icon_size))
+                                viewport.PlayAnimations = !viewport.PlayAnimations;
+
+                            ImGui.SameLine();
+
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_BORDER_ALL, viewport.ShowGrid, icon_size))
+                                viewport.ShowGrid = !viewport.ShowGrid;
+
+                            ImGui.SameLine();
+
+                            string current_palette = area.mInitEnvPalette == null ? "" : area.mInitEnvPalette.Name;
+
+                            void SelectPalette(string name, string palette)
                             {
-                                foreach (var palette in area.mAreaParams.EnvPaletteSetting.WonderPaletteList)
-                                    SelectPalette($"Wonder Palette", palette);
+                                if (string.IsNullOrEmpty(palette))
+                                    return;
+
+                                palette = palette.Replace("Work/Gyml/Gfx/EnvPaletteParam/", "");
+                                palette = palette.Replace(".game__gfx__EnvPaletteParam.gyml", "");
+
+                                bool selected = current_palette == name;
+                                if (ImGui.Selectable($"{name} : {palette}", selected))
+                                    viewport.EnvironmentData.TransitionEnvPalette(current_palette, palette);
+
+                                if (selected)
+                                    ImGui.SetItemDefaultFocus();
                             }
-                            if (area.mAreaParams.EnvPaletteSetting.TransPaletteList != null)
+
+                            if (showAreaSettings)
+                                AreaSettings.Draw(ref showAreaSettings, mPopupModalHost, area.mAreaParams);
+
+                            if (showCourseSettings)
+                                CourseSettings.Draw(ref showCourseSettings, mPopupModalHost, course.mCourseInfo, course.mMapAnalysisInfo, course.mStageLoadInfo);
+
+                            var flags = ImGuiComboFlags.NoArrowButton | ImGuiComboFlags.WidthFitPreview;
+                            if (ImGui.BeginCombo($"##EnvPalette", $"{IconUtil.ICON_PALETTE}", flags))
                             {
-                                foreach (var palette in area.mAreaParams.EnvPaletteSetting.TransPaletteList)
-                                    SelectPalette($"Transition Palette", palette);
+                                SelectPalette($"Default Palette", area.mAreaParams.EnvPaletteSetting.InitPaletteBaseName);
+
+                                if (area.mAreaParams.EnvPaletteSetting.WonderPaletteList != null)
+                                    foreach (var palette in area.mAreaParams.EnvPaletteSetting.WonderPaletteList)
+                                        SelectPalette($"Wonder Palette", palette);
+
+                                if (area.mAreaParams.EnvPaletteSetting.TransPaletteList != null)
+                                    foreach (var palette in area.mAreaParams.EnvPaletteSetting.TransPaletteList)
+                                        SelectPalette($"Transition Palette", palette);
+
+                                if (area.mAreaParams.EnvPaletteSetting.EventPaletteList != null)
+                                    foreach (var palette in area.mAreaParams.EnvPaletteSetting.EventPaletteList)
+                                        SelectPalette($"Event Palette", palette);
+
+                                ImGui.EndCombo();
                             }
-                            if (area.mAreaParams.EnvPaletteSetting.EventPaletteList != null)
+
+                            ImGui.SameLine();
+
+                            bool useGameShaders = UserSettings.UseGameShaders();
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_ADJUST, useGameShaders, icon_size))
                             {
-                                foreach (var palette in area.mAreaParams.EnvPaletteSetting.EventPaletteList)
-                                    SelectPalette($"Event Palette", palette);
+                                useGameShaders = !useGameShaders;
+                                UserSettings.SetGameShaders(useGameShaders);
                             }
-                            ImGui.EndCombo();
-                        }
+                            ImGui.SetItemTooltip("Use Game Shaders");
 
-                        ImGui.SameLine();
+                            ImGui.SameLine();
 
-                        // Use Game Shaders
-                        bool useGameShaders = UserSettings.UseGameShaders();
-                        if (ImguiHelper.DrawTextToggle(IconUtil.ICON_ADJUST, useGameShaders, icon_size))
-                        {
-                            useGameShaders = !useGameShaders;
-                            UserSettings.SetGameShaders(useGameShaders);
-                        }
-                        ImGui.SetItemTooltip("Use Game Shaders");
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_CAMERA, viewport.ScreenshotMode, icon_size))
+                                viewport.ScreenshotMode = !viewport.ScreenshotMode;
+                            ImGui.SetItemTooltip("Screenshot Mode");
 
-                        ImGui.SameLine();
+                            ImGui.SameLine();
 
-                        // Screenshot Mode
-                        if (ImguiHelper.DrawTextToggle(IconUtil.ICON_CAMERA, viewport.ScreenshotMode, icon_size))
-                        {
-                            viewport.ScreenshotMode = !viewport.ScreenshotMode;
-                        }
-                        ImGui.SetItemTooltip("Screenshot Mode");
-
-                        ImGui.SameLine();
-
-                        if (ImGui.BeginCombo("##WonderView", $"{IconUtil.ICON_EYE}", flags))
-                        {
-                            for (int n = 0; n < 3; n++)
+                            if (ImGui.BeginCombo("##WonderView", $"{IconUtil.ICON_EYE}", flags))
                             {
-                                if (ImGui.Selectable(mViewMode[n]))
-                                    viewport.WonderViewMode = (WonderViewType)n;
+                                for (int n = 0; n < 3; n++)
+                                    if (ImGui.Selectable(mViewMode[n]))
+                                        viewport.WonderViewMode = (WonderViewType)n;
+
+                                ImGui.EndCombo();
                             }
-                            ImGui.EndCombo();
-                        }
-                        ImGui.SetItemTooltip("Wonder View");
+                            ImGui.SetItemTooltip("Wonder View");
 
-                        ImGui.SameLine();
+                            ImGui.SameLine();
 
-                        if (ImguiHelper.DrawTextToggle(IconUtil.ICON_IMAGE, viewport.ShowBackground, icon_size))
-                        {
-                            viewport.ShowBackground = !viewport.ShowBackground;
-                            foreach (var layer in mLayersVisibility.Keys)
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_IMAGE, viewport.ShowBackground, icon_size))
                             {
-                                if(BackgroundLayerTypes.Contains(layer))
-                                    mLayersVisibility[layer] = viewport.ShowBackground;
+                                viewport.ShowBackground = !viewport.ShowBackground;
+                                foreach (var layer in mLayersVisibility.Keys)
+                                    if (BackgroundLayerTypes.Contains(layer))
+                                        mLayersVisibility[layer] = viewport.ShowBackground;
                             }
+                            ImGui.SetItemTooltip("Hide/Show Background Layers");
+
+                            ImGui.PopStyleColor(1);
+                            ImGui.EndChild();
                         }
-                        ImGui.SetItemTooltip("Hide/Show Background Layers");
 
-                        ImGui.PopStyleColor(1);
-
-                        ImGui.EndChild();
-                    }
-
-                    if (ImGui.IsWindowFocused())
-                    {
-                        if (selectedArea != area)
+                        if (ImGui.IsItemActive() || ImGui.IsItemFocused())
                         {
+                            activeViewport = viewport;
                             selectedArea = area;
                             mHasFilledLayers = false;
                             UpdateDRPC();
                         }
-                        activeViewport = viewport;
+
+                        var topLeft = ImGui.GetCursorScreenPos();
+                        var size = ImGui.GetContentRegionAvail();
+
+                        ImGui.SetNextItemAllowOverlap();
+                        ImGui.SetCursorScreenPos(topLeft);
+
+                        ImGui.SetNextItemAllowOverlap();
+                        viewport.Draw(ImGui.GetContentRegionAvail(), deltaSeconds, mLayersVisibility);
+
+
+                        ImGui.SetCursorScreenPos(topLeft + 16 * Vector2.One);
+
+                        float fps = (float)Math.Round(1.0f / ImGui.GetIO().DeltaTime, 0);
+
+                        if (ImGui.IsMouseHoveringRect(topLeft, topLeft + size))
+                        {
+                            var _mousePos = activeViewport.ScreenToWorld(ImGui.GetMousePos());
+                            ImGui.Text("X: " + Math.Round(_mousePos.X, 3) + "\nY: " + Math.Round(_mousePos.Y, 3) + "\nFPS: " + fps);
+                        }
+                        else
+                            ImGui.Text("X:\nY:\nFPS: " + fps);
+
+                        AreaParameters(area.mAreaParams);
+
+     
+                        ImGui.EndChild();     // End ViewportContent
+                        ImGui.EndTabItem();   // End tab
                     }
-
-                    var topLeft = ImGui.GetCursorScreenPos();
-                    var size = ImGui.GetContentRegionAvail();
-
-                    ImGui.SetNextItemAllowOverlap();
-                    ImGui.SetCursorScreenPos(topLeft);
-
-                    ImGui.SetNextItemAllowOverlap();
-                    viewport.Draw(ImGui.GetContentRegionAvail(), deltaSeconds, mLayersVisibility);
-                    if (activeViewport != viewport)
-                        ImGui.GetWindowDrawList().AddRectFilled(topLeft, topLeft + size, 0x44000000);
-
-                    //Allow button press, align to top of the screen
-                    ImGui.SetCursorScreenPos(topLeft + 16 * Vector2.One);
-
-                    float fps = 1.0f / ImGui.GetIO().DeltaTime;
-                    fps = (float)Math.Round(fps, 0);
-
-                    //Display Mouse Position  
-                    if (ImGui.IsMouseHoveringRect(topLeft, topLeft + size))
-                    {
-                        var _mousePos = activeViewport.ScreenToWorld(ImGui.GetMousePos());
-                        ImGui.Text("X: " + Math.Round(_mousePos.X, 3) + "\nY: " + Math.Round(_mousePos.Y, 3) + "\nFPS: " + fps);
-                    }
-                    else
-                        ImGui.Text("X:\nY:\nFPS: " + fps);
-
-                    //Fixed popup pos, render popup
-                    //var pos = ImGui.GetCursorScreenPos();
-                    //ImGui.SetNextWindowPos(pos, ImGuiCond.Appearing);
-                    AreaParameters(area.mAreaParams);
                 }
+
+                ImGui.EndTabBar();
             }
 
             if (lastCreatedViewports != viewports)
@@ -590,23 +576,20 @@ namespace Fushigi.ui.widgets
 
                     if (playerLocator is not null)
                     {
-                        ImGui.SetWindowFocus(area.GetName());
+                        areaToFocus = area;
                         viewports[area].FrameSelectedActor(playerLocator);
                         break;
                     }
-
                 }
 
                 lastCreatedViewports = viewports;
             }
 
-            //minimap.Draw(selectedArea, areaScenes[selectedArea].EditContext, viewports[selectedArea]);
-
             if (status)
                 ImGui.End();
         }
 
-        void UpdateDRPC()
+            void UpdateDRPC()
         {
             string sCourseID = course.GetName().Split("_")[0].Replace("Course", "");
             if (int.TryParse(sCourseID, out int courseID))
@@ -1558,7 +1541,7 @@ namespace Fushigi.ui.widgets
                     ImGui.Text("Actor Name");
                         ImGui.TableNextColumn();
                         ImGui.PushItemWidth(ImGui.GetColumnWidth() - ImGui.GetStyle().ScrollbarSize);
-                        ImGui.InputText("##Actor Hash", ref englishName, 256, ImGuiInputTextFlags.ReadOnly);
+                        ImGui.InputText("##Actor Name", ref englishName, 256, ImGuiInputTextFlags.ReadOnly);
                         ImGui.PopItemWidth();
 
                     ImGui.TableNextColumn();

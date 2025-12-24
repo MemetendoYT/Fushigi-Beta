@@ -1,4 +1,4 @@
-using Fushigi.course;
+﻿using Fushigi.course;
 using Fushigi.gl;
 using Fushigi.param;
 using Fushigi.ui.modal;
