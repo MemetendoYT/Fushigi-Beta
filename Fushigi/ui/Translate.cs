@@ -48,10 +48,9 @@ public static class Translate
     public static string translateHistoryData(string name)
     {
         string[] parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        (string first, string last, string actor) = (parts[0], parts[1], parts[2]);
-        if (parts.Length < 4)
+        if (parts.Length == 3)
         {
+            (string first, string last, string actor) = (parts[0], parts[1], parts[2]);
             string actorName = $"{first} {last} {(Translate.FetchTranslatedName(actor))}";
             return actorName;
         }
