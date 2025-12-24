@@ -30,7 +30,8 @@ namespace Fushigi.course
         Unit,
         WMap,
         WObj,
-        WorldMap
+        WorldMap,
+        Camera
     }
 
     public class CourseActor
@@ -246,6 +247,8 @@ namespace Fushigi.course
         public static CourseActorType GetActorTypeFromGyaml(string gyaml)
         {
             gyaml = gyaml.ToLower();
+            if (gyaml.EndsWith("camera"))
+                return CourseActorType.Tag;
             if (gyaml.EndsWith("tag"))
                 return CourseActorType.Tag;
             if (gyaml.Contains("area"))
@@ -340,6 +343,7 @@ namespace Fushigi.course
             { CourseActorType.WMap, ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) },
             { CourseActorType.Object, ImGui.ColorConvertFloat4ToU32(new(0.125f, 0.976f, 0.988f, 1)) },
             { CourseActorType.Sound, ImGui.ColorConvertFloat4ToU32(new(0.36f, 0.25f, 0.83f, 1)) },
+            { CourseActorType.Camera, ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) },
         };
     }
 
@@ -391,7 +395,7 @@ namespace Fushigi.course
     public class CourseActorRender //This can be overridden per actor for individual behavior
     {
 
-        public virtual void Render() 
+        public virtual void Render()
         {
         }
     }
