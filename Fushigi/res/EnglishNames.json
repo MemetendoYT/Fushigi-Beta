@@ -1,5 +1,4 @@
 {
-  "EnemyHacchin": "Stingby",
   "AdditionalCullingAabbArea": "Culling Area",
   "AirWall": "Invisible Wall",
   "AirWallRight": "Invisible Wall (Only Facing Right)",
@@ -814,3 +813,4 @@
   "WonderBlockPow": "Big POW Block (Wonder)",
   "WonderNextGoto": "Wonder Effect Warp"
 }
+
