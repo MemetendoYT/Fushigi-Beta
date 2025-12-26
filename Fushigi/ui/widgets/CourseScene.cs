@@ -2704,8 +2704,14 @@ namespace Fushigi.ui.widgets
                     if (unit.mModelType is not CourseUnit.ModelType.Bridge)
                     {
                         if (ImGui.Button("Add Wall"))
+                        {
                             editContext.AddWall(unit, new Wall(unit));
+                            editContext.DeselectAll();
+                            editContext.Select(unit);
+                        }
                         ImGui.SameLine();
+
+
                         if (ImGui.Button("Remove Wall"))
                         {
                             editContext.WithSuspendUpdateDo(() =>
@@ -2713,8 +2719,12 @@ namespace Fushigi.ui.widgets
                                 for (int i = unit.Walls.Count - 1; i >= 0; i--)
                                 {
                                     //TODO is that REALLY how we want to do this?
-                                    if (editContext.IsSelected(unit.Walls[i].ExternalRail))
+                                    if (editContext.IsSelected(unit.Walls[i].ExternalRail)) { 
                                         editContext.DeleteWall(unit, unit.Walls[i]);
+                                        editContext.DeselectAll();
+                                        editContext.Select(unit);
+                                    }
+
                                 }
                             });
                         }
@@ -2755,6 +2765,7 @@ namespace Fushigi.ui.widgets
                                     ImGui.EndPopup();
                                 }
                             }
+
                             if (wall.InternalRails.Count > 0)
                             {
                                 ImGui.Unindent();

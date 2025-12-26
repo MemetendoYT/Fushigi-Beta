@@ -776,6 +776,10 @@ namespace Fushigi.ui.widgets
             if (hoveredActor != null && ImGui.IsMouseClicked(0) && ctrlOrCtrlShift)
                 DoImmediatePaste(freshCopy: ctrlAndShift);
 
+            if (ImGui.IsWindowFocused())
+                InteractionWithFocus(modifiers);
+
+
             ImGui.PopClipRect();
         }
 
@@ -955,7 +959,8 @@ namespace Fushigi.ui.widgets
                 }
                 if (!mMultiSelecting && mEditContext.IsAnySelected<CourseActor>())
                 {
-                    var primaryActor = mEditContext.GetSelectedObjects<CourseActor>().FirstOrDefault(actor => actor.mStartingTrans == (Vector3)selectedMedianStartPos);
+                    var primaryActor = mEditContext.GetSelectedObjects<CourseActor>()
+    .FirstOrDefault(actor => actor.mStartingTrans == selectedMedianStartPos.GetValueOrDefault());
 
                     if (primaryActor != null)
                     {
