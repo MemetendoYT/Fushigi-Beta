@@ -776,9 +776,6 @@ namespace Fushigi.ui.widgets
             if (hoveredActor != null && ImGui.IsMouseClicked(0) && ctrlOrCtrlShift)
                 DoImmediatePaste(freshCopy: ctrlAndShift);
 
-            if (ImGui.IsWindowFocused())
-                InteractionWithFocus(modifiers);
-
             ImGui.PopClipRect();
         }
 
@@ -857,7 +854,7 @@ namespace Fushigi.ui.widgets
 
         }
 
-        void InteractionWithFocus(KeyboardModifier modifiers)
+        public void InteractionWithFocus(KeyboardModifier modifiers)
         {
             if (IsViewportHovered &&
                 mObjectPickingRequest.TryGetValue(out var objectPickingRequest))

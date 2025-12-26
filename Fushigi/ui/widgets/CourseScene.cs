@@ -406,6 +406,10 @@ namespace Fushigi.ui.widgets
                             areaToFocus = null;
                         }
 
+                        
+                        activeViewport = viewport;
+                        selectedArea = area;
+
                         ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
 
 
@@ -485,6 +489,17 @@ namespace Fushigi.ui.widgets
 
                             ImGui.SameLine();
 
+                            KeyboardModifier modifiers = KeyboardModifier.None;
+
+                            if (ImGui.GetIO().KeyShift)
+                                modifiers |= KeyboardModifier.Shift;
+                            if (ImGui.GetIO().KeyAlt)
+                                modifiers |= KeyboardModifier.Alt;
+                            if (OperatingSystem.IsMacOS() ? ImGui.GetIO().KeySuper : ImGui.GetIO().KeyCtrl)
+                                modifiers |= KeyboardModifier.CtrlCmd;
+
+                            viewport.InteractionWithFocus(modifiers);
+
                             bool useGameShaders = UserSettings.UseGameShaders();
                             if (ImguiHelper.DrawTextToggle(IconUtil.ICON_ADJUST, useGameShaders, icon_size))
                             {
@@ -525,14 +540,14 @@ namespace Fushigi.ui.widgets
                             ImGui.PopStyleColor(1);
                             ImGui.EndChild();
                         }
+                        var io = ImGui.GetIO();
 
-                        if (ImGui.IsItemActive() || ImGui.IsItemFocused())
-                        {
-                            activeViewport = viewport;
-                            selectedArea = area;
-                            mHasFilledLayers = false;
-                            UpdateDRPC();
-                        }
+                        bool viewportActive = ImGui.IsWindowFocused(ImGuiFocusedFlags.ChildWindows);
+
+                        if (viewportActive)
+                            io.ConfigFlags &= ~ImGuiConfigFlags.NavEnableKeyboard;
+                        else
+                            io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
 
                         var topLeft = ImGui.GetCursorScreenPos();
                         var size = ImGui.GetContentRegionAvail();
