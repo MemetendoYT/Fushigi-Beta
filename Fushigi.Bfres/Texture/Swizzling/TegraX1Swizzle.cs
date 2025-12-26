@@ -183,9 +183,6 @@ namespace Fushigi.Bfres
 
         public static uint DIV_ROUND_UP(uint n, uint d)
         {
-            if(d == 0) {
-                d = 1;
-            }
             return (n + d - 1) / d;
         }
         public static uint round_up(uint x, uint y)

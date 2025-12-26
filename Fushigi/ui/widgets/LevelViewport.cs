@@ -773,9 +773,6 @@ namespace Fushigi.ui.widgets
                 DoPaste(freshCopy: ctrlAndShift);
             }
 
-            if (hoveredActor != null && ImGui.IsMouseClicked(0) && ctrlOrCtrlShift)
-                DoImmediatePaste(freshCopy: ctrlAndShift);
-
             if (ImGui.IsWindowFocused())
                 InteractionWithFocus(modifiers);
 

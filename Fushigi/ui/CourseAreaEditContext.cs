@@ -17,7 +17,6 @@ namespace Fushigi.ui
         public void AddActor(CourseActor actor)
         {
             LogAdding<CourseActor>($"{actor.mPackName}[{actor.mHash}]");
-
             CommitAction(area.mActorHolder.mActors
                 .RevertableAdd(actor, $"{IconUtil.ICON_PLUS_CIRCLE} Add {actor.mPackName}"));
         }
