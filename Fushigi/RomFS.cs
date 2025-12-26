@@ -43,11 +43,15 @@ namespace Fushigi
         public static bool IsValidRoot(string root)
         {
             /* common paths to check */
-            return Directory.Exists(Path.Combine(root, "BancMapUnit")) && 
+            return Directory.Exists(Path.Combine(root, "BancMapUnit")) &&
                 Directory.Exists(Path.Combine(root, "Model")) &&
                 Directory.Exists(Path.Combine(root, "UI")) &&
                 Directory.Exists(Path.Combine(root, "Mals")) &&
-                Directory.Exists(Path.Combine(root, "Stage"));
+                Directory.Exists(Path.Combine(root, "Stage")) &&
+                Directory.Exists(Path.Combine(root, "GameData")) &&
+                Directory.Exists(Path.Combine(root, "Bake")) &&
+                Directory.Exists(Path.Combine(root, "CameraAnimation"));
+
         }
 
         public static Dictionary<string, WorldEntry> GetCourseEntries()

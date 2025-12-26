@@ -85,7 +85,7 @@ namespace Fushigi.ui.widgets
                 if (romfsTouched && !RomFS.IsValidRoot(romfs))
                 {
                     ImGui.TextColored(errCol,
-                        "The path you have selected is invalid. Please select a RomFS path that contains BancMapUnit, Model, and Stage.");
+                        "The path you have selected is invalid. Please select a RomFS path that contains your full Wonder dump.");
                 }
 
                 if (PathSelector.Show("Save Directory", ref mod, !string.IsNullOrEmpty(mod)))
