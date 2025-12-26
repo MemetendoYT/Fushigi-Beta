@@ -136,8 +136,11 @@ namespace Fushigi.param
         public static string[] GetEnglishActors(Dictionary<string, string> englishNames)
         {
             return sActors.Keys
-                .Select(key => englishNames.TryGetValue(key, out var eng) ? eng : key)
-                .ToArray();
+                 .ToArray() 
+                 .Select(key => englishNames.TryGetValue(key, out var eng) ? eng : key)
+                 .ToArray();
+        
+
         }
 
         public static void Load(IProgress<(string operationName, float? progress)> progress)
