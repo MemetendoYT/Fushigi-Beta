@@ -135,6 +135,10 @@ namespace Fushigi.param
 
         public static string[] GetEnglishActors(Dictionary<string, string> englishNames)
         {
+
+            if (!sIsInit)
+                return Array.Empty<string>();
+
             var keys = sActors.Keys.ToArray();
 
             return keys
