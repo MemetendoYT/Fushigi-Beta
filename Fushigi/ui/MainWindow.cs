@@ -125,35 +125,35 @@ namespace Fushigi.ui
             {
                 string romFSPath = UserSettings.GetRomFSPath();
                 UserSettings.SetRomfsReload(false);
-                    Task.Run(async () =>
+                Task.Run(async () =>
+                {
+
+                    if (mCurrentCourseName is null)
+                        return;
+
+                    if (await TryCloseCourse())
                     {
-
-                        if (mCurrentCourseName is null)
-                            return;
-
-                        if (await TryCloseCourse())
+                        await ProgressBarDialog.ShowDialogForAsyncAction(
+                        this,
+                        "Preloading Thumbnails",
+                        async (p) =>
                         {
-                           await ProgressBarDialog.ShowDialogForAsyncAction(
-                           this,
-                           "Preloading Thumbnails",
-                           async (p) =>
-                           {
-                               await mModalHost.WaitTick();
-                               await mGLTaskScheduler.Schedule(gl => RomFS.SetRoot(romFSPath, gl));
-                           });
-                            if (!ParamDB.sIsInit)
-                                await LoadParamDBWithProgressBar(this);
-                            Logger.Logger.LogMessage("MainWindow", $"Reload course {mCurrentCourseName}!");
-                            await LoadCourseWithProgressBar(mCurrentCourseName);
-                            BfresCache.Clear();
-                            UserSettings.AppendRecentCourse(mCurrentCourseName);
-                            CourseAreaEditContext.saveStatus = true;
-                        }
-                    }).ConfigureAwait(false);
-                }
-              else
+                            await mModalHost.WaitTick();
+                            await mGLTaskScheduler.Schedule(gl => RomFS.SetRoot(romFSPath, gl));
+                        });
+                        if (!ParamDB.sIsInit)
+                            await LoadParamDBWithProgressBar(this);
+                        Logger.Logger.LogMessage("MainWindow", $"Reload course {mCurrentCourseName}!");
+                        await LoadCourseWithProgressBar(mCurrentCourseName);
+                        BfresCache.Clear();
+                        UserSettings.AppendRecentCourse(mCurrentCourseName);
+                        CourseAreaEditContext.saveStatus = true;
+                    }
+                }).ConfigureAwait(false);
+            }
+            else
                 UserSettings.SetRomfsReload(false);
-              }
+        }
         public void SetWindowIcon(int id)
         {
             var icon = Icons[id];
@@ -193,7 +193,7 @@ namespace Fushigi.ui
 
             Task.Run(async () =>
             {
-                if(await TryCloseCourse())
+                if (await TryCloseCourse())
                 {
                     mSkipCloseTest = true;
                     mWindow.Close();
@@ -201,10 +201,11 @@ namespace Fushigi.ui
             }).ConfigureAwait(false); //fire and forget
         }
 
-        public static bool isRegenerate(bool Regenerate) {
+        public static bool isRegenerate(bool Regenerate)
+        {
             return Regenerate;
         }
-        
+
         //TODO put this somewhere else
         public static Task LoadParamDBWithProgressBar(IPopupModalHost modalHost)
         {
@@ -215,12 +216,12 @@ namespace Fushigi.ui
                     {
                         p.Report(("Creating task", 0));
                         await modalHost.WaitTick();
-                        var task = ParamDB.sIsInit ? 
-                        Task.Run(() => ParamDB.Reload(p)) : 
+                        var task = ParamDB.sIsInit ?
+                        Task.Run(() => ParamDB.Reload(p)) :
                         Task.Run(() => ParamDB.Load(p));
                         await task;
                     });
-                    isRegenerate(false);
+            isRegenerate(false);
         }
 
         async Task StartupRoutine()
@@ -245,7 +246,7 @@ namespace Fushigi.ui
                     Console.WriteLine("Parameter database needs to be initialized...");
 
                     await LoadParamDBWithProgressBar(this);
-                    await Task.Delay(500); 
+                    await Task.Delay(500);
                 }
 
                 string? latestCourse = UserSettings.GetLatestCourse();
@@ -253,7 +254,7 @@ namespace Fushigi.ui
                 {
                     //wait for other pending dialogs to close
                     await mModalHost.WaitTick();
-                    
+
                     await LoadCourseWithProgressBar(latestCourse);
                     shouldShowPreferenceWindow = false;
                     shouldShowWelcomeDialog = false;
@@ -269,10 +270,10 @@ namespace Fushigi.ui
                 shouldShowWelcomeDialog = false;
             }
 
-            if(shouldShowPreferenceWindow)
+            if (shouldShowPreferenceWindow)
                 mIsShowPreferenceWindow = true;
 
-             if(shouldShowWelcomeDialog)
+            if (shouldShowWelcomeDialog)
                 await WelcomeMessage.ShowDialog(this);
         }
 
@@ -405,7 +406,7 @@ namespace Fushigi.ui
                     /* end File menu */
                     ImGui.EndMenu();
                 }
-            
+
                 if (ImGui.BeginMenu("Edit"))
                 {
 
@@ -420,7 +421,7 @@ namespace Fushigi.ui
                     if (ImGui.MenuItem("Place Goal Setup"))
                         mSelectedCourseScene?.PlaceGoalSetup();
 
-                  
+
                     ImGui.Separator();
 
                     if (ImGui.MenuItem("Reset User Interface"))
@@ -467,7 +468,7 @@ namespace Fushigi.ui
 
             DrawMainMenu();
 
- 
+
             if (!string.IsNullOrEmpty(RomFS.GetRoot()) &&
                 !string.IsNullOrEmpty(UserSettings.GetModRomFSPath()))
             {
