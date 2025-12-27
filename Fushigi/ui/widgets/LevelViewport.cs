@@ -749,7 +749,6 @@ namespace Fushigi.ui.widgets
             CourseActor[] selectedActors = areaScene.EditContext.GetSelectedObjects<CourseActor>().ToArray();
 
             if (selectedActors.Length != 0 &&
-                ImGui.IsWindowHovered() &&
                 ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd)
             {
                 CopiedMedianPosition = Vector3.Zero;

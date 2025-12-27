@@ -2694,7 +2694,7 @@ namespace Fushigi.ui.widgets
                             if (ImGui.MenuItem("Add Wall"))
                                 editContext.AddWall(unit, new Wall(unit));
 
-                            if (ImGui.MenuItem($"Remove {name}"))
+                            if (ImGui.MenuItem($"Remove {name}")) ;
                                 removed_tile_units.Add(unit);
 
                             ImGui.EndPopup();
@@ -2712,7 +2712,7 @@ namespace Fushigi.ui.widgets
                         ImGui.SameLine();
 
 
-                        if (ImGui.Button("Remove Wall"))
+                        if (ImGui.Button("Remove Wall") || ImGui.IsKeyPressed(ImGuiKey.Delete))
                         {
                             editContext.WithSuspendUpdateDo(() =>
                             {
