@@ -2245,7 +2245,7 @@ namespace Fushigi.ui.widgets
                 ImGui.Text($"Selected Global Link");
                 ImGui.NewLine();
 
-                if (ImGui.Button("Delete Link"))
+                if (ImGui.Button("Delete Link") || ImGui.IsKeyPressed(ImGuiKey.Delete))
                 {
                     course.RemoveGlobalLink(mSelectedGlobalLink);
                     mSelectedGlobalLink = null;
