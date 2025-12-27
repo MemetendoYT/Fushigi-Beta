@@ -206,9 +206,14 @@ namespace Fushigi.ui.widgets
                     {
                         UserSettings.SetShaders(2);
                     }
+                    if (ImGui.Selectable(ShaderDescriptions[3]))
+                    {
+                        UserSettings.SetShaders(3);
+                    }
 
                     ImGui.EndCombo();
                 }
+                Tooltip.Show("Disable custom shaders on custom actors. NOTE: This only works on new custom actors and not model swaps");
 
                 ImGui.Unindent();
 

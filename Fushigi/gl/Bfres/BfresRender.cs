@@ -14,8 +14,7 @@ namespace Fushigi.gl.Bfres
     {
         public Dictionary<string, GLTexture> Textures = new Dictionary<string, GLTexture>();
         public Dictionary<string, BfresModel> Models = new Dictionary<string, BfresModel>();
-        public static readonly string[] VanillaActors = File.ReadAllLines("vanilla.txt");
-
+        public static string[] VanillaActors = File.ReadAllLines("res/VanillaNames.txt");
         public BfresRender(GL gl, string filePath)
         {
             Init(gl, File.OpenRead(filePath));
@@ -152,6 +151,7 @@ namespace Fushigi.gl.Bfres
 
                     if (this.Skeleton.Bones[mesh.BoneIndex].Name == "Bonecap_Model")
                         continue;
+
                     bool shaderSettings = true;
                     switch (UserSettings.GetShaders())
                     {
@@ -161,6 +161,10 @@ namespace Fushigi.gl.Bfres
 
                         case 2:
                             shaderSettings = VanillaActors.Contains(name) && !name.StartsWith("DV");
+                            break;
+
+                        case 3:
+                            shaderSettings = VanillaActors.Contains(name) && !name.StartsWith("DV") &&  !name.StartsWith("Unit");
                             break;
 
                         default:
