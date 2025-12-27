@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Fushigi.ui;
+using Newtonsoft.Json;
 
 namespace Fushigi.util
 {
@@ -29,6 +30,8 @@ namespace Fushigi.util
             public bool PrivateDRPC;
             public string Theme;
             public int ShaderSettings;
+            public bool romfsReload;
+            public bool allowRomfsReload;
 
             public Settings()
             {
@@ -46,6 +49,8 @@ namespace Fushigi.util
                 EnableTranslation = true;
                 Theme = "Theme";
                 ShaderSettings = 0;
+                romfsReload = false;
+                allowRomfsReload = true;
             }
         }
 
@@ -210,11 +215,30 @@ namespace Fushigi.util
             return AppSettings.ShaderSettings;
         }
 
+        public static void SetRomfsReload(bool status)
+        {
+            AppSettings.romfsReload = status;
+        }
+        public static bool GetRomfsReload()
+        {
+            return AppSettings.romfsReload;
+        }
         public static void SetShaders(int selectedShaderSetting)
         {
             AppSettings.ShaderSettings = selectedShaderSetting;
             Save();
         }
+        public static bool GetAllowRomfsReload()
+        {
+            return AppSettings.allowRomfsReload;
+        }
+        public static void SetAllowRomfsReload(bool value)
+        {
+            AppSettings.allowRomfsReload = value;
+            Save();
+        }
+
+
 
         public static void AppendRecentCourse(string courseName)
         {

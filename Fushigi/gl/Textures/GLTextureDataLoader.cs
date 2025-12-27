@@ -35,6 +35,7 @@ namespace Fushigi.gl
             switch (target)
             {
                 case TextureTarget.Texture2D:
+                    if(data != null && data.Length > 10 && height != 0 && width != 0)
                     LoadImage2D(gl, mipLevel, width, height, format, data);
                     break;
                 case TextureTarget.Texture2DArray:

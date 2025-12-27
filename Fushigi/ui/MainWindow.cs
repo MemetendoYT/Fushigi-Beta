@@ -1,5 +1,6 @@
 ﻿using Fushigi.course;
 using Fushigi.gl;
+using Fushigi.gl.Bfres;
 using Fushigi.param;
 using Fushigi.ui.modal;
 using Fushigi.ui.widgets;
@@ -13,6 +14,8 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Fushigi.ui
 {
@@ -116,7 +119,31 @@ namespace Fushigi.ui
             mWindow.Load += () => WindowManager.RegisterRenderDelegate(mWindow, Render);
             mWindow.Closing += Close;
         }
+        public void ReloadRomfs()
+        {
+            if (UserSettings.GetRomfsReload() && UserSettings.GetAllowRomfsReload())
+            {
+                    UserSettings.SetRomfsReload(false);
+                    Task.Run(async () =>
+                    {
+                        if (mCurrentCourseName is null)
+                            return;
 
+                        if (await TryCloseCourse())
+                        {
+                            if (!ParamDB.sIsInit)
+                                await LoadParamDBWithProgressBar(this);
+                            Logger.Logger.LogMessage("MainWindow", $"Reload course {mCurrentCourseName}!");
+                            await LoadCourseWithProgressBar(mCurrentCourseName);
+                            BfresCache.Clear();
+                            UserSettings.AppendRecentCourse(mCurrentCourseName);
+                            CourseAreaEditContext.saveStatus = true;
+                        }
+                    }).ConfigureAwait(false);
+                }
+              else
+                UserSettings.SetRomfsReload(false);
+              }
         public void SetWindowIcon(int id)
         {
             var icon = Icons[id];
@@ -239,7 +266,7 @@ namespace Fushigi.ui
                 await WelcomeMessage.ShowDialog(this);
         }
 
-        Task LoadCourseWithProgressBar(string name)
+        public Task LoadCourseWithProgressBar(string name)
         {
             return ProgressBarDialog.ShowDialogForAsyncAction(this,
                     $"Loading {name}",
@@ -412,7 +439,7 @@ namespace Fushigi.ui
 
             /* keep OpenGLs viewport size in sync with the window's size */
             gl.Viewport(mWindow.FramebufferSize);
-
+            ReloadRomfs();
             gl.ClearColor(.45f, .55f, .60f, 1f);
             gl.Clear((uint)ClearBufferMask.ColorBufferBit);
 

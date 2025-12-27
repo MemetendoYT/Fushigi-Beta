@@ -28,6 +28,11 @@ namespace Fushigi.gl.Bfres
             return task.IsCompletedSuccessfully ? task.Result : null;
         }
 
+        public static void Clear()
+        {
+            Cache.Clear();
+        }
+
         public static Task<BfresRender?> LoadAsync(GLTaskScheduler glScheduler, string projectName)
         {
             if (!Cache.ContainsKey(projectName))

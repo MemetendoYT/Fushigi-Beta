@@ -138,10 +138,10 @@ namespace Fushigi.ui.widgets
         public static uint MultiSelectBoxColor = 0x90_00_00_FF;
         public static float MultiSelectBoxThickness = 3f;
 
-        private (string message, Predicate<object?> predicate,
+        public (string message, Predicate<object?> predicate,
             TaskCompletionSource<(object? picked, KeyboardModifier modifiers)> promise)?
             mObjectPickingRequest = null;
-        private (string message, string layer, TaskCompletionSource<(Vector3? picked, KeyboardModifier modifiers)> promise)?
+        public (string message, string layer, TaskCompletionSource<(Vector3? picked, KeyboardModifier modifiers)> promise)?
             mPositionPickingRequest = null;
 
         public enum EditorMode

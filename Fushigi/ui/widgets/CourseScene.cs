@@ -40,6 +40,7 @@ namespace Fushigi.ui.widgets
         readonly UndoWindow undoWindow;
         NumVec camSave;
 
+
         (object? courseObj, FullPropertyCapture capture)
            propertyCapture = (null,
             FullPropertyCapture.Empty);
@@ -65,6 +66,7 @@ namespace Fushigi.ui.widgets
         private ImmutableList<string> filteredActors = ImmutableList<string>.Empty;
         private ImmutableList<string> englishActors = ImmutableList<string>.Empty;
         private CourseArea areaToFocus = null;
+        public static bool leftClickStartedInsideViewport = false;
 
         // this is a very bad fix bc im waiting
         // to work on jupahe's editor instead of
@@ -489,16 +491,6 @@ namespace Fushigi.ui.widgets
 
                             ImGui.SameLine();
 
-                            KeyboardModifier modifiers = KeyboardModifier.None;
-
-                            if (ImGui.GetIO().KeyShift)
-                                modifiers |= KeyboardModifier.Shift;
-                            if (ImGui.GetIO().KeyAlt)
-                                modifiers |= KeyboardModifier.Alt;
-                            if (OperatingSystem.IsMacOS() ? ImGui.GetIO().KeySuper : ImGui.GetIO().KeyCtrl)
-                                modifiers |= KeyboardModifier.CtrlCmd;
-
-                            viewport.InteractionWithFocus(modifiers);
 
                             bool useGameShaders = UserSettings.UseGameShaders();
                             if (ImguiHelper.DrawTextToggle(IconUtil.ICON_ADJUST, useGameShaders, icon_size))
@@ -549,31 +541,67 @@ namespace Fushigi.ui.widgets
                         else
                             io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
 
-                        var topLeft = ImGui.GetCursorScreenPos();
+                        // 1. Compute viewport size BEFORE drawing
                         var size = ImGui.GetContentRegionAvail();
 
-                        ImGui.SetNextItemAllowOverlap();
-                        ImGui.SetCursorScreenPos(topLeft);
+                        // 2. Draw viewport
+                        var drawPos = ImGui.GetCursorScreenPos();
+                        ImGui.SetCursorScreenPos(drawPos);
+                        viewport.Draw(size, deltaSeconds, mLayersVisibility);
 
-                        ImGui.SetNextItemAllowOverlap();
-                        viewport.Draw(ImGui.GetContentRegionAvail(), deltaSeconds, mLayersVisibility);
+                        // 3. Get the REAL viewport rect from the last item
+                        Vector2 vpMin = ImGui.GetItemRectMin();
+                        Vector2 vpMax = ImGui.GetItemRectMax();
+                        bool insideViewport = ImGui.IsMouseHoveringRect(vpMin, vpMax);
 
-
-                        ImGui.SetCursorScreenPos(topLeft + 16 * Vector2.One);
-
+                        // 4. Overlay FPS + mouse coords
+                        ImGui.SetCursorScreenPos(vpMin + new Vector2(16, 16));
                         float fps = (float)Math.Round(1.0f / ImGui.GetIO().DeltaTime, 0);
 
-                        if (ImGui.IsMouseHoveringRect(topLeft, topLeft + size))
+                        if (insideViewport)
                         {
-                            var _mousePos = activeViewport.ScreenToWorld(ImGui.GetMousePos());
-                            ImGui.Text("X: " + Math.Round(_mousePos.X, 3) + "\nY: " + Math.Round(_mousePos.Y, 3) + "\nFPS: " + fps);
+                            var worldPos = activeViewport.ScreenToWorld(ImGui.GetMousePos());
+                            ImGui.Text($"X: {Math.Round(worldPos.X, 3)}\nY: {Math.Round(worldPos.Y, 3)}\nFPS: {fps}");
                         }
                         else
-                            ImGui.Text("X:\nY:\nFPS: " + fps);
+                        {
+                            ImGui.Text($"X:\nY:\nFPS: {fps}");
+                        }
+
+                        // 5. Track where the click STARTED
+                        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                        {
+                            leftClickStartedInsideViewport = insideViewport;
+                        }
+
+                        if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+                        {
+                            leftClickStartedInsideViewport = false;
+                        }
+
+                        // 6. Detect placement mode (so tooltip still works)
+                        bool placingActor =
+                            viewport.mObjectPickingRequest != null ||
+                            viewport.mPositionPickingRequest != null;
+
+                        // 7. Compute modifiers
+                        KeyboardModifier modifiers = KeyboardModifier.None;
+                        if (ImGui.GetIO().KeyShift) modifiers |= KeyboardModifier.Shift;
+                        if (ImGui.GetIO().KeyAlt) modifiers |= KeyboardModifier.Alt;
+                        if (OperatingSystem.IsMacOS() ? ImGui.GetIO().KeySuper : ImGui.GetIO().KeyCtrl)
+                            modifiers |= KeyboardModifier.CtrlCmd;
+
+        
+                        bool viewportWindowHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.None);
+
+                        if (placingActor || (leftClickStartedInsideViewport && viewportWindowHovered))
+                        {
+                            viewport.InteractionWithFocus(modifiers);
+                        }
+
 
                         AreaParameters(area.mAreaParams);
 
-     
                         ImGui.EndChild();     // End ViewportContent
                         ImGui.EndTabItem();   // End tab
                     }
