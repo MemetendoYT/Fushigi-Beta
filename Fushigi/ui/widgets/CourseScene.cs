@@ -1372,7 +1372,7 @@ namespace Fushigi.ui.widgets
 
             ImGui.SameLine();
 
-            if (ImGui.Button("Remove Group", new Vector2(100, 22)))
+            if (ImGui.Button("Remove Group", new Vector2(100, 22)) || ImGui.IsKeyPressed(ImGuiKey.Delete))
             {
                 foreach (var group in areaGroups)
                 {
