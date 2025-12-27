@@ -342,7 +342,7 @@ namespace Fushigi.ui
 
                     ImGui.Separator();
 
-                    if (ImGui.MenuItem("Blank out baked collision [EXPERIMENTAL]") && mSelectedCourseScene != null)
+                    if (ImGui.MenuItem("Blank out baked collisions") && mSelectedCourseScene != null)
                     {
                         string directory = Path.Combine(UserSettings.GetModRomFSPath(), "Phive", "StaticCompoundBody");
 
