@@ -123,14 +123,24 @@ namespace Fushigi.ui
         {
             if (UserSettings.GetRomfsReload() && UserSettings.GetAllowRomfsReload())
             {
-                    UserSettings.SetRomfsReload(false);
+                string romFSPath = UserSettings.GetRomFSPath();
+                UserSettings.SetRomfsReload(false);
                     Task.Run(async () =>
                     {
+
                         if (mCurrentCourseName is null)
                             return;
 
                         if (await TryCloseCourse())
                         {
+                           await ProgressBarDialog.ShowDialogForAsyncAction(
+                           this,
+                           "Preloading Thumbnails",
+                           async (p) =>
+                           {
+                               await mModalHost.WaitTick();
+                               await mGLTaskScheduler.Schedule(gl => RomFS.SetRoot(romFSPath, gl));
+                           });
                             if (!ParamDB.sIsInit)
                                 await LoadParamDBWithProgressBar(this);
                             Logger.Logger.LogMessage("MainWindow", $"Reload course {mCurrentCourseName}!");
@@ -421,7 +431,7 @@ namespace Fushigi.ui
                         _ = LoadParamDBWithProgressBar(this);
                     }
 
-                    if (ImGui.MenuItem("Preferences"))
+                    if (ImGui.MenuItem("Settings"))
                         mIsShowPreferenceWindow = true;
 
                     /* end Edit menu */

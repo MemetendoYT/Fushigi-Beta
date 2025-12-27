@@ -2649,8 +2649,12 @@ namespace Fushigi.ui.widgets
 
                         railObj.Visible = unit.Visible;
                         foreach (var rail in wall.InternalRails)
+                        {
                             GetRailSceneObj(rail).Visible = unit.Visible;
-                    }
+                          }
+                        }
+                    editContext.DeselectAll();
+                    editContext.Select(unit);
                 }
                 ImGui.SameLine();
 
@@ -2720,10 +2724,18 @@ namespace Fushigi.ui.widgets
                         if (ImGui.BeginPopupContextWindow("RailMenu", ImGuiPopupFlags.MouseButtonRight))
                         {
                             if (ImGui.MenuItem("Add Wall"))
+                            {
                                 editContext.AddWall(unit, new Wall(unit));
+                                editContext.DeselectAll();
+                                editContext.Select(unit);
+                            }
 
-                            if (ImGui.MenuItem($"Remove {name}")) ;
+                            if (ImGui.MenuItem($"Remove {name}"))
+                            {
                                 removed_tile_units.Add(unit);
+                                editContext.DeselectAll();
+                                editContext.Select(unit);
+                            }
 
                             ImGui.EndPopup();
                         }
@@ -2782,15 +2794,23 @@ namespace Fushigi.ui.widgets
                                     ImGui.Separator();
 
                                     if (ImGui.MenuItem("Add Internal Rail"))
-                                        editContext.AddInternalRail(wall, new BGUnitRail(unit){IsInternal = true});
+                                    {
+                                        editContext.AddInternalRail(wall, new BGUnitRail(unit) { IsInternal = true });
+                                        editContext.DeselectAll();
+                                        editContext.Select(unit);
+                                    }
 
-                                    if (ImGui.MenuItem("Reverse Rail Points"))
+                                        if (ImGui.MenuItem("Reverse Rail Points"))
                                         editContext.ReverseBgUnitRailPoints(wall);
 
                                     if (ImGui.MenuItem("Remove Rail"))
+                                    {
                                         editContext.DeleteWall(unit, wall);
+                                        editContext.DeselectAll();
+                                        editContext.Select(unit);
+                                    }
 
-                                    ImGui.EndPopup();
+                                        ImGui.EndPopup();
                                 }
                             }
 
