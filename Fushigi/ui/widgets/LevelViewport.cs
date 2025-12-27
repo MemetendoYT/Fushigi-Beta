@@ -529,8 +529,8 @@ namespace Fushigi.ui.widgets
                 _ => actScale
             };
             return result;
-        }
-
+        } dgfvokdsgois
+         
         public Vector2 ExpandScaleTypes(string type, Vector2 scale)
         {
             var result = type switch
