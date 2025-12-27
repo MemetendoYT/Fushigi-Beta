@@ -511,7 +511,7 @@ namespace Fushigi.ui.widgets
                     }
                 }
                 else
-                    model.Render(gl, render, mat, this.Camera);
+                    model.Render(gl, render, mat, this.Camera, actor.mPackName);
 
             }
         }

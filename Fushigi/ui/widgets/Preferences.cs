@@ -13,7 +13,13 @@ namespace Fushigi.ui.widgets
         static bool romfsTouched = false;
         static bool modRomfsTouched = false;
         static string curTheme = null;
-
+        private static readonly string[] ShaderDescriptions =
+            {
+            "All Actors",
+            "Vanilla Actors Only",
+            "Vanilla Actors Except DV",
+            "Vanilla Actors Except DV and Tiles"
+            };
         public static void Draw(ref bool continueDisplay, GLTaskScheduler glTaskScheduler,
             IPopupModalHost modalHost)
         {
@@ -183,6 +189,26 @@ namespace Fushigi.ui.widgets
                 }
 
                 Tooltip.Show("Change the UI theme.");
+
+                int shaderSettings = UserSettings.GetShaders();
+
+                if (ImGui.BeginCombo("Shader Settings [EXPERIMENTAL]", ShaderDescriptions[shaderSettings]))
+                {
+                    if (ImGui.Selectable(ShaderDescriptions[0]))
+                    {
+                        UserSettings.SetShaders(0);
+                    }
+                    if (ImGui.Selectable(ShaderDescriptions[1]))
+                    {
+                        UserSettings.SetShaders(1);
+                    }
+                    if (ImGui.Selectable(ShaderDescriptions[2]))
+                    {
+                        UserSettings.SetShaders(2);
+                    }
+
+                    ImGui.EndCombo();
+                }
 
                 ImGui.Unindent();
 

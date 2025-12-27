@@ -10,8 +10,11 @@ namespace Fushigi.Bfres
     {
         public static byte[] GetSurface(BntxTexture texture, int array_level, int mip_level, int target = 1)
         {
-            //Block and bpp format info
-            uint bpp = GetBytesPerPixel(texture.Format);
+            try
+            {
+
+                //Block and bpp format info
+                uint bpp = GetBytesPerPixel(texture.Format);
             uint blkWidth = GetBlockWidth(texture.Format);
             uint blkHeight = GetBlockHeight(texture.Format);
             //Tile mode
@@ -32,6 +35,13 @@ namespace Fushigi.Bfres
                 height,
                 1, blkWidth, blkHeight, 1, target, bpp, tileMode,
                 block_height, mip_data.ToArray());
+
+            }
+            catch
+            {
+                return new byte[] { 0, 0, 0, 0 };
+            }
+
         }
 
         static uint CalculateMipOffset(int level, uint alignment, uint width, uint height, uint blkWidth, uint blkHeight, uint bpp, int blockHeightLog2)

@@ -28,6 +28,7 @@ namespace Fushigi.util
             public bool EnableTranslation;
             public bool PrivateDRPC;
             public string Theme;
+            public int ShaderSettings;
 
             public Settings()
             {
@@ -44,6 +45,7 @@ namespace Fushigi.util
                 EnableHalfTile = false;
                 EnableTranslation = true;
                 Theme = "Theme";
+                ShaderSettings = 0;
             }
         }
 
@@ -201,6 +203,16 @@ namespace Fushigi.util
         public static void SetTheme(string theme)
         {
             AppSettings.Theme = theme;
+            Save();
+        }
+        public static int GetShaders()
+        {
+            return AppSettings.ShaderSettings;
+        }
+
+        public static void SetShaders(int selectedShaderSetting)
+        {
+            AppSettings.ShaderSettings = selectedShaderSetting;
             Save();
         }
 

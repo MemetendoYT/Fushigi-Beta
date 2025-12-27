@@ -48,6 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
+	<None Update="res\VanillaNames.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</None>
     <None Update="res\AreaParam.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

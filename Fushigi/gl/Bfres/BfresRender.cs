@@ -14,6 +14,7 @@ namespace Fushigi.gl.Bfres
     {
         public Dictionary<string, GLTexture> Textures = new Dictionary<string, GLTexture>();
         public Dictionary<string, BfresModel> Models = new Dictionary<string, BfresModel>();
+        public static readonly string[] VanillaActors = File.ReadAllLines("vanilla.txt");
 
         public BfresRender(GL gl, string filePath)
         {
@@ -124,6 +125,55 @@ namespace Fushigi.gl.Bfres
                 }
             }
 
+            internal void Render(GL gl, BfresRender render, Matrix4x4 transform, Camera camera, string name)
+            {
+                foreach (var mesh in Meshes)
+                {
+                    var m = mesh.LodMeshes[0].BoundingBox;
+                    m.Transform(transform);
+                    BoundingBox.Include(mesh.LodMeshes[0].BoundingBox);
+                }
+
+                if (!IsVisible || !camera.InFrustum(BoundingBox))
+                    return;
+
+                UpdateSkeleton(transform);
+
+                foreach (var mesh in Meshes)
+                {
+                    if (!mesh.IsVisible)
+                        continue;
+
+                    //Cull in camera frustum
+                    mesh.LodMeshes[0].BoundingBox.Transform(transform);
+
+                    if (!camera.InFrustum(mesh.LodMeshes[0].BoundingBox, mesh.LodMeshes[0].BoundingRadius))
+                        continue;
+
+                    if (this.Skeleton.Bones[mesh.BoneIndex].Name == "Bonecap_Model")
+                        continue;
+                    bool shaderSettings = true;
+                    switch (UserSettings.GetShaders())
+                    {
+                        case 1:
+                            shaderSettings = VanillaActors.Contains(name);
+                            break;
+
+                        case 2:
+                            shaderSettings = VanillaActors.Contains(name) && !name.StartsWith("DV");
+                            break;
+
+                        default:
+                            shaderSettings = true;
+                            break;
+                    }
+
+                    if (UserSettings.UseGameShaders() && shaderSettings)
+                        mesh.RenderGameShaders(gl, render, this, transform, camera);
+                    else
+                        mesh.Render(gl, render, this, transform, camera);
+                }
+            }
             //Computes the skeleton matrix block
             public void UpdateSkeleton(Matrix4x4 root)
             {
