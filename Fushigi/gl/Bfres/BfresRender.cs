@@ -40,7 +40,7 @@ namespace Fushigi.gl.Bfres
             foreach (var model in file.Models.Values)
                 Models.Add(model.Name, new BfresModel(gl, model));
             foreach (var texture in file.TryGetTextureBinary().Textures)
-               Textures.Add(texture.Key, new BfresTextureRender(gl, texture.Value));
+                Textures.Add(texture.Key, new BfresTextureRender(gl, texture.Value));
         }
 
         internal void Render(GL gl, Matrix4x4 transform, Camera camera)
@@ -137,7 +137,7 @@ namespace Fushigi.gl.Bfres
                     for (int i = 0; i < Skeleton.NumSmoothMatrices; i++)
                     {
                         var bone_index = Skeleton.MatrixToBoneList[i];
-                        var value = (Skeleton.Bones[bone_index].InverseMatrix * 
+                        var value = (Skeleton.Bones[bone_index].InverseMatrix *
                             Skeleton.Bones[bone_index].WorldMatrix) * root;
 
                         writer.Write(value.Column0());
@@ -432,7 +432,7 @@ namespace Fushigi.gl.Bfres
                 { BfresAttribFormat.Format_16_16_UInt, new FormatInfo(2, false, VertexAttribIType.UnsignedShort) },
                 { BfresAttribFormat.Format_16_UInt, new FormatInfo(1, false, VertexAttribIType.UnsignedShort) },
             };
-           
+
 
             class FormatInfo
             {

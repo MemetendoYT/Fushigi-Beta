@@ -530,7 +530,7 @@ namespace Fushigi.ui.widgets
             };
             return result;
         }
-         
+
         public Vector2 ExpandScaleTypes(string type, Vector2 scale)
         {
             var result = type switch
@@ -730,7 +730,7 @@ namespace Fushigi.ui.widgets
             if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
             { //prevents tooltip flickering
                 actorName = hoveredActor.mPackName;
-                if(UserSettings.GetEnableTranslation())
+                if (UserSettings.GetEnableTranslation())
                     actorName = Translate.FetchTranslatedName(actorName);
 
                 ImGui.SetTooltip($"{actorName}\n{hoveredActor.mName}");
@@ -804,7 +804,8 @@ namespace Fushigi.ui.widgets
             if (CopiedObjects is not CourseActor[] actors) return;
             string msg;
             string actorName;
-            if (actors.Length == 1) {
+            if (actors.Length == 1)
+            {
                 actorName = actors[0].mPackName;
                 msg = $"Placing actor {actorName}";
             }
@@ -816,7 +817,7 @@ namespace Fushigi.ui.widgets
             do
             {
                 (_pos, modifier) = await PickPosition(msg, actors[0].mLayer, tokenSource);
-                    if (_pos == null) return;
+                if (_pos == null) return;
 
                 var batchAction = mEditContext.BeginBatchAction();
                 for (var i = 0; i < actors.Length; i++)
@@ -835,22 +836,22 @@ namespace Fushigi.ui.widgets
                     // }
                     // else
                     // {
-                        newActor.mTranslation = (Vector3)_pos + (actor.mTranslation-CopiedMedianPosition);
-                        newActor.mTranslation.Z = actor.mTranslation.Z;
-                        var n = 0;
-                        do
-                        {
-                            n++;
-                        } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{n}"));
-                        newActor.mName = $"{actor.mPackName}"+(n == 0 ? "":n);
+                    newActor.mTranslation = (Vector3)_pos + (actor.mTranslation - CopiedMedianPosition);
+                    newActor.mTranslation.Z = actor.mTranslation.Z;
+                    var n = 0;
+                    do
+                    {
+                        n++;
+                    } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{n}"));
+                    newActor.mName = $"{actor.mPackName}" + (n == 0 ? "" : n);
                     //}
 
                     mEditContext.AddActor(newActor);
                 }
-                batchAction.Commit($"{IconUtil.ICON_PLUS_CIRCLE} Paste {actors.Length} Actor{(actors.Length > 1 ? "s":"")}");
+                batchAction.Commit($"{IconUtil.ICON_PLUS_CIRCLE} Paste {actors.Length} Actor{(actors.Length > 1 ? "s" : "")}");
 
                 mEditContext.Select(actors);
-            }while(modifier == KeyboardModifier.Shift);
+            } while (modifier == KeyboardModifier.Shift);
 
         }
 
@@ -1324,17 +1325,19 @@ namespace Fushigi.ui.widgets
 
                         var index = rail.mPoints.IndexOf(selectedPoint);
                         var newPoint = new CourseRail.CourseRailPoint(selectedPoint);
-                        if (UserSettings.GetEnableHalfTile()) {
+                        if (UserSettings.GetEnableHalfTile())
+                        {
                             newPoint.mTranslate = new(
                                 MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2,
                                 MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2,
                                 selectedPoint.mTranslate.Z);
                         }
-                        else {
-                        newPoint.mTranslate = new(
-                            MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
-                            MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
-                            selectedPoint.mTranslate.Z);
+                        else
+                        {
+                            newPoint.mTranslate = new(
+                                MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
+                                MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
+                                selectedPoint.mTranslate.Z);
                         }
 
                         newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
@@ -1353,17 +1356,19 @@ namespace Fushigi.ui.widgets
                         Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
 
                         var newPoint = new CourseRail.CourseRailPoint(rail.mType);
-                        if (UserSettings.GetEnableHalfTile()) {
+                        if (UserSettings.GetEnableHalfTile())
+                        {
                             newPoint.mTranslate = new(
                             MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2,
                             MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2,
                             0);
                         }
-                        else {
-                        newPoint.mTranslate = new(
-                            MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
-                            MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
-                            0);
+                        else
+                        {
+                            newPoint.mTranslate = new(
+                                MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
+                                MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
+                                0);
                         }
 
                         newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
@@ -1492,7 +1497,7 @@ namespace Fushigi.ui.widgets
                         }
                         else
                         {
-                            min.X = - Math.Abs(min.X);
+                            min.X = -Math.Abs(min.X);
                             max.X = Math.Abs(max.X);
                         }
                     }
