@@ -68,11 +68,12 @@ namespace Fushigi.ui.widgets
         private CourseArea areaToFocus = null;
         public static bool leftClickStartedInsideViewport = false;
         public static bool insideViewport = false;
-
+        public static CourseArea currentArea;
         // this is a very bad fix bc im waiting
         // to work on jupahe's editor instead of
         // fushigi.
         public static bool HideWalls;
+        public static bool reloadUnit = false;
 
         string mActorSearchText = "";
 
@@ -339,9 +340,31 @@ namespace Fushigi.ui.widgets
                 return false;
         }
         double backupTime = 0;
+        public static bool blankLevel = false;
 
+        public void overwriteLevel(CourseArea currentArea)
+        {
+            CourseArea blank = new CourseArea("BlankStage");
+            currentArea.mAreaParams = blank.mAreaParams;
+            currentArea.mInitEnvPalette = blank.mInitEnvPalette;
+            currentArea.mActorHolder = blank.mActorHolder;
+            currentArea.mRailHolder = blank.mRailHolder;
+            currentArea.mUnitHolder = blank.mUnitHolder;
+            currentArea.mLinkHolder = blank.mLinkHolder;
+            currentArea.mGroupsHolder = blank.mGroupsHolder;
+            currentArea.mRailLinksHolder = blank.mRailLinksHolder;
+            currentArea.mRootHash = blank.mRootHash;
+            reloadUnit = true;
+        }
         public void DrawUI(GL gl, double deltaSeconds)
         {
+            if(blankLevel)
+            {
+                blankLevel = false;
+                overwriteLevel(selectedArea);
+
+            }
+
             UndoHistoryPanel();
 
             ActorsPanel();
@@ -406,6 +429,7 @@ namespace Fushigi.ui.widgets
                             ImGui.SetItemDefaultFocus();
                             activeViewport = viewport;  
                             selectedArea = area;
+                            currentArea = selectedArea;
                             areaToFocus = null;
                         }
 
@@ -2711,7 +2735,12 @@ namespace Fushigi.ui.widgets
 
                         ImGui.Unindent();
                     }
-
+                    if(reloadUnit)
+                    {
+                        editContext.DeselectAll();
+                        editContext.Select(unit);
+                        reloadUnit = false; 
+                    }
                     if (editContext.IsSelected(unit))
                     {
                         if (ImGui.BeginPopupContextWindow("RailMenu", ImGuiPopupFlags.MouseButtonRight))

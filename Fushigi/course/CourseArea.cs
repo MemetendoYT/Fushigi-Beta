@@ -19,15 +19,27 @@ namespace Fushigi.course
 
         public CourseArea(string areaName) {
             mAreaName = areaName;
-            Load();
+            if(areaName == "BlankStage")
+                Load(true);
+            else
+                Load(false);
         }
 
-        public void Load()
+
+        public void Load(bool loadTemplate)
         {
-            string areaParamPath = FileUtil.FindContentPath(
+            string areaParamPath = "";
+            if (!loadTemplate)
+            {
+                areaParamPath = FileUtil.FindContentPath(
                 Path.Combine("Stage", "AreaParam", $"{mAreaName}.game__stage__AreaParam.bgyml")
                 );
-            mAreaParams = new AreaParam(new Byml.Byml(new MemoryStream(File.ReadAllBytes(areaParamPath))));
+            }
+            else
+            {
+                areaParamPath = "res/template.game__stage__AreaParam.bgyml";
+            }
+                mAreaParams = new AreaParam(new Byml.Byml(new MemoryStream(File.ReadAllBytes(areaParamPath))));
 
             //Load env settings
             if (mAreaParams.EnvPaletteSetting != null && mAreaParams.EnvPaletteSetting.InitPaletteBaseName != null)
@@ -35,10 +47,16 @@ namespace Fushigi.course
             else
                 mInitEnvPalette = new EnvPalette();
 
-
-            string levelPath = FileUtil.FindContentPath(
-                Path.Combine("BancMapUnit", $"{mAreaName}.bcett.byml.zs")
-                );
+            string levelPath = "";
+            if (!loadTemplate)
+            {
+                levelPath = FileUtil.FindContentPath(
+                    Path.Combine("BancMapUnit", $"{mAreaName}.bcett.byml.zs")
+                    );
+            }
+            else {                 
+                levelPath = "res/template.bcett.byml.zs";
+                 }
             byte[] levelBytes = FileUtil.DecompressFile(levelPath);
             var byml = new Byml.Byml(new MemoryStream(levelBytes));
 

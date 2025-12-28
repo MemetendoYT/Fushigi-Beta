@@ -16,7 +16,6 @@ namespace Fushigi.course
             mAreas = [];
             LoadFromRomFS();
         }
-
         public string GetName()
         {
             return mCourseName;
