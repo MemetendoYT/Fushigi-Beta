@@ -67,6 +67,7 @@ namespace Fushigi.ui.widgets
         private ImmutableList<string> englishActors = ImmutableList<string>.Empty;
         private CourseArea areaToFocus = null;
         public static bool leftClickStartedInsideViewport = false;
+        public static bool insideViewport = false;
 
         // this is a very bad fix bc im waiting
         // to work on jupahe's editor instead of
@@ -549,8 +550,8 @@ namespace Fushigi.ui.widgets
 
                         Vector2 vpMin = ImGui.GetItemRectMin();
                         Vector2 vpMax = ImGui.GetItemRectMax();
-                        bool insideViewport = ImGui.IsMouseHoveringRect(vpMin, vpMax);
-                        LevelViewport.InsideViewport = insideViewport;
+                        insideViewport = ImGui.IsMouseHoveringRect(vpMin, vpMax);
+
                         ImGui.SetCursorScreenPos(vpMin + new Vector2(16, 16));
                         float fps = (float)Math.Round(1.0f / ImGui.GetIO().DeltaTime, 0);
 
@@ -578,7 +579,6 @@ namespace Fushigi.ui.widgets
                             viewport.mObjectPickingRequest != null ||
                             viewport.mPositionPickingRequest != null;
 
-
                         KeyboardModifier modifiers = KeyboardModifier.None;
                         if (ImGui.GetIO().KeyShift) modifiers |= KeyboardModifier.Shift;
                         if (ImGui.GetIO().KeyAlt) modifiers |= KeyboardModifier.Alt;
@@ -592,7 +592,6 @@ namespace Fushigi.ui.widgets
                         {
                             viewport.InteractionWithFocus(modifiers);
                         }
-
 
                         AreaParameters(area.mAreaParams);
 

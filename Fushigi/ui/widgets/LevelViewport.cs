@@ -1,4 +1,4 @@
-using Fasterflect;
+﻿using Fasterflect;
 using Fushigi.actor_pack.components;
 using Fushigi.Bfres;
 using Fushigi.Byml.Serializer;
@@ -102,7 +102,6 @@ namespace Fushigi.ui.widgets
         public bool PlayAnimations = false;
         public bool ShowGrid = true;
         public bool ShowBackground = true;
-        public static bool InsideViewport;
 
         Vector2 mSize = Vector2.Zero;
 
@@ -906,7 +905,7 @@ namespace Fushigi.ui.widgets
             if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !isPanGesture)
             {
                 if (mMultiSelectStartPos != null &&
-                    !CourseScene.insideViewport && mEditorMode == EditorMode.Actors &&
+                    !ImGui.IsWindowHovered() && mEditorMode == EditorMode.Actors &&
                     !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>()
                     || mEditContext.IsAnySelected<CourseUnit>() || mEditContext.IsAnySelected<BGUnitRail>()
                     || mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
@@ -1061,54 +1060,61 @@ namespace Fushigi.ui.widgets
             }
 
 
-            if (ImGui.IsItemClicked())
+            // --- CLICK BEGIN -------------------------------------------------------------
+
+            // Use raw mouse click instead of IsItemClicked() so viewport clicks register
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
-                /* if the user clicked somewhere and it was not hovered over an element, 
-                    * we clear our selected actors array */
+                // If nothing hovered → clear selection (unless shift)
                 if (mHoveredObject == null)
                 {
                     if (!ImGui.IsKeyDown(ImGuiKey.LeftShift))
                         mEditContext.DeselectAll();
                 }
-                else if (mHoveredObject is IViewportSelectable obj)
+                else if (mHoveredObject is IViewportSelectable selectable)
                 {
                     prevSelectVersion = mEditContext.SelectionVersion;
-                    obj.OnSelect(mEditContext);
+                    selectable.OnSelect(mEditContext);
                 }
                 else
                 {
-                    //TODO remove this once all course objects have IViewportSelectable SceneObjs
+                    // Legacy fallback
                     prevSelectVersion = mEditContext.SelectionVersion;
                     IViewportSelectable.DefaultSelect(mEditContext, mHoveredObject);
-                    if (mHoveredObject is CourseActor act)
-                        selectedMedianStartPos = act.mStartingTrans;
-                    else if (mHoveredObject is CourseRail.CourseRailPoint p)
+
+                    switch (mHoveredObject)
                     {
-                        selectedMedianStartPos = p.mStartingTrans;
-                    }
-                    else if (mHoveredObject is CourseRail.CourseRailPointControl c)
-                    {
-                        selectedMedianStartPos = c.mStartingTrans;
+                        case CourseActor act:
+                            selectedMedianStartPos = act.mStartingTrans;
+                            break;
+
+                        case CourseRail.CourseRailPoint p:
+                            selectedMedianStartPos = p.mStartingTrans;
+                            break;
+
+                        case CourseRail.CourseRailPointControl c:
+                            selectedMedianStartPos = c.mStartingTrans;
+                            break;
                     }
                 }
             }
 
-            if (ImGui.IsMouseDown(0))
+            if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
             {
-                if (!ImGui.IsMouseDragging(0))
+                if (!ImGui.IsMouseDragging(ImGuiMouseButton.Left))
                     mMultiSelectStartPos = ImGui.GetMousePos();
+
                 if (!isPanGesture)
-                    dragRelease = ImGui.IsMouseDragging(0);
+                    dragRelease = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
             }
 
-            if (ImGui.IsMouseReleased(0))
+
+            if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
             {
                 mMultiSelecting = false;
                 mMultiSelectEnded = true;
 
-                if (mHoveredObject != null &&
-                mHoveredObject is CourseActor &&
-                !dragRelease)
+                if (mHoveredObject is CourseActor && !dragRelease)
                 {
                     if (ImGui.IsKeyDown(ImGuiKey.LeftShift) &&
                         prevSelectVersion == mEditContext.SelectionVersion)
@@ -1121,29 +1127,33 @@ namespace Fushigi.ui.widgets
                         IViewportSelectable.DefaultSelect(mEditContext, mHoveredObject);
                     }
                 }
+                var movedActors = mEditContext
+                    .GetSelectedObjects<CourseActor>()
+                    .Where(x => x.mTranslation != x.mStartingTrans)
+                    .ToList();
 
-                var actors = mEditContext.GetSelectedObjects<CourseActor>().Where(x => x.mTranslation != x.mStartingTrans) ?? [];
-
-                if (actors.Any())
+                if (movedActors.Count > 0)
                 {
-                    if (mEditContext.IsSingleObjectSelected(out CourseActor? act))
+                    if (mEditContext.IsSingleObjectSelected(out CourseActor? single))
                     {
                         mEditContext.CommitAction(new PropertyFieldsSetUndo(
-                            act,
-                            [("mTranslation", act.GetFieldValue("mStartingTrans"))],
-                            $"{IconUtil.ICON_ARROWS_ALT} Move {string.Join(", ", act.mPackName)}"));
+                            single,
+                            [("mTranslation", single.GetFieldValue("mStartingTrans"))],
+                            $"{IconUtil.ICON_ARROWS_ALT} Move {string.Join(", ", single.mPackName)}"));
                     }
                     else
                     {
-                        var batchAction = mEditContext.BeginBatchAction();
-                        foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>().Where(x => x.mTranslation != x.mStartingTrans))
+                        var batch = mEditContext.BeginBatchAction();
+
+                        foreach (var actor in movedActors)
                         {
                             mEditContext.CommitAction(new PropertyFieldsSetUndo(
                                 actor,
                                 [("mTranslation", actor.GetFieldValue("mStartingTrans"))],
-                                $"{IconUtil.ICON_ARROWS_ALT} Move {string.Join(", ", actor.mName)}"));
+                                $"{IconUtil.ICON_ARROWS_ALT} Move {actor.mName}"));
                         }
-                        batchAction.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {string.Join(", ", actors.Count())} Actors");
+
+                        batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {movedActors.Count} Actors");
                     }
                 }
 
