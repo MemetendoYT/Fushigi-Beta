@@ -100,6 +100,7 @@ namespace Fushigi.ui.widgets
             { "Music Track 3", "MusicTrack03" },
             { "Music Track 4", "MusicTrack04" },
             { "Music Track 5", "MusicTrack05" },
+            {"Wonder Flower: Default", "Delete" },
             { "Wonder Flower: Course Mania", "Wonder08" },
             { "Wonder Flower: Singing Piranha Plants", "Wonder05" },
             { "Wonder Flower: Super Star", "Wonder18" },
@@ -411,11 +412,18 @@ namespace Fushigi.ui.widgets
                     // WonderBgmType
                     ImGui.Text("Wonder Background Track");
                     ImGui.TableNextColumn();
-                    var wonderBgmType = areaParam.WonderBgmType is null ? "" : areaParam.WonderBgmType;
+                    var wonderBgmType = areaParam.WonderBgmType is null ? "Delete" : areaParam.WonderBgmType;
                     int index = BgmTypes.Values.ToList().IndexOf(wonderBgmType);
+                    string bgm = "";
                     if (index < 0) index = 0;
                     if (ImGui.Combo("##WonderBgmType", ref index, BgmTypes.Keys.ToArray(), BgmTypes.Count(), 10))
-                        areaParam.WonderBgmType = BgmTypes.Values.ToArray()[index];
+                    {
+                        bgm = BgmTypes.Values.ToArray()[index];
+                        if (bgm == "Delete")
+                            areaParam.WonderBgmType = null;
+                        else
+                            areaParam.WonderBgmType = BgmTypes.Values.ToArray()[index];
+                    }
 
                     ImGui.TableNextColumn();
 

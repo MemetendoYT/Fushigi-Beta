@@ -1,4 +1,5 @@
-﻿using Fushigi.ui;
+﻿using Fushigi.gl.Bfres;
+using Fushigi.ui;
 using Newtonsoft.Json;
 
 namespace Fushigi.util
@@ -98,6 +99,8 @@ namespace Fushigi.util
         {
             AppSettings.RenderCustomModels = value;
             Save();
+            BfresCache.Clear();
+
         }
 
         public static void SetAstcTextureCache(bool value)
