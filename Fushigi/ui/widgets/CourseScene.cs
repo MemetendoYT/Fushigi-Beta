@@ -541,20 +541,16 @@ namespace Fushigi.ui.widgets
                         else
                             io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
 
-                        // 1. Compute viewport size BEFORE drawing
                         var size = ImGui.GetContentRegionAvail();
 
-                        // 2. Draw viewport
                         var drawPos = ImGui.GetCursorScreenPos();
                         ImGui.SetCursorScreenPos(drawPos);
                         viewport.Draw(size, deltaSeconds, mLayersVisibility);
 
-                        // 3. Get the REAL viewport rect from the last item
                         Vector2 vpMin = ImGui.GetItemRectMin();
                         Vector2 vpMax = ImGui.GetItemRectMax();
                         bool insideViewport = ImGui.IsMouseHoveringRect(vpMin, vpMax);
-
-                        // 4. Overlay FPS + mouse coords
+                        LevelViewport.InsideViewport = insideViewport;
                         ImGui.SetCursorScreenPos(vpMin + new Vector2(16, 16));
                         float fps = (float)Math.Round(1.0f / ImGui.GetIO().DeltaTime, 0);
 
@@ -568,7 +564,6 @@ namespace Fushigi.ui.widgets
                             ImGui.Text($"X:\nY:\nFPS: {fps}");
                         }
 
-                        // 5. Track where the click STARTED
                         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                         {
                             leftClickStartedInsideViewport = insideViewport;
@@ -579,12 +574,11 @@ namespace Fushigi.ui.widgets
                             leftClickStartedInsideViewport = false;
                         }
 
-                        // 6. Detect placement mode (so tooltip still works)
                         bool placingActor =
                             viewport.mObjectPickingRequest != null ||
                             viewport.mPositionPickingRequest != null;
 
-                        // 7. Compute modifiers
+
                         KeyboardModifier modifiers = KeyboardModifier.None;
                         if (ImGui.GetIO().KeyShift) modifiers |= KeyboardModifier.Shift;
                         if (ImGui.GetIO().KeyAlt) modifiers |= KeyboardModifier.Alt;

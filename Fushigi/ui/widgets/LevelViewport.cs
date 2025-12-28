@@ -102,6 +102,7 @@ namespace Fushigi.ui.widgets
         public bool PlayAnimations = false;
         public bool ShowGrid = true;
         public bool ShowBackground = true;
+        public static bool InsideViewport;
 
         Vector2 mSize = Vector2.Zero;
 
@@ -905,7 +906,7 @@ namespace Fushigi.ui.widgets
             if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !isPanGesture)
             {
                 if (mMultiSelectStartPos != null &&
-                    !ImGui.IsWindowHovered() && mEditorMode == EditorMode.Actors &&
+                    !CourseScene.insideViewport && mEditorMode == EditorMode.Actors &&
                     !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>()
                     || mEditContext.IsAnySelected<CourseUnit>() || mEditContext.IsAnySelected<BGUnitRail>()
                     || mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
