@@ -815,13 +815,10 @@ namespace Fushigi.ui.widgets
                             new MemoryStream(File.ReadAllBytes(templateParamFilePath))
                         );
 
-                        // Brand‑new root (this avoids ALL read‑only issues)
                         BymlHashTable stageParamRoot = new();
 
-                        // Build a brand‑new Components hash table
                         BymlHashTable components = new();
 
-                        // Build your three strings
                         string AreaParamPath =
                             $"Work/Stage/AreaParam/{area.GetName()}.game__stage__AreaParam.gyml";
                         string Mumap =
@@ -829,15 +826,14 @@ namespace Fushigi.ui.widgets
                         string StaticCompoundBody =
                             $"Work/Phive/StaticCompoundBody/{area.GetName()}.phive__StaticCompoundBodySourceParam.gyml";
 
-                        // Insert entries into the Components hash table
+                     
                         components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(AreaParamPath), "AreaParam");
                         components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(Mumap), "Mumap");
                         components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(StaticCompoundBody), "StaticCompoundBodySourceParam");
 
-                        // Insert Components into the root
                         stageParamRoot.AddNode(BymlNodeId.Hash, components, "Components");
 
-                        // Replace the BYML root
+     
                         stageParam.Root = stageParamRoot;
 
                         // Save
