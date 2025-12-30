@@ -160,13 +160,15 @@ namespace Fushigi.gl.Bfres
                             break;
 
                         case 2:
-                            shaderSettings = VanillaActors.Contains(name) && !name.StartsWith("DV");
+                            shaderSettings = VanillaActors.Contains(name) && !name.StartsWith("DV") && !name.StartsWith("RichDV");
                             break;
 
                         case 3:
-                            shaderSettings = VanillaActors.Contains(name) && !name.StartsWith("DV") &&  !name.StartsWith("Unit");
+                            shaderSettings = VanillaActors.Contains(name) && !name.StartsWith("DV") && !name.StartsWith("RichDV") && !name.StartsWith("Unit");
                             break;
-
+                        case 4:
+                            shaderSettings = false;
+                            break;
                         default:
                             shaderSettings = true;
                             break;

@@ -22,7 +22,8 @@ namespace Fushigi.ui.widgets
             "All Actors",
             "Vanilla Actors Only",
             "Vanilla Actors Except DV",
-            "Vanilla Actors Except DV and Tiles"
+            "Vanilla Actors Except DV and Tiles",
+            "Tilesets Only"
             };
         public static void Draw(ref bool continueDisplay, GLTaskScheduler glTaskScheduler,
      IPopupModalHost modalHost)
@@ -260,6 +261,10 @@ namespace Fushigi.ui.widgets
                 if (ImGui.Selectable(ShaderDescriptions[3]))
                 {
                     UserSettings.SetShaders(3);
+                }
+                if (ImGui.Selectable(ShaderDescriptions[4]))
+                {
+                    UserSettings.SetShaders(4);
                 }
 
                 ImGui.EndCombo();

@@ -2900,8 +2900,7 @@ namespace Fushigi.ui.widgets
                         }
                         ImGui.SameLine();
 
-
-                        if (ImGui.Button("Remove Wall") || ImGui.IsKeyPressed(ImGuiKey.Delete))
+                        if (ImGui.Button("Remove Wall"))
                         {
                             editContext.WithSuspendUpdateDo(() =>
                             {
