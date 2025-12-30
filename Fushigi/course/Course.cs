@@ -70,6 +70,7 @@ namespace Fushigi.course
             string NewAreaName = mCourseName.Replace("_Course", "");
             mAreas.Add(new CourseArea($"{NewAreaName}_Sub{areaCount}"));
         }
+
         public List<CourseArea> GetAreas() => mAreas;
 
         public CourseArea GetArea(int idx) => mAreas.ElementAt(idx);

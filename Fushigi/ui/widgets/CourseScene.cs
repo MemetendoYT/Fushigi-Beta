@@ -432,6 +432,7 @@ namespace Fushigi.ui.widgets
 
             ulong selectionVersionBefore = areaScenes[selectedArea].EditContext.SelectionVersion;
 
+
             bool status = ImGui.Begin("Viewports", ImGuiWindowFlags.NoNav);
 
             if (ImGui.BeginTabBar("ViewportTabs"))
@@ -445,7 +446,24 @@ namespace Fushigi.ui.widgets
 
                     if (ImGui.BeginTabItem(area.GetName()))
                     {
-                        if (areaToFocus == area)
+                            if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                                ImGui.OpenPopup($"AreaTabMenu_{i}");
+
+                            if (ImGui.BeginPopup($"AreaTabMenu_{i}"))
+                            {
+                                if (ImGui.MenuItem("Remove Area"))
+                                {
+                                    course.GetAreas().Remove(selectedArea); 
+                                    ImGui.EndPopup();
+                                    ImGui.EndTabItem();
+                                    continue;
+                                }
+
+                                ImGui.EndPopup();
+                            }
+
+
+                            if (areaToFocus == area)
                         {
                             ImGui.SetItemDefaultFocus();
                             activeViewport = viewport;
@@ -458,6 +476,7 @@ namespace Fushigi.ui.widgets
 
                         activeViewport = viewport;
                         selectedArea = area;
+                   
 
                         ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
 
@@ -651,6 +670,7 @@ namespace Fushigi.ui.widgets
                 {
                     MainWindow.addNewArea = true;
                 }
+
                 ImGui.EndTabBar();
             }
 
@@ -2404,7 +2424,7 @@ namespace Fushigi.ui.widgets
                             ImGui.TableSetColumnIndex(0);
                             ImGui.Text("Source Hash"); ImGui.TableNextColumn();
                             string srcHash = mSelectedGlobalLink.mSource.ToString();
-                            if (ImGui.InputText("##Source Hash", ref srcHash, 256, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue))
+                            if (ImGui.InputText("##Source Hash", ref srcHash, 256, ImGuiInputTextFlags.CharsDecimal))
                             {
                                 mSelectedGlobalLink.mSource = Convert.ToUInt64(srcHash);
                             }
@@ -2412,7 +2432,7 @@ namespace Fushigi.ui.widgets
                         ImGui.TableNextColumn();
                             ImGui.Text("Destination Hash"); ImGui.TableNextColumn();
                             string destHash = mSelectedGlobalLink.mDest.ToString();
-                            if (ImGui.InputText("##Dest Hash", ref destHash, 256, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue))
+                            if (ImGui.InputText("##Dest Hash", ref destHash, 256, ImGuiInputTextFlags.CharsDecimal))
                             {
                                 mSelectedGlobalLink.mDest = Convert.ToUInt64(destHash);
                             }
