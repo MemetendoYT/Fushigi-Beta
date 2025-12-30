@@ -14,8 +14,10 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Fushigi.ui
 {
@@ -29,6 +31,8 @@ namespace Fushigi.ui
 
         private static readonly Dictionary<int, RawImage> Icons = [];
         public static bool reloadIni = false;
+        public static bool reloadLevel = false;
+        public static bool addNewArea = false;
 
         public MainWindow()
         {
@@ -179,6 +183,24 @@ namespace Fushigi.ui
             return true;
         }
 
+
+        public async Task<bool> ResetCourse()
+        {
+            if (mSelectedCourseScene is not null)
+            {
+                var result = await ResetConfirmationDialog.ShowDialog(this);
+
+                if (result == ResetConfirmationDialog.DialogResult.Yes)
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+
+            return true;
+        }
+
         bool mSkipCloseTest = false;
         public void Close()
         {
@@ -275,6 +297,33 @@ namespace Fushigi.ui
              if(shouldShowWelcomeDialog)
                 await WelcomeMessage.ShowDialog(this);
         }
+        public async Task fingle()
+        {
+            if (mCurrentCourseName is null)
+                return;
+
+            if (!await ResetCourse())
+                return;
+
+            await ProgressBarDialog.ShowDialogForAsyncAction(this,
+                $"Loading {mCurrentCourseName}",
+                async (p) =>
+                {
+                    CourseScene.overwriteLevel(CourseScene.currentArea);
+
+                    Logger.Logger.LogMessage("MainWindow", $"Reload course {mCurrentCourseName}!");
+
+                    var currentCourse = mSelectedCourseScene.course;
+
+                    mSelectedCourseScene = await CourseScene.Create(
+                        currentCourse,
+                        mGLTaskScheduler,
+                        mModalHost,
+                        p);
+
+                    CourseAreaEditContext.saveStatus = true;
+                });
+        }
 
         public Task LoadCourseWithProgressBar(string name)
         {
@@ -348,6 +397,7 @@ namespace Fushigi.ui
                     {
                         CourseScene.blankLevel = true;
                     }
+
                 /* Saves the currently loaded course */
                 var text_color = mSelectedCourseScene == null ?
                          ImGui.GetStyle().Colors[(int)ImGuiCol.TextDisabled] :
@@ -446,7 +496,13 @@ namespace Fushigi.ui
                 ImGui.EndMenuBar();
             }
         }
+        public async Task AddArea()
+        {
+            addNewArea = false;
+            mSelectedCourseScene.course.AddArea();
+            await mSelectedCourseScene.RebuildAreaData(mGLTaskScheduler);
 
+        }
         public void Render(GL gl, double delta, ImGuiController controller)
         {
             mGLTaskScheduler.ExecutePending(gl);
@@ -468,10 +524,21 @@ namespace Fushigi.ui
             }
 
 
-
+            if (reloadLevel)
+            {
+                reloadLevel = false;
+                Console.WriteLine("Im so fingle");
+                fingle();
+            }
             DrawMainMenu();
 
- 
+            if(addNewArea)
+            {
+                AddArea();
+
+            }
+            
+             
             if (!string.IsNullOrEmpty(RomFS.GetRoot()) &&
                 !string.IsNullOrEmpty(UserSettings.GetModRomFSPath()))
             {

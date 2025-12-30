@@ -45,7 +45,7 @@ namespace Fushigi.ui.widgets
            propertyCapture = (null,
             FullPropertyCapture.Empty);
 
-        readonly Course course;
+        public Course course;
         readonly IPopupModalHost mPopupModalHost;
         CourseArea selectedArea;
 
@@ -215,7 +215,26 @@ namespace Fushigi.ui.widgets
         //     }
         // }
         // readonly LayerSorter layerSort = new();
-    
+        public async Task RebuildAreaData(GLTaskScheduler scheduler)
+        {
+           
+            var newArea = course.GetAreas().Last();
+            uint hash = Crc32.Compute(newArea.GetName());
+            newArea.mRootHash = hash;
+
+            foreach (var actor in newArea.GetActors())
+            {
+                actor.mAreaHash = newArea.mRootHash;
+            }
+            //newArea.StageParamRoot["HashId"] = new BymlNode<uint>(hash);
+            var areaScene = new CourseAreaScene(newArea, new CourseAreaSceneRoot(newArea));
+            areaScenes[newArea] = areaScene;
+
+            var viewport = await scheduler.Schedule(gl => new LevelViewport(newArea, gl, areaScene));
+            viewports[newArea] = viewport;
+
+            lastSavedAction[newArea] = null;
+        }
 
         public static async Task<CourseScene> Create(Course course, 
             GLTaskScheduler glScheduler, 
@@ -342,7 +361,7 @@ namespace Fushigi.ui.widgets
         double backupTime = 0;
         public static bool blankLevel = false;
 
-        public void overwriteLevel(CourseArea currentArea)
+        public static void overwriteLevel(CourseArea currentArea)
         {
             CourseArea blank = new CourseArea("BlankStage");
             currentArea.mAreaParams = blank.mAreaParams;
@@ -355,14 +374,15 @@ namespace Fushigi.ui.widgets
             currentArea.mRailLinksHolder = blank.mRailLinksHolder;
             currentArea.mRootHash = blank.mRootHash;
             reloadUnit = true;
+            //MainWindow.fingle();
         }
         public void DrawUI(GL gl, double deltaSeconds)
         {
             if(blankLevel)
             {
                 blankLevel = false;
-                overwriteLevel(selectedArea);
-
+                currentArea = selectedArea;
+                MainWindow.reloadLevel = true;
             }
 
             UndoHistoryPanel();
@@ -419,21 +439,23 @@ namespace Fushigi.ui.widgets
                 for (int i = 0; i < course.GetAreaCount(); i++)
                 {
                     var area = course.GetArea(i);
-                    var viewport = viewports[area];
 
-  
+                    if (!viewports.TryGetValue(area, out var viewport))
+                        continue; 
+
                     if (ImGui.BeginTabItem(area.GetName()))
                     {
                         if (areaToFocus == area)
                         {
                             ImGui.SetItemDefaultFocus();
-                            activeViewport = viewport;  
+                            activeViewport = viewport;
                             selectedArea = area;
                             currentArea = selectedArea;
                             areaToFocus = null;
                         }
 
-                        
+
+
                         activeViewport = viewport;
                         selectedArea = area;
 
@@ -557,6 +579,7 @@ namespace Fushigi.ui.widgets
                             ImGui.PopStyleColor(1);
                             ImGui.EndChild();
                         }
+
                         var io = ImGui.GetIO();
 
                         bool viewportActive = ImGui.IsWindowFocused(ImGuiFocusedFlags.ChildWindows);
@@ -624,6 +647,10 @@ namespace Fushigi.ui.widgets
                     }
                 }
 
+                if (ImGui.TabItemButton("+"))
+                {
+                    MainWindow.addNewArea = true;
+                }
                 ImGui.EndTabBar();
             }
 
@@ -766,6 +793,74 @@ namespace Fushigi.ui.widgets
                 //Save each course area to current romfs folder
                 foreach (var area in course.GetAreas())
                 {
+                    string directory = Path.Combine(UserSettings.GetModRomFSPath(), "Phive", "StaticCompoundBody");
+
+                    if (!Directory.Exists(directory))
+                        Directory.CreateDirectory(directory);
+
+                    var filePath = Path.Combine(directory, $"{area.GetName()}.Nin_NX_NVN.bphsc.zs");
+                        File.Copy(Path.Combine(AppContext.BaseDirectory, "res", "BlankStaticCompoundBody.bphsc.zs"),
+                            filePath, overwrite: true);
+
+
+                    var stageParamFilePath = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam", $"{area}.game__stage__StageParam.bgyml"));
+                    bool noFileFound = !File.Exists(stageParamFilePath);
+
+                    if (noFileFound)
+                    {
+                        // Load template (you aren't using it, but keeping your structure)
+                        var templateParamFilePath = "res/template.game__stage__StageParam.bgyml";
+                       
+                        Byml.Byml stageParam = new Byml.Byml(
+                            new MemoryStream(File.ReadAllBytes(templateParamFilePath))
+                        );
+
+                        // Brand‑new root (this avoids ALL read‑only issues)
+                        BymlHashTable stageParamRoot = new();
+
+                        // Build a brand‑new Components hash table
+                        BymlHashTable components = new();
+
+                        // Build your three strings
+                        string AreaParamPath =
+                            $"Work/Stage/AreaParam/{area.GetName()}.game__stage__AreaParam.gyml";
+                        string Mumap =
+                            $"Work/MapUnit/Map/{area.GetName()}.mumap";
+                        string StaticCompoundBody =
+                            $"Work/Phive/StaticCompoundBody/{area.GetName()}.phive__StaticCompoundBodySourceParam.gyml";
+
+                        // Insert entries into the Components hash table
+                        components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(AreaParamPath), "AreaParam");
+                        components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(Mumap), "Mumap");
+                        components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(StaticCompoundBody), "StaticCompoundBodySourceParam");
+
+                        // Insert Components into the root
+                        stageParamRoot.AddNode(BymlNodeId.Hash, components, "Components");
+
+                        // Replace the BYML root
+                        stageParam.Root = stageParamRoot;
+
+                        // Save
+                        string outPath = Path.Combine(
+                            UserSettings.GetModRomFSPath(),
+                            "Stage/StageParam",
+                            $"{area.GetName()}.game__stage__StageParam.bgyml"
+                        );
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+
+                        using (var ms = new MemoryStream())
+                        {
+                            stageParam.Save(ms);
+                            File.WriteAllBytes(outPath, ms.ToArray());
+                        }
+
+                    }
+
+
+
+
+
 
                     CourseAreaEditContext.saveStatus = true;
                     Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area {area.GetName()}...");
@@ -823,6 +918,12 @@ namespace Fushigi.ui.widgets
                     resource_table.Save(Path.Combine(backupFolder, "System", "Resource"));
                 else
                     resource_table.Save();
+
+                //Save resource table
+                if (backup)
+                    course.Save();
+                else
+                    course.Save();
             }
             if (backup == false)
                 Save(backup: true, backupFolder);

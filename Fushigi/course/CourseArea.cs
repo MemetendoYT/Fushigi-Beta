@@ -39,6 +39,12 @@ namespace Fushigi.course
             {
                 areaParamPath = "res/template.game__stage__AreaParam.bgyml";
             }
+
+            if(!File.Exists(areaParamPath))
+            {
+                areaParamPath = "res/template.game__stage__AreaParam.bgyml";
+                loadTemplate = true;
+            }
                 mAreaParams = new AreaParam(new Byml.Byml(new MemoryStream(File.ReadAllBytes(areaParamPath))));
 
             //Load env settings

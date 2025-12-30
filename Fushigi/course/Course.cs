@@ -1,7 +1,8 @@
-﻿using Fushigi.util;
-using Fushigi.Byml;
-using Fushigi.rstb;
+﻿using Fushigi.Byml;
+using Fushigi.gl;
 using Fushigi.Logger;
+using Fushigi.rstb;
+using Fushigi.util;
 
 namespace Fushigi.course
 {
@@ -63,7 +64,12 @@ namespace Fushigi.course
             mGlobalLinks = new(new BymlArrayNode());
        
         }
-
+        public void AddArea()
+        {
+            int areaCount = mAreas.Count;
+            string NewAreaName = mCourseName.Replace("_Course", "");
+            mAreas.Add(new CourseArea($"{NewAreaName}_Sub{areaCount}"));
+        }
         public List<CourseArea> GetAreas() => mAreas;
 
         public CourseArea GetArea(int idx) => mAreas.ElementAt(idx);
@@ -115,36 +121,52 @@ namespace Fushigi.course
             var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
 
             if (!Directory.Exists(rstbPath))
-                    Directory.CreateDirectory(rstbPath);
+                Directory.CreateDirectory(rstbPath);
+
             string[] sizeTables = Directory.GetFiles(rstbPath);
+
             foreach (string path in sizeTables)
             {
                 RSTB resource_table = new RSTB();
                 resource_table.Load(Path.GetFileName(path));
 
+                // Build a fresh StageParam root
                 BymlHashTable stageParamRoot = new();
+
+                // Always present
                 stageParamRoot.AddNode(BymlNodeId.Array, new BymlArrayNode(), "Actors");
                 stageParamRoot.AddNode(BymlNodeId.Array, mGlobalLinks.SerializeToArray(), "Links");
 
+                // Rebuild RefStages from scratch
                 BymlArrayNode refArr = new();
 
                 foreach (CourseArea area in mAreas)
-                    refArr.AddNodeToArray(BymlUtil.CreateNode($"Work/Stage/StageParam/{area.GetName()}.game__stage__StageParam.gyml"));
+                {
+                    string refPath = $"Work/Stage/StageParam/{area.GetName()}.game__stage__StageParam.gyml";
+                    refArr.AddNodeToArray(BymlUtil.CreateNode(refPath));
+                }
 
+                // Overwrite RefStages
                 stageParamRoot.AddNode(BymlNodeId.Array, refArr, "RefStages");
 
+                // Serialize the course .bcett.byml
                 var byml = new Byml.Byml(stageParamRoot);
                 var mem = new MemoryStream();
                 byml.Save(mem);
-                resource_table.SetResource($"BancMapUnit/{mCourseName}.bcett.byml", (uint)mem.Length);
-                string folder = Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit");
 
+                // Register the new size in the RSTB
+                string virtualPath = $"BancMapUnit/{mCourseName}.bcett.byml";
+                resource_table.SetResource(virtualPath, (uint)mem.Length);
+
+                // Write compressed file to mod RomFS
+                string folder = Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit");
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
 
                 string levelPath = Path.Combine(folder, $"{mCourseName}.bcett.byml.zs");
                 File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
 
+                // Save all areas (this updates RSTB entries for each area)
                 SaveAreas(resource_table);
 
                 resource_table.Save();

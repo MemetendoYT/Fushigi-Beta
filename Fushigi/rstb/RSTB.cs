@@ -47,17 +47,20 @@ namespace Fushigi.rstb
         /// <param name="decompressed_size"></param>
         public void SetResource(string filePath, uint decompressed_size)
         {
-            //Get file name without .zs extension
             string path = filePath.Replace(".zs", "");
             string ext = Path.GetExtension(filePath);
-            //Compute hash to find in the resource table
+
             uint hash = Crc32.Compute(path);
-            //Update the resource size
+            uint size = CalculateResourceSize(decompressed_size, ext);
+
             if (HashToResourceSize.ContainsKey(hash))
-                HashToResourceSize[hash] = CalculateResourceSize(decompressed_size, ext);
+            {
+                HashToResourceSize[hash] = size;
+            }
             else
             {
-                Logger.Logger.LogWarning("GLTexture", $"Warning! File {path} not found in resource table!");
+                HashToResourceSize[hash] = size;
+                Logger.Logger.LogWarning("RSTB", $"Added new RSTB entry: {path}");
             }
         }
 
