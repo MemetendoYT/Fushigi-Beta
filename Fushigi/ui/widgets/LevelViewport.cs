@@ -365,13 +365,11 @@ namespace Fushigi.ui.widgets
 
                     return render;
                 }
-                Console.WriteLine(mArea.mAreaParams.SkinParam?.FieldA);
                 string? fieldASkin = mArea.mAreaParams.SkinParam?.FieldA;
                 string? fieldBSkin = mArea.mAreaParams.SkinParam?.FieldB;
 
                 if(updateSkinA)
                 {
-                    Console.WriteLine("JOOGLE");
                     TileBfresRenderFieldA = null;
                     //BfresCache.Clear();
                     updateSkinA = false;
