@@ -116,6 +116,8 @@ namespace Fushigi.ui.widgets
         public TileBfresRender TileBfresRenderFieldA;
         public TileBfresRender TileBfresRenderFieldB;
         public AreaResourceManager EnvironmentData = new AreaResourceManager(gl, area.mInitEnvPalette);
+        public static bool updateSkinA = false;
+        public static bool updateSkinB = false;
 
         private readonly HashSet<CourseUnit> mRegisteredUnits = [];
 
@@ -363,8 +365,24 @@ namespace Fushigi.ui.widgets
 
                     return render;
                 }
+                Console.WriteLine(mArea.mAreaParams.SkinParam?.FieldA);
                 string? fieldASkin = mArea.mAreaParams.SkinParam?.FieldA;
                 string? fieldBSkin = mArea.mAreaParams.SkinParam?.FieldB;
+
+                if(updateSkinA)
+                {
+                    Console.WriteLine("JOOGLE");
+                    TileBfresRenderFieldA = null;
+                    //BfresCache.Clear();
+                    updateSkinA = false;
+                }
+                
+                if(updateSkinB)
+                {
+                    TileBfresRenderFieldB = null;
+                    //BfresCache.Clear();
+                    updateSkinB = false;
+                }
 
                 if (TileBfresRenderFieldA == null && !string.IsNullOrEmpty(fieldASkin))
                     TileBfresRenderFieldA = CreateTileRendererForSkin(SkinDivision.FieldA, fieldASkin);

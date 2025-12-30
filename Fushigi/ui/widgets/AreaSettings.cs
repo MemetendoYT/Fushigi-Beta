@@ -233,16 +233,21 @@ namespace Fushigi.ui.widgets
                 value = skinParam.FieldA;
                 int index = Tilesets.Values.ToList().IndexOf(value);
                 if (ImGui.Combo("##FieldA", ref index, Tilesets.Keys.ToArray(), Tilesets.Count(), 10))
+                {
                     skinParam.FieldA = Tilesets.Values.ToArray()[index];
+                    LevelViewport.updateSkinA = true;
+                }
 
-                ImGui.TableNextColumn();
+                    ImGui.TableNextColumn();
 
                 ImGui.Text("Field B");
                 ImGui.TableSetColumnIndex(1);
                 value = skinParam.FieldB;
                 index = Tilesets.Values.ToList().IndexOf(value);
-                if (ImGui.Combo("##FieldB", ref index, Tilesets.Keys.ToArray(), Tilesets.Count(), 10))
+                if (ImGui.Combo("##FieldB", ref index, Tilesets.Keys.ToArray(), Tilesets.Count(), 10)) {
                     skinParam.FieldB = Tilesets.Values.ToArray()[index];
+                    LevelViewport.updateSkinB = true;
+                        }
 
                 ImGui.TableNextColumn();
 
@@ -257,9 +262,8 @@ namespace Fushigi.ui.widgets
 
                 bool disableBgUnitDecoA = skinParam.DisableBgUnitDecoA;
                 if (ImGui.Checkbox("Disable Decorations on Field A", ref disableBgUnitDecoA))
-                {
                     skinParam.DisableBgUnitDecoA = disableBgUnitDecoA;
-                }
+
 
                 ImGui.EndTable();
             }
