@@ -47,7 +47,7 @@ namespace Fushigi.ui.widgets
 
         public Course course;
         readonly IPopupModalHost mPopupModalHost;
-        CourseArea selectedArea;
+        public CourseArea selectedArea;
 
         readonly Dictionary<string, bool> mLayersVisibility = [];
         bool mHasFilledLayers = false;
@@ -236,6 +236,23 @@ namespace Fushigi.ui.widgets
             lastSavedAction[newArea] = null;
         }
 
+        public void DeleteAreaFiles(string areaName)
+        {
+            string modRoot = UserSettings.GetModRomFSPath();
+            string areaParam = Path.Combine(modRoot, "Stage/AreaParam", $"{areaName}.game__stage__AreaParam.bgyml");
+            string phive = Path.Combine(modRoot, "Phive/StaticCompoundBody", $"{areaName}.phive__StaticCompoundBodySourceParam.gyml");
+            string bcett = Path.Combine(modRoot, "BancMapUnit", $"{areaName}.bcett.byml.zs");
+
+            TryDelete(areaParam);
+            TryDelete(phive);
+            TryDelete(bcett);
+        }
+
+        private void TryDelete(string path)
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
         public static async Task<CourseScene> Create(Course course, 
             GLTaskScheduler glScheduler, 
             IPopupModalHost popupModalHost,
@@ -363,7 +380,7 @@ namespace Fushigi.ui.widgets
 
         public static void overwriteLevel(CourseArea currentArea)
         {
-            CourseArea blank = new CourseArea("BlankStage");
+            CourseArea blank = new CourseArea("BlankStage", false);
             currentArea.mAreaParams = blank.mAreaParams;
             currentArea.mInitEnvPalette = blank.mInitEnvPalette;
             currentArea.mActorHolder = blank.mActorHolder;
@@ -453,13 +470,11 @@ namespace Fushigi.ui.widgets
                             {
                                 if (ImGui.MenuItem("Remove Area"))
                                 {
-                                    course.GetAreas().Remove(selectedArea); 
-                                    ImGui.EndPopup();
-                                    ImGui.EndTabItem();
-                                    continue;
+                                MainWindow.removeCurrentArea = true;
+                                ImGui.CloseCurrentPopup(); // optional
                                 }
 
-                                ImGui.EndPopup();
+                            ImGui.EndPopup();
                             }
 
 
@@ -753,7 +768,7 @@ namespace Fushigi.ui.widgets
                         a => Path.Combine(backupFolder, "Stage", "AreaParam", $"{a.GetName()}.game__stage__AreaParam.bgyml")
                         ).ToList();
 
-                    foreach ( var areaParam in areaParamSave)
+                    foreach (var areaParam in areaParamSave)
                     {
                         pathsToWriteTo.Add(areaParam);
                     }
@@ -873,19 +888,14 @@ namespace Fushigi.ui.widgets
 
                     }
 
-
-
-
-
-
                     CourseAreaEditContext.saveStatus = true;
                     Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area {area.GetName()}...");
                     Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area parameters for {area.GetName()}...");
 
                     if (backup)
                     {
-                        area.Save(resource_table, Path.Combine(backupFolder, "BancMapUnit"));
-                        area.mAreaParams.Save(resource_table, Path.Combine(backupFolder, "Stage", "AreaParam"), area.mAreaName);
+                        area.Save(resource_table, Path.Combine(backupFolder, "BancMapUnit"), false);
+                        area.mAreaParams.Save(resource_table, Path.Combine(backupFolder, "Stage", "AreaParam"), area.mAreaName, false);
                     }
                     else
                     {

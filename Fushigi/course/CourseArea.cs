@@ -17,18 +17,24 @@ namespace Fushigi.course
     public class CourseArea
     {
 
-        public CourseArea(string areaName) {
+        public CourseArea(string areaName, bool overrideVanilla) {
             mAreaName = areaName;
             if(areaName == "BlankStage")
-                Load(true);
+                Load(true, false, false);
             else
-                Load(false);
+                Load(false, false, overrideVanilla);
         }
-
-
-        public void Load(bool loadTemplate)
+        
+        
+        public void Load(bool loadTemplate, bool disableBGUnit, bool overrideVanilla)
         {
             string areaParamPath = "";
+
+            if(overrideVanilla)
+            {
+              loadTemplate = true;
+            }
+
             if (!loadTemplate)
             {
                 areaParamPath = FileUtil.FindContentPath(
@@ -45,6 +51,7 @@ namespace Fushigi.course
                 areaParamPath = "res/template.game__stage__AreaParam.bgyml";
                 loadTemplate = true;
             }
+
                 mAreaParams = new AreaParam(new Byml.Byml(new MemoryStream(File.ReadAllBytes(areaParamPath))));
 
             //Load env settings
@@ -62,7 +69,7 @@ namespace Fushigi.course
             }
             else {                 
                 levelPath = "res/template.bcett.byml.zs";
-                 }
+            }
             byte[] levelBytes = FileUtil.DecompressFile(levelPath);
             var byml = new Byml.Byml(new MemoryStream(levelBytes));
 
@@ -86,7 +93,7 @@ namespace Fushigi.course
                 BymlArrayNode railsArray = (BymlArrayNode)root["Rails"];
                 mRailHolder = new(railsArray);
             }
-            else
+            else 
             {
                 mRailHolder = new();
             }
@@ -121,12 +128,12 @@ namespace Fushigi.course
                 mGroupsHolder = new();
             }
 
-            if (root.ContainsKey("BgUnits"))
+            if (root.ContainsKey("BgUnits") && !disableBGUnit)
             {
                 BymlArrayNode? unitsArray = root["BgUnits"] as BymlArrayNode;
                 mUnitHolder = new CourseUnitHolder(unitsArray);
             }
-            else
+            else if (!disableBGUnit)
             {
                 mUnitHolder = new();
             }
@@ -136,13 +143,16 @@ namespace Fushigi.course
         public void Save(RSTB resource_table)
         {
             //Save using the configured mod romfs path
-            Save(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit"));
+            Save(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit"), false);
         }
 
-        public void Save(RSTB resource_table, string folder)
+        public void Save(RSTB resource_table, string folder, bool saveTemplate)
         {
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
+            if (!saveTemplate)
+            {
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+            }
 
             BymlHashTable root = new();
             root.AddNode(BymlNodeId.UInt, BymlUtil.CreateNode<uint>(mRootHash), "RootAreaHash");
@@ -167,11 +177,23 @@ namespace Fushigi.course
 
             //Compress and save the course area           
             string levelPath = Path.Combine(folder, $"{mAreaName}.bcett.byml.zs");
-            File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
+            if (saveTemplate)
+            {
+                string paramPath = "res/template.game__stage__AreaParam.bgyml";
+                levelPath = "res/template.bcett.byml.zs";
+                File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
+                File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
+                Load(true, true, false);
 
-            //Update resource table
-            // filePath is a key not an actual path so we cannot use Path.Combine
-            resource_table.SetResource($"BancMapUnit/{mAreaName}.bcett.byml", decomp_size);
+            }
+            else
+            {
+                File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
+
+                //Update resource table
+                // filePath is a key not an actual path so we cannot use Path.Combine
+                resource_table.SetResource($"BancMapUnit/{mAreaName}.bcett.byml", decomp_size);
+            }
         }
 
         public string GetName()

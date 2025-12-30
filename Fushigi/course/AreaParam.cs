@@ -65,11 +65,13 @@ namespace Fushigi.course
             return (uint)mem.Length;
         }
 
-        public void Save(RSTB resource_table, string folder, string areaName)
+        public void Save(RSTB resource_table, string folder, string areaName, bool saveTemplate)
         {
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
-
+            if (!saveTemplate)
+            {
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+            }
             BymlHashTable root = this.Serialize();
 
             var byml = new Byml.Byml(root);
@@ -79,17 +81,26 @@ namespace Fushigi.course
             var decomp_size = (uint)mem.Length;
 
             //Compress and save the course area           
-            string levelPath = Path.Combine(folder, $"{areaName}.game__stage__AreaParam.bgyml");
-            File.WriteAllBytes(levelPath, mem.ToArray());
 
-            //Update resource table
-            // filePath is a key not an actual path so we cannot use Path.Combine
-            resource_table.SetResource($"Stage/AreaParam/{areaName}.game__stage__AreaParam.bgyml", decomp_size);
+            string levelPath = Path.Combine(folder, $"{areaName}.game__stage__AreaParam.bgyml");
+            if (saveTemplate)
+            {
+                levelPath = "res/template.game__stage__AreaParam.bgyml";
+                File.WriteAllBytes(levelPath, mem.ToArray());
+            }
+            else
+            {
+                File.WriteAllBytes(levelPath, mem.ToArray());
+                //Update resource table
+                // filePath is a key not an actual path so we cannot use Path.Combine
+                resource_table.SetResource($"Stage/AreaParam/{areaName}.game__stage__AreaParam.bgyml", decomp_size);
+            }
+          
         }
 
         public void Save(RSTB resource_table, string areaName)
         {
-            Save(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "Stage", "AreaParam"), areaName);
+            Save(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "Stage", "AreaParam"), areaName, false);
             CourseScene.oldAreaParamSize = CourseScene.areaParamSize;
             CourseScene.oldCourseInfoSize = CourseScene.courseInfoSize;
         }

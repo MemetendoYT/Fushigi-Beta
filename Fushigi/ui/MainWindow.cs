@@ -12,6 +12,7 @@ using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
+using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -33,6 +34,7 @@ namespace Fushigi.ui
         public static bool reloadIni = false;
         public static bool reloadLevel = false;
         public static bool addNewArea = false;
+        public static bool removeCurrentArea = false;
 
         public MainWindow()
         {
@@ -145,8 +147,7 @@ namespace Fushigi.ui
                                await mModalHost.WaitTick();
                                await mGLTaskScheduler.Schedule(gl => RomFS.SetRoot(romFSPath, gl));
                            });
-                            if (!ParamDB.sIsInit)
-                                await LoadParamDBWithProgressBar(this);
+                            await LoadParamDBWithProgressBar(this);
                             Logger.Logger.LogMessage("MainWindow", $"Reload course {mCurrentCourseName}!");
                             await LoadCourseWithProgressBar(mCurrentCourseName);
                             BfresCache.Clear();
@@ -191,6 +192,23 @@ namespace Fushigi.ui
                 var result = await ResetConfirmationDialog.ShowDialog(this);
 
                 if (result == ResetConfirmationDialog.DialogResult.Yes)
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+
+            return true;
+        }
+
+        public async Task<bool> RemoveArea()
+        {
+            if (mSelectedCourseScene is not null)
+            {
+                var result = await RemoveAreaConfirmationDialog.ShowDialog(this);
+
+                if (result == RemoveAreaConfirmationDialog.DialogResult.Yes)
                 {
                     return true;
                 }
@@ -297,7 +315,7 @@ namespace Fushigi.ui
              if(shouldShowWelcomeDialog)
                 await WelcomeMessage.ShowDialog(this);
         }
-        public async Task fingle()
+        public async Task reloadAfterAreaReset()
         {
             if (mCurrentCourseName is null)
                 return;
@@ -323,6 +341,22 @@ namespace Fushigi.ui
 
                     CourseAreaEditContext.saveStatus = true;
                 });
+        }
+
+        public async Task removeArea()
+        {
+            await Task.Yield();
+            if (mCurrentCourseName is null)
+                return;
+
+            if (!await RemoveArea())
+                return;
+
+            var selectedArea = mSelectedCourseScene.selectedArea;
+            string areaName = selectedArea.GetName();
+            mSelectedCourseScene.DeleteAreaFiles(areaName);
+            mSelectedCourseScene.course.GetAreas().Remove(selectedArea);
+            
         }
 
         public Task LoadCourseWithProgressBar(string name)
@@ -393,11 +427,6 @@ namespace Fushigi.ui
 
                     ImGui.Separator();
 
-                    if (ImGui.MenuItem("Blank out"))
-                    {
-                        CourseScene.blankLevel = true;
-                    }
-
                 /* Saves the currently loaded course */
                 var text_color = mSelectedCourseScene == null ?
                          ImGui.GetStyle().Colors[(int)ImGuiCol.TextDisabled] :
@@ -448,6 +477,19 @@ namespace Fushigi.ui
                         }
                     }
 
+                    if (ImGui.MenuItem("Reset Area"))
+                    {
+                        CourseScene.blankLevel = true;
+                    }
+
+                    if (ImGui.MenuItem("Use this area as template"))
+                    {
+                        var area = mSelectedCourseScene.selectedArea;
+                        area.mAreaParams.Save(null, "", "", true);
+                        area.Save(null, "", true);
+
+
+                    }
                     ImGui.PopStyleColor();
 
                     ImGui.Separator();
@@ -527,8 +569,7 @@ namespace Fushigi.ui
             if (reloadLevel)
             {
                 reloadLevel = false;
-                Console.WriteLine("Im so fingle");
-                fingle();
+                reloadAfterAreaReset();
             }
             DrawMainMenu();
 
@@ -537,8 +578,13 @@ namespace Fushigi.ui
                 AddArea();
 
             }
-            
-             
+
+            if (removeCurrentArea)
+            {
+                removeArea();
+                MainWindow.removeCurrentArea = false;
+            }
+
             if (!string.IsNullOrEmpty(RomFS.GetRoot()) &&
                 !string.IsNullOrEmpty(UserSettings.GetModRomFSPath()))
             {

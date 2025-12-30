@@ -44,12 +44,12 @@ namespace Fushigi.course
                 {
                     string stageParamPath = ((BymlNode<string>)mStageReferences[i]).Data.Replace("Work/", "").Replace(".gyml", ".bgyml");
                     string stageName = Path.GetFileName(stageParamPath).Split(".game")[0];
-                    mAreas.Add(new CourseArea(stageName));
+                    mAreas.Add(new CourseArea(stageName, false));
                 }
             }
             catch
             {
-                mAreas.Add(new CourseArea(mCourseName));
+                mAreas.Add(new CourseArea(mCourseName, false));
             }
 
             if (root.ContainsKey("Links") && !IsOneAreaCourse)
@@ -68,7 +68,16 @@ namespace Fushigi.course
         {
             int areaCount = mAreas.Count;
             string NewAreaName = mCourseName.Replace("_Course", "");
-            mAreas.Add(new CourseArea($"{NewAreaName}_Sub{areaCount}"));
+            string areaName = $"{NewAreaName}_Sub{areaCount}";
+
+            if(areaCount == 0)
+            {
+                areaName = $"{NewAreaName}_Main";
+            }
+
+            string testPath = FileUtil.FindContentPath(Path.Combine("BancMapUnit", $"{areaName}.bcett.byml.zs"));
+            bool overrideVanilla = File.Exists(testPath);
+            mAreas.Add(new CourseArea(areaName, overrideVanilla));
         }
 
         public List<CourseArea> GetAreas() => mAreas;
