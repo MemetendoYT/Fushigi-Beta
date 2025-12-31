@@ -18,6 +18,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Text.Json;
 using static System.Formats.Asn1.AsnWriter;
 
 namespace Fushigi.ui
@@ -477,6 +478,8 @@ namespace Fushigi.ui
                         }
                     }
 
+                    ImGui.Separator();
+
                     if (ImGui.MenuItem("Reset Area"))
                     {
                         CourseScene.blankLevel = true;
@@ -491,6 +494,38 @@ namespace Fushigi.ui
 
                     }
                     ImGui.PopStyleColor();
+
+                    ImGui.Separator();
+
+                    if (ImGui.MenuItem("Update Translation JSON"))
+                    {
+                        FileDialog dlg = new FileDialog();
+                        if (dlg.ShowDialog("Select a JSON."))
+                        {
+                                string selectedJson = dlg.SelectedPath;
+
+                                try
+                                {
+                                    var test = JsonSerializer.Deserialize<Dictionary<string, string>>(
+                                        File.ReadAllText(selectedJson)
+                                    );
+                                }
+                                catch
+                                {
+                                    Logger.Logger.LogError("Translation", "Invalid JSON selected.");
+                                    return;
+                                }
+
+                                string dest = Path.Combine(AppContext.BaseDirectory, "res", "EnglishNames.json");
+                                File.Copy(selectedJson, dest, overwrite: true);
+
+                                Translate.LoadEnglishNames();
+                                CourseScene.refreshTranslation = true;
+                                Logger.Logger.LogWarning("Translation", "JSON imported successfully.");
+                        }
+
+
+                    }
 
                     ImGui.Separator();
 
