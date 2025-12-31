@@ -68,9 +68,30 @@ namespace Fushigi.course
         {
             int areaCount = mAreas.Count;
             string NewAreaName = mCourseName.Replace("_Course", "");
-            string areaName = $"{NewAreaName}_Sub{areaCount}";
 
-            if(areaCount == 0)
+
+            var usedNumbers = new HashSet<int>();
+
+            foreach (var area in mAreas)
+            {
+                string name = area.GetName();
+
+                if (name.StartsWith(NewAreaName + "_Sub"))
+                {
+                    string numStr = name.Substring((NewAreaName + "_Sub").Length);
+                    if (int.TryParse(numStr, out int num))
+                        usedNumbers.Add(num);
+                }
+            }
+
+            int nextNumber = 1;
+            while (usedNumbers.Contains(nextNumber))
+                nextNumber++;
+
+            string areaName = $"{NewAreaName}_Sub{nextNumber}";
+
+
+            if (areaCount == 0)
             {
                 areaName = $"{NewAreaName}_Main";
             }
