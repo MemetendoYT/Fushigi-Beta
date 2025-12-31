@@ -391,7 +391,6 @@ namespace Fushigi.ui.widgets
             currentArea.mRailLinksHolder = blank.mRailLinksHolder;
             currentArea.mRootHash = blank.mRootHash;
             reloadUnit = true;
-            //MainWindow.fingle();
         }
         public void DrawUI(GL gl, double deltaSeconds)
         {
