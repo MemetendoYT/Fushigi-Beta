@@ -310,8 +310,10 @@ namespace Fushigi.ui.widgets
             {
                 if (ImGui.Button("Add Palette"))
                 {
-                    if (wonderPal is null) { wonderPal = new List<string>(); }
+                    if (wonderPal is null) {
+                    wonderPal = new List<string>(); }
                     wonderPal.Add("");
+                    areaParam.EnvPaletteSetting.WonderPaletteList = wonderPal;
                 }
 
                 if (wonderPal is not null)
