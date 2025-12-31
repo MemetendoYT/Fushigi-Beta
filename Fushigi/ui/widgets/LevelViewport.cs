@@ -277,22 +277,22 @@ namespace Fushigi.ui.widgets
                 var zoomedCameraSpeed = MathF.Floor(zoomSpeedFactor) * baseCameraSpeed;
                 var dt = (float)deltaSeconds;
 
-                if (ImGui.IsKeyDown(ImGuiKey.LeftArrow) || ImGui.IsKeyDown(ImGuiKey.A))
+                if (ImGui.IsKeyDown(ImGuiKey.LeftArrow) || ImGui.IsKeyDown(ImGuiKey.A) && !ImGui.GetIO().KeyCtrl)
                 {
                     Camera.Target.X -= zoomedCameraSpeed * dt;
                 }
 
-                if (ImGui.IsKeyDown(ImGuiKey.RightArrow) || ImGui.IsKeyDown(ImGuiKey.D))
+                if (ImGui.IsKeyDown(ImGuiKey.RightArrow) || ImGui.IsKeyDown(ImGuiKey.D) && !ImGui.GetIO().KeyCtrl)
                 {
                     Camera.Target.X += zoomedCameraSpeed * dt;
                 }
 
-                if (ImGui.IsKeyDown(ImGuiKey.UpArrow) || ImGui.IsKeyDown(ImGuiKey.W))
+                if (ImGui.IsKeyDown(ImGuiKey.UpArrow) || ImGui.IsKeyDown(ImGuiKey.W) && !ImGui.GetIO().KeyCtrl)
                 {
                     Camera.Target.Y += zoomedCameraSpeed * dt;
                 }
 
-                if (ImGui.IsKeyDown(ImGuiKey.DownArrow) || ImGui.IsKeyDown(ImGuiKey.S))
+                if (ImGui.IsKeyDown(ImGuiKey.DownArrow) || ImGui.IsKeyDown(ImGuiKey.S) && !ImGui.GetIO().KeyCtrl)
                 {
                     Camera.Target.Y -= zoomedCameraSpeed * dt;
                 }
@@ -1217,7 +1217,10 @@ namespace Fushigi.ui.widgets
             }
 
             if (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace)))
-                ObjectDeletionRequested?.Invoke(mEditContext.GetSelectedObjects<CourseActor>().ToList());
+            {
+                var selected = mEditContext.GetSelectedObjects<CourseActor>().ToList();
+                ObjectDeletionRequested?.Invoke(selected);
+            }
 
             if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? point) &&
                 mHoveredObject == point &&

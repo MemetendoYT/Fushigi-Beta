@@ -217,7 +217,6 @@ namespace Fushigi.ui.widgets
         // readonly LayerSorter layerSort = new();
         public async Task RebuildAreaData(GLTaskScheduler scheduler)
         {
-           
             var newArea = course.GetAreas().Last();
             uint hash = Crc32.Compute(newArea.GetName());
             newArea.mRootHash = hash;
@@ -226,7 +225,7 @@ namespace Fushigi.ui.widgets
             {
                 actor.mAreaHash = newArea.mRootHash;
             }
-            //newArea.StageParamRoot["HashId"] = new BymlNode<uint>(hash);
+
             var areaScene = new CourseAreaScene(newArea, new CourseAreaSceneRoot(newArea));
             areaScenes[newArea] = areaScene;
 
@@ -234,6 +233,18 @@ namespace Fushigi.ui.widgets
             viewports[newArea] = viewport;
 
             lastSavedAction[newArea] = null;
+
+            var localAreaScene = areaScene;
+
+            viewport.ObjectDeletionRequested += (objs) =>
+            {
+                if (objs.Count > 0)
+                    _ = DeleteObjectsWithWarningPrompt(
+                        objs,
+                        localAreaScene.EditContext,
+                        "Delete objects"
+                    );
+            };
         }
 
         public void DeleteAreaFiles(string areaName)
@@ -267,19 +278,27 @@ namespace Fushigi.ui.widgets
             {
                 var areaScene = new CourseAreaScene(area, new CourseAreaSceneRoot(area));
                 cs.areaScenes[area] = areaScene;
+
                 var viewport = await glScheduler.Schedule(gl => new LevelViewport(area, gl, areaScene));
                 cs.viewports[area] = viewport;
                 cs.lastSavedAction[area] = null;
 
-                //might not be the best approach but better than what we had before
+                var localAreaScene = areaScene; // ← THIS is the correct capture
+
                 viewport.ObjectDeletionRequested += (objs) =>
                 {
+
                     if (objs.Count > 0)
-                        _ = cs.DeleteObjectsWithWarningPrompt(objs,
-                            areaScene.EditContext, "Delete objects");
+                    {
+                        _ = cs.DeleteObjectsWithWarningPrompt(
+                            objs,
+                            localAreaScene.EditContext,   // ← THIS is the fix
+                            "Delete objects"
+                        );
+                    }
                 };
             }
-    
+
             oldAreaParamSize = 0;
             foreach (var area in course.GetAreas())
             {
@@ -3984,7 +4003,7 @@ namespace Fushigi.ui.widgets
             }
 
             var batchAction = ctx.BeginBatchAction();
-
+            Console.WriteLine("Itsy");
             foreach (var actor in actors)
             {
                 ctx.DeleteActor(actor);
