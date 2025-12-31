@@ -909,6 +909,8 @@ namespace Fushigi.ui.widgets
 
                 return;
             }
+
+
         }
 
         public void InteractionWithFocus(KeyboardModifier modifiers)
@@ -1115,13 +1117,8 @@ namespace Fushigi.ui.widgets
                 }
             }
 
-
-            // --- CLICK BEGIN -------------------------------------------------------------
-
-            // Use raw mouse click instead of IsItemClicked() so viewport clicks register
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
-                // If nothing hovered → clear selection (unless shift)
                 if (mHoveredObject == null)
                 {
                     if (!ImGui.IsKeyDown(ImGuiKey.LeftShift))
@@ -1455,10 +1452,35 @@ namespace Fushigi.ui.widgets
                 {
                     foreach (CourseRail rail in mArea.mRailHolder.mRails)
                     {
+
+                        bool selected = mEditContext.IsSelected(rail);
+
+                        if (selected && rail.mPoints.Count == 0 && ImGui.GetIO().KeyAlt)
+                        {
+                            Vector3 pos = ScreenToWorld(ImGui.GetMousePos());
+
+                            // snapping
+                            if (UserSettings.GetEnableHalfTile())
+                            {
+                                pos.X = MathF.Round(pos.X * 2) / 2;
+                                pos.Y = MathF.Round(pos.Y * 2) / 2;
+                            }
+                            else
+                            {
+                                pos.X = MathF.Round(pos.X);
+                                pos.Y = MathF.Round(pos.Y);
+                            }
+
+                            Vector2 pos2D = WorldToScreen(pos);
+
+                            mDrawList.AddCircleFilled(pos2D, 5, ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)));
+
+                            continue;
+                        }
                         if (rail.mPoints.Count == 0)
                             continue;
 
-                        bool selected = mEditContext.IsSelected(rail);
+
                         var rail_color = selected ? ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) : color;
 
                         List<Vector2> pointsList = [];
@@ -1513,6 +1535,31 @@ namespace Fushigi.ui.widgets
 
                             pointsList.Add(pos2D);
 
+                            if (point_selected && ImGui.GetIO().KeyAlt)
+                            {
+                                Vector3 previewPos = ScreenToWorld(ImGui.GetMousePos());
+
+                                if (UserSettings.GetEnableHalfTile())
+                                {
+                                    previewPos.X = MathF.Round(previewPos.X * 2, MidpointRounding.AwayFromZero) / 2;
+                                    previewPos.Y = MathF.Round(previewPos.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                                }
+                                else
+                                {
+                                    previewPos.X = MathF.Round(previewPos.X, MidpointRounding.AwayFromZero);
+                                    previewPos.Y = MathF.Round(previewPos.Y, MidpointRounding.AwayFromZero);
+                                }
+
+                                previewPos.Z = pnt.mTranslate.Z;
+
+                                Vector2 preview2D = WorldToScreen(previewPos);
+
+                                mDrawList.AddLine(pos2D, preview2D, rail_point_color, 2.5f);
+                                mDrawList.AddCircleFilled(preview2D, size, rail_point_color);
+                            }
+
+
+
                             if (point_selected && pnt.mIsCurve)
                             {
                                 var contPos2D = WorldToScreen(pnt.mControl.mTranslate);
@@ -1523,6 +1570,7 @@ namespace Fushigi.ui.widgets
                                     mDrawList.AddCircle(contPos2D, 9.0f, rail_point_color, 10, 1.5f);
                             }
                         }
+
                     }
                 }
             }
