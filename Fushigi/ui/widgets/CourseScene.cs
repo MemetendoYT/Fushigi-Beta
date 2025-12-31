@@ -1389,6 +1389,12 @@ namespace Fushigi.ui.widgets
                 {
                     actor.mActorParameters["ChildActorSelectName"] = "Default";
                 }
+                /* also hardcoding the camerarea scale to the default one
+                because why not !!!!!*/
+                if (actor.mPackName.Contains("CameraArea"))
+                {
+                    actor.mScale = new NumVec(27.5f, 15.5f, 1.0f);
+                }
 
                 ctx.AddActor(actor);
             } while ((modifier & KeyboardModifier.Shift) > 0);
