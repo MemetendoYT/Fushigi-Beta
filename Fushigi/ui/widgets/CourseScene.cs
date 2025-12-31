@@ -828,22 +828,48 @@ namespace Fushigi.ui.widgets
                 //Save each course area to current romfs folder
                 foreach (var area in course.GetAreas())
                 {
-                    string directory = Path.Combine(UserSettings.GetModRomFSPath(), "Phive", "StaticCompoundBody");
-
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-
-                    var filePath = Path.Combine(directory, $"{area.GetName()}.Nin_NX_NVN.bphsc.zs");
-                        File.Copy(Path.Combine(AppContext.BaseDirectory, "res", "BlankStaticCompoundBody.bphsc.zs"),
-                            filePath, overwrite: true);
-
-
                     var stageParamFilePath = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam", $"{area}.game__stage__StageParam.bgyml"));
                     bool noFileFound = !File.Exists(stageParamFilePath);
 
                     if (noFileFound)
                     {
-                        // Load template (you aren't using it, but keeping your structure)
+
+                         string phiveDir = Path.Combine(
+                           UserSettings.GetModRomFSPath(),
+                           "Phive",
+                           "StaticCompoundBody"
+                       );
+
+                string normalDir  = Path.Combine(
+                           UserSettings.GetRomFSPath(),
+                           "Phive",
+                           "StaticCompoundBody"
+                       );
+
+                if (!Directory.Exists(phiveDir))
+                    Directory.CreateDirectory(phiveDir);
+
+
+                string phiveFileDir = Path.Combine(
+                    phiveDir,
+                    $"{area.GetName()}.Nin_NX_NVN.bphsc.zs"
+                );
+
+                string phiveNormalDir = Path.Combine(
+                    normalDir,
+                    $"{area.GetName()}.Nin_NX_NVN.bphsc.zs"
+                );
+                bool phiveFound = File.Exists(phiveFileDir) || File.Exists(phiveNormalDir);
+
+                if (!phiveFound)
+                {
+                    File.Copy(
+                        Path.Combine(AppContext.BaseDirectory, "res", "BlankStaticCompoundBody.bphsc.zs"),
+                        phiveFileDir,
+                        overwrite: true
+                    );
+                }
+
                         var templateParamFilePath = "res/template.game__stage__StageParam.bgyml";
                        
                         Byml.Byml stageParam = new Byml.Byml(
@@ -871,7 +897,6 @@ namespace Fushigi.ui.widgets
      
                         stageParam.Root = stageParamRoot;
 
-                        // Save
                         string outPath = Path.Combine(
                             UserSettings.GetModRomFSPath(),
                             "Stage/StageParam",

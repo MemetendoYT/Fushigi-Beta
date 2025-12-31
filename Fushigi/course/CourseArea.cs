@@ -33,6 +33,42 @@ namespace Fushigi.course
             if(overrideVanilla)
             {
               loadTemplate = true;
+
+                string phiveDir = Path.Combine(
+                           UserSettings.GetModRomFSPath(),
+                           "Phive",
+                           "StaticCompoundBody"
+                       );
+
+                string normalDir  = Path.Combine(
+                           UserSettings.GetRomFSPath(),
+                           "Phive",
+                           "StaticCompoundBody"
+                       );
+
+                if (!Directory.Exists(phiveDir))
+                    Directory.CreateDirectory(phiveDir);
+
+
+                string phiveFileDir = Path.Combine(
+                    phiveDir,
+                    $"{mAreaName}.Nin_NX_NVN.bphsc.zs"
+                );
+
+                string phiveNormalDir = Path.Combine(
+                    normalDir,
+                    $"{mAreaName}.Nin_NX_NVN.bphsc.zs"
+                );
+                bool phiveFound = File.Exists(phiveFileDir) || File.Exists(phiveNormalDir);
+
+                if (!phiveFound)
+                {
+                    File.Copy(
+                        Path.Combine(AppContext.BaseDirectory, "res", "BlankStaticCompoundBody.bphsc.zs"),
+                        phiveFileDir,
+                        overwrite: true
+                    );
+                }
             }
 
             if (!loadTemplate)
