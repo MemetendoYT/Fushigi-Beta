@@ -870,6 +870,46 @@ namespace Fushigi.ui.widgets
             } while (modifier == KeyboardModifier.Shift);
 
         }
+        public void InteractionWithFocus_TooltipOnly()
+        {
+            if (IsViewportHovered &&
+                mObjectPickingRequest.TryGetValue(out var objectPickingRequest))
+            {
+                bool isValid = objectPickingRequest.predicate(mHoveredObject);
+
+                string hoveredText = "";
+                if (isValid && mHoveredObject is CourseActor hoveredActor)
+                    hoveredText = $"\n\nCurrently Hovered: {hoveredActor.mPackName}";
+
+                ImGui.SetTooltip(objectPickingRequest.message +
+                                 "\nPress Escape to cancel" +
+                                 hoveredText);
+
+                if (ImGui.IsKeyPressed(ImGuiKey.Escape))
+                {
+                    mObjectPickingRequest = null;
+                    objectPickingRequest.promise.SetResult((null, KeyboardModifier.None));
+                }
+
+                return;
+            }
+
+
+            if (IsViewportHovered &&
+                mPositionPickingRequest.TryGetValue(out var positionPickingRequest))
+            {
+                ImGui.SetTooltip(positionPickingRequest.message +
+                                 "\nPress Escape to cancel");
+
+                if (ImGui.IsKeyPressed(ImGuiKey.Escape))
+                {
+                    mPositionPickingRequest = null;
+                    positionPickingRequest.promise.SetResult((null, KeyboardModifier.None));
+                }
+
+                return;
+            }
+        }
 
         public void InteractionWithFocus(KeyboardModifier modifiers)
         {

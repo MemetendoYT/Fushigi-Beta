@@ -671,7 +671,7 @@ namespace Fushigi.ui.widgets
 
                         if (placingActor || (leftClickStartedInsideViewport && viewportWindowHovered))
                         {
-                            viewport.InteractionWithFocus(modifiers);
+                            viewport.InteractionWithFocus_TooltipOnly();
                         }
 
                         AreaParameters(area.mAreaParams);
