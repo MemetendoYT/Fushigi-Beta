@@ -1,4 +1,6 @@
-﻿namespace Fushigi.ui
+﻿using Fushigi.ui.widgets;
+
+namespace Fushigi.ui
 {
     public class UndoHandler
     {
@@ -38,7 +40,7 @@
                 undoStack.Push(new MultiRevertable(name, undoCollection.ToArray()));
                 redoStack.Clear();
             }
-            CourseAreaEditContext.saveStatus = false;
+            CourseScene.saveStatus = false;
         }
 
         /// <summary>
@@ -49,7 +51,7 @@
         {
             undoStack.Push(revertable);
             redoStack.Clear();
-            CourseAreaEditContext.saveStatus = false;
+            CourseScene.saveStatus = false;
         }
 
         /// <summary>
@@ -63,7 +65,7 @@
                 var undoable = undoStack.Pop();
                 var redoable = undoable.Revert();
                 redoStack.Push(new RedoEntry { undoable = undoable, redoable = redoable });
-                CourseAreaEditContext.saveStatus = false;
+                CourseScene.saveStatus = false;
             }
             return canUndo;
         }
@@ -79,7 +81,7 @@
                 var entry = redoStack.Pop();
                 entry.redoable.Revert();
                 undoStack.Push(entry.undoable);
-                CourseAreaEditContext.saveStatus = false;
+                CourseScene.saveStatus = false;
             }
             return canRedo;
         }

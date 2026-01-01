@@ -68,8 +68,6 @@ namespace Fushigi.course
         {
             int areaCount = mAreas.Count;
             string NewAreaName = mCourseName.Replace("_Course", "");
-
-
             var usedNumbers = new HashSet<int>();
 
             foreach (var area in mAreas)

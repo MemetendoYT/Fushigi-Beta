@@ -153,7 +153,7 @@ namespace Fushigi.ui
                             await LoadCourseWithProgressBar(mCurrentCourseName);
                             BfresCache.Clear();
                             UserSettings.AppendRecentCourse(mCurrentCourseName);
-                            CourseAreaEditContext.saveStatus = true;
+                            CourseScene.saveStatus = true;
                         }
                     }).ConfigureAwait(false);
                 }
@@ -340,7 +340,7 @@ namespace Fushigi.ui
                         mModalHost,
                         p);
 
-                    CourseAreaEditContext.saveStatus = true;
+                    CourseScene.saveStatus = true;
                 });
         }
 
@@ -353,6 +353,7 @@ namespace Fushigi.ui
             if (!await RemoveArea())
                 return;
 
+            CourseScene.saveStatus = false;
             var selectedArea = mSelectedCourseScene.selectedArea;
             string areaName = selectedArea.GetName();
             mSelectedCourseScene.DeleteAreaFiles(areaName);
@@ -420,7 +421,7 @@ namespace Fushigi.ui
                                     Logger.Logger.LogMessage("MainWindow", $"Reload course {mCurrentCourseName}!");
                                     await LoadCourseWithProgressBar(mCurrentCourseName);
                                     UserSettings.AppendRecentCourse(mCurrentCourseName);
-                                    CourseAreaEditContext.saveStatus = true;
+                                    CourseScene.saveStatus = true;
                                 }
                             }).ConfigureAwait(false); //fire and forget
                         }
@@ -617,7 +618,7 @@ namespace Fushigi.ui
             if (removeCurrentArea)
             {
                 removeArea();
-                MainWindow.removeCurrentArea = false;
+                removeCurrentArea = false;
             }
 
             if (!string.IsNullOrEmpty(RomFS.GetRoot()) &&

@@ -13,7 +13,6 @@ namespace Fushigi.ui
 {
     class CourseAreaEditContext(CourseArea area) : EditContextBase
     {
-        public static bool saveStatus = true;
         public void AddActor(CourseActor actor)
         {
             LogAdding<CourseActor>($"{actor.mPackName}[{actor.mHash}]");

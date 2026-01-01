@@ -39,6 +39,7 @@ namespace Fushigi.ui.widgets
         public LevelViewport activeViewport;
         readonly UndoWindow undoWindow;
         NumVec camSave;
+        public static bool saveStatus = true;
 
 
         (object? courseObj, FullPropertyCapture capture)
@@ -389,7 +390,7 @@ namespace Fushigi.ui.widgets
 
         public bool HasUnsavedChanges()
         {
-            if (!CourseAreaEditContext.saveStatus)
+            if (!saveStatus)
                 return true;
             else
                 return false;
@@ -702,6 +703,7 @@ namespace Fushigi.ui.widgets
                 if (ImGui.TabItemButton("+"))
                 {
                     MainWindow.addNewArea = true;
+                    saveStatus = false;
                 }
 
                 ImGui.EndTabBar();
@@ -931,7 +933,7 @@ namespace Fushigi.ui.widgets
 
                     }
 
-                    CourseAreaEditContext.saveStatus = true;
+                    saveStatus = true;
                     Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area {area.GetName()}...");
                     Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area parameters for {area.GetName()}...");
 
