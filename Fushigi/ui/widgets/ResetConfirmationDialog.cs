@@ -27,7 +27,7 @@ namespace Fushigi.ui.widgets
 
         public void DrawModalContent(Promise<DialogResult> promise)
         {
-            ImGui.Text("Do you want to reset the level?");
+            ImGui.Text("Do you want to replace this area with the template? \nThis action cannot be undone!");
             ImGui.NewLine();
 
             float centerXButtons = (ImGui.GetWindowWidth() - ImGui.CalcTextSize("Yes No").X) * 0.4f;

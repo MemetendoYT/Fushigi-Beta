@@ -200,6 +200,7 @@ namespace Fushigi.ui.widgets
             var useNewCamera = UserSettings.GetUseNewCamera();
             var privateDRPC = UserSettings.GetPrivateDRPC();
             var toggleRomfsReload = UserSettings.GetAllowRomfsReload();
+            var ClickDuplicate = UserSettings.GetClickDuplicate();
 
             ImGui.Indent();
 
@@ -235,6 +236,11 @@ namespace Fushigi.ui.widgets
                 UserSettings.SetAllowRomfsReload(toggleRomfsReload);
 
             Tooltip.Show("When switching to a different modded romfs everything will reload.");
+
+            if (ImGui.Checkbox("Use Ctrl + Click to duplicate", ref ClickDuplicate))
+                UserSettings.SetClickDuplicate(ClickDuplicate);
+
+            Tooltip.Show("Toggles whether pressing Ctrl and clicking an actor will duplicate it or not.");
 
             if (ImGui.Checkbox("Hide Activity", ref privateDRPC))
                 UserSettings.SetPrivateDRPC(privateDRPC);

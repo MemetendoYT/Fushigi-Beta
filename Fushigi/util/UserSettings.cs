@@ -33,6 +33,7 @@ namespace Fushigi.util
             public int ShaderSettings;
             public bool romfsReload;
             public bool allowRomfsReload;
+            public bool ClickDuplicate;
 
             public Settings()
             {
@@ -52,6 +53,7 @@ namespace Fushigi.util
                 ShaderSettings = 0;
                 romfsReload = false;
                 allowRomfsReload = true;
+                ClickDuplicate = false;
             }
         }
 
@@ -241,7 +243,15 @@ namespace Fushigi.util
             Save();
         }
 
-
+        public static bool GetClickDuplicate()
+        {
+            return AppSettings.ClickDuplicate;
+        }
+        public static void SetClickDuplicate(bool value)
+        {
+            AppSettings.ClickDuplicate = value;
+            Save();
+        }
 
         public static void AppendRecentCourse(string courseName)
         {

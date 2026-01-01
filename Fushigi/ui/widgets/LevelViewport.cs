@@ -965,7 +965,7 @@ namespace Fushigi.ui.widgets
 
             if (mHoveredObject is CourseActor hovered &&
                 ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-                modifiers == KeyboardModifier.CtrlCmd)
+                modifiers == KeyboardModifier.CtrlCmd && UserSettings.GetClickDuplicate())
             {
                 CopiedMedianPosition = hovered.mTranslation;
 
