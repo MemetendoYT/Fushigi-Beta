@@ -3112,3 +3112,136 @@
 [CourseScene]: Loading ObjectTalkingFlower
 [CourseScene]: Loaded ObjectTalkingFlower
 [CourseScene]: Finished loading models
+[Logger]: Initialized logger
+[Program]: Starting Fushigi v1.7.0...
+[Program]: Not running on osx
+[Program]: Loading user settings...
+[Program]: Loading parameter database...
+[Program]: Loading area parameter loader...
+[Program]: Checking for imgui.ini
+[MainWindow]: Loading icons
+[DiscordRPC]: Ready
+[MainWindow]: Initializing Window
+[RomFS]: World001
+[RomFS]: World002
+[RomFS]: World003
+[RomFS]: World004
+[RomFS]: World005
+[RomFS]: World006
+[RomFS]: World007
+[RomFS]: World008
+[RomFS]: World009
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading course files ()
+[EnvPalette]: AA_Common_HanapioHouse_DokanRockBajiHouse
+[EnvPalette]: AA_Common_HanapioHouse_DokanRockBajiHouse
+[ProgressBarDialog]: Loading other resources (this temporarily freezes the app) ()
+[BfshaFile]: Bfsha SecredUber
+[BfshaFile]: Bfsha SecredUber
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading models (0%)
+[CourseScene]: Loading ObjectBlockRace
+[CourseScene]: Loaded ObjectBlockRace
+[ProgressBarDialog]: Loading models (3%)
+[CourseScene]: Loading DVSavanna
+[CourseScene]: Loaded DVSavanna
+[ProgressBarDialog]: Loading models (6%)
+[CourseScene]: Loading MapObjUFO
+[CourseScene]: Loaded MapObjUFO
+[ProgressBarDialog]: Loading models (9%)
+[CourseScene]: Loading MapObjElectricRail
+[CourseScene]: Loaded MapObjElectricRail
+[ProgressBarDialog]: Loading models (11%)
+[CourseScene]: Loading MapObjElectricRailPoint
+[CourseScene]: Loaded MapObjElectricRailPoint
+[ProgressBarDialog]: Loading models (14%)
+[CourseScene]: Loading ObjectCoin
+[CourseScene]: Loaded ObjectCoin
+[ProgressBarDialog]: Loading models (17%)
+[CourseScene]: Loading ObjectBlockHatena30
+[CourseScene]: Loaded ObjectBlockHatena30
+[ProgressBarDialog]: Loading models (20%)
+[CourseScene]: Loading ObjectBlockRenga
+[CourseScene]: Loaded ObjectBlockRenga
+[ProgressBarDialog]: Loading models (23%)
+[CourseScene]: Loading ObjectFlowerChibi
+[CourseScene]: Loaded ObjectFlowerChibi
+[ProgressBarDialog]: Loading models (26%)
+[CourseScene]: Loading EnemyKakibo
+[CourseScene]: Loaded EnemyKakibo
+[ProgressBarDialog]: Loading models (29%)
+[CourseScene]: Loading EnemyBombhei
+[CourseScene]: Loaded EnemyBombhei
+[ProgressBarDialog]: Loading models (31%)
+[CourseScene]: Loading MapObjMetalCage
+[CourseScene]: Loaded MapObjMetalCage
+[ProgressBarDialog]: Loading models (34%)
+[CourseScene]: Loading ObjectDokan
+[CourseScene]: Loaded ObjectDokan
+[ProgressBarDialog]: Loading models (37%)
+[CourseScene]: Loading ObjectCoinRandom
+[CourseScene]: Loaded ObjectCoinRandom
+[ProgressBarDialog]: Loading models (40%)
+[CourseScene]: Loading ObjectCoinRandom10
+[CourseScene]: Loaded ObjectCoinRandom10
+[ProgressBarDialog]: Loading models (43%)
+[CourseScene]: Loading DVKinMori
+[CourseScene]: Loaded DVKinMori
+[ProgressBarDialog]: Loading models (46%)
+[CourseScene]: Loading ObjectBlockHard
+[CourseScene]: Loaded ObjectBlockHard
+[ProgressBarDialog]: Loading models (49%)
+[CourseScene]: Loading ObjectBlackHole
+[CourseScene]: Loaded ObjectBlackHole
+[ProgressBarDialog]: Loading models (51%)
+[CourseScene]: Loading ItemKinoko
+[CourseScene]: Loaded ItemKinoko
+[ProgressBarDialog]: Loading models (54%)
+[CourseScene]: Loading ObjectBlockTsuru
+[CourseScene]: Loaded ObjectBlockTsuru
+[ProgressBarDialog]: Loading models (57%)
+[CourseScene]: Loading ObjectGoalPole
+[CourseScene]: Loaded ObjectGoalPole
+[ProgressBarDialog]: Loading models (60%)
+[CourseScene]: Loading NpcPrince
+[CourseScene]: Loaded NpcPrince
+[ProgressBarDialog]: Loading models (63%)
+[CourseScene]: Loading ItemWonderSeed
+[CourseScene]: Loaded ItemWonderSeed
+[ProgressBarDialog]: Loading models (66%)
+[CourseScene]: Loading NpcCommonerA
+[CourseScene]: Loaded NpcCommonerA
+[ProgressBarDialog]: Loading models (69%)
+[CourseScene]: Loading ObjectGoalToride
+[CourseScene]: Loaded ObjectGoalToride
+[ProgressBarDialog]: Loading models (71%)
+[CourseScene]: Loading MapObjBattlerockBeam
+[CourseScene]: Loaded MapObjBattlerockBeam
+[ProgressBarDialog]: Loading models (74%)
+[CourseScene]: Loading MapObjBattlerockBG
+[CourseScene]: Loaded MapObjBattlerockBG
+[ProgressBarDialog]: Loading models (77%)
+[CourseScene]: Loading ObjectFlagMiddle
+[CourseScene]: Loaded ObjectFlagMiddle
+[ProgressBarDialog]: Loading models (80%)
+[CourseScene]: Loading DVNettaiResortKakyuWonder
+[CourseScene]: Loaded DVNettaiResortKakyuWonder
+[ProgressBarDialog]: Loading models (83%)
+[CourseScene]: Loading MapObjBrokenCannon
+[CourseScene]: Loaded MapObjBrokenCannon
+[ProgressBarDialog]: Loading models (86%)
+[CourseScene]: Loading ObjectWonderHole
+[CourseScene]: Loaded ObjectWonderHole
+[ProgressBarDialog]: Loading models (89%)
+[CourseScene]: Loading EnemyDossun
+[CourseScene]: Loaded EnemyDossun
+[ProgressBarDialog]: Loading models (91%)
+[CourseScene]: Loading MapObjTogeAllDirection
+[CourseScene]: Loaded MapObjTogeAllDirection
+[ProgressBarDialog]: Loading models (94%)
+[CourseScene]: Loading ObjectCoinRing
+[CourseScene]: Loaded ObjectCoinRing
+[ProgressBarDialog]: Loading models (97%)
+[CourseScene]: Loading ObjectTalkingFlower
+[CourseScene]: Loaded ObjectTalkingFlower
+[CourseScene]: Finished loading models

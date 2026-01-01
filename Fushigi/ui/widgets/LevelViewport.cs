@@ -804,7 +804,9 @@ namespace Fushigi.ui.widgets
                 newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
             else
                 newActor = actor.Clone(mArea);
-            newActor.mStartingTrans = actor.mStartingTrans;
+
+            newActor.mStartingTrans = newActor.mTranslation;
+
             mEditContext.AddActor(newActor);
 
             mEditContext.DeselectAll();
@@ -915,6 +917,8 @@ namespace Fushigi.ui.widgets
 
         public void InteractionWithFocus(KeyboardModifier modifiers)
         {
+
+
             if (IsViewportHovered &&
                 mObjectPickingRequest.TryGetValue(out var objectPickingRequest))
             {
@@ -959,7 +963,24 @@ namespace Fushigi.ui.widgets
                 return;
             }
 
+            if (mHoveredObject is CourseActor hovered &&
+                ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
+                modifiers == KeyboardModifier.CtrlCmd)
+            {
+                CopiedMedianPosition = hovered.mTranslation;
+
+                var clone = hovered.Clone(mArea);
+                CopiedObjects = new CourseActor[] { clone };
+                DoImmediatePaste(freshCopy: false);
+
+                clone.mStartingTrans = clone.mTranslation;
+                selectedMedianStartPos = clone.mStartingTrans;
+
+                return;
+            }
+
             // [TODO]: This needs to be rewritten, it's a bit of a mess.
+
             if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !isPanGesture)
             {
                 if (mMultiSelectStartPos != null &&
@@ -971,6 +992,8 @@ namespace Fushigi.ui.widgets
                     DoDrag();
                     void DoDrag()
                     {
+
+
                         if (mEditContext.IsAnySelected<CourseActor>() && mMultiSelectEnded)
                             return;
 
@@ -1116,6 +1139,7 @@ namespace Fushigi.ui.widgets
                     }
                 }
             }
+
 
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {

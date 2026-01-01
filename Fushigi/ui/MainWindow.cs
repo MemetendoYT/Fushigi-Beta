@@ -378,7 +378,48 @@ namespace Fushigi.ui
                         mCurrentCourseName = name;
                     });
         }
+        public static async Task UpdateEnglishNamesFromGitHub()
+        {
+            string hashPath = "res/translation_hash.txt";
+            string jsonPath = "res/EnglishNames.json";
 
+            string commitApiUrl =
+                "https://api.github.com/repos/MemetendoYT/Fushigi-TranslationJSON/commits/main";
+
+
+            string JsonUrl =
+                "https://raw.githubusercontent.com/MemetendoYT/Fushigi-TranslationJSON/main/EnglishNames.json";
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("FushigiTool/1.0");
+
+            string remoteJson = await client.GetStringAsync(commitApiUrl);
+            using var doc = JsonDocument.Parse(remoteJson);
+            string remoteHash = doc.RootElement.GetProperty("sha").GetString();
+
+
+            string localHash = null;
+            if (File.Exists(hashPath))
+                localHash = File.ReadAllText(hashPath).Trim();
+
+            if (localHash != remoteHash)
+            {
+                string json = await client.GetStringAsync(JsonUrl);
+
+                Directory.CreateDirectory("res");
+
+                File.WriteAllText(jsonPath, json);
+
+
+                File.WriteAllText(hashPath, remoteHash);
+
+                Console.WriteLine("Translation JSON updated successfully.");
+                CourseScene.refreshTranslation = true;
+                return;
+            }
+
+            Console.WriteLine("No translation updates available.");
+        }
         void DrawMainMenu()
         {
             /* create a new menubar */
@@ -500,32 +541,7 @@ namespace Fushigi.ui
 
                     if (ImGui.MenuItem("Update Translation JSON"))
                     {
-                        FileDialog dlg = new FileDialog();
-                        if (dlg.ShowDialog("Select a JSON."))
-                        {
-                                string selectedJson = dlg.SelectedPath;
-
-                                try
-                                {
-                                    var test = JsonSerializer.Deserialize<Dictionary<string, string>>(
-                                        File.ReadAllText(selectedJson)
-                                    );
-                                }
-                                catch
-                                {
-                                    Logger.Logger.LogError("Translation", "Invalid JSON selected.");
-                                    return;
-                                }
-
-                                string dest = Path.Combine(AppContext.BaseDirectory, "res", "EnglishNames.json");
-                                File.Copy(selectedJson, dest, overwrite: true);
-
-                                Translate.LoadEnglishNames();
-                                CourseScene.refreshTranslation = true;
-                                Logger.Logger.LogWarning("Translation", "JSON imported successfully.");
-                        }
-
-
+                        UpdateEnglishNamesFromGitHub();
                     }
 
                     ImGui.Separator();
