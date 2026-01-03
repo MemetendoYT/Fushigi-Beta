@@ -24,6 +24,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using static System.Net.Mime.MediaTypeNames;
 using NumVec = System.Numerics.Vector3;
 
 
@@ -2492,16 +2493,17 @@ namespace Fushigi.ui.widgets
                             string srcHash = mSelectedGlobalLink.mSource.ToString();
                             if (ImGui.InputText("##Source Hash", ref srcHash, 256, ImGuiInputTextFlags.CharsDecimal))
                             {
-                                mSelectedGlobalLink.mSource = Convert.ToUInt64(srcHash);
-                            }
+                                mSelectedGlobalLink.mSource = ulong.TryParse(srcHash, out var v) ? v : 0;
+
+                        }
 
                         ImGui.TableNextColumn();
                             ImGui.Text("Destination Hash"); ImGui.TableNextColumn();
                             string destHash = mSelectedGlobalLink.mDest.ToString();
                             if (ImGui.InputText("##Dest Hash", ref destHash, 256, ImGuiInputTextFlags.CharsDecimal))
                             {
-                                mSelectedGlobalLink.mDest = Convert.ToUInt64(destHash);
-                            }
+                                mSelectedGlobalLink.mDest = ulong.TryParse(destHash, out var v) ? v : 0;
+                        }
 
                         ImGui.TableNextColumn();
                             ImGui.Text("Link Type"); ImGui.TableNextColumn();
