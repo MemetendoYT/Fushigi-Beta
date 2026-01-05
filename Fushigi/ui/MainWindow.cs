@@ -471,6 +471,7 @@ namespace Fushigi.ui
                                     Logger.Logger.LogMessage("MainWindow", $"Selected course {mCurrentCourseName}!");
                                     await LoadCourseWithProgressBar(mCurrentCourseName);
                                     UserSettings.AppendRecentCourse(mCurrentCourseName);
+                                    CourseScene.saveStatus = true;
                                 }
                             }).ConfigureAwait(false); //fire and forget
                         }

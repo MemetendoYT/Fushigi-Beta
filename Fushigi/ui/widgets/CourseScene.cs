@@ -512,12 +512,8 @@ namespace Fushigi.ui.widgets
 
                         activeViewport = viewport;
                         selectedArea = area;
+                        mHasFilledLayers = false;
 
-                        if (currentArea != area)
-                        {
-                            currentArea = area;
-                            mHasFilledLayers = false;
-                        }
 
                         ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
 
