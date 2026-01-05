@@ -226,6 +226,7 @@ namespace Fushigi.ui.widgets
             foreach (var actor in newArea.GetActors())
             {
                 actor.mAreaHash = newArea.mRootHash;
+                actor.mHash = (ulong)(new Random().NextDouble() * ulong.MaxValue);
             }
 
             var areaScene = new CourseAreaScene(newArea, new CourseAreaSceneRoot(newArea));
