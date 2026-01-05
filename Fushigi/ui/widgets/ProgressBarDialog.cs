@@ -36,7 +36,7 @@ namespace Fushigi.ui.widgets
             dialog.mTask = asyncAction(progress);
             await modalHost.ShowPopUp(dialog, "",
                 ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar,
-                minWindowSize: new Vector2(300, 150));
+                minWindowSize: new Vector2(300, 150 * MainWindow.dpiScale));
         }
 
         public static async Task<TResult> ShowDialogForAsyncFunc<TResult>(IPopupModalHost modalHost,

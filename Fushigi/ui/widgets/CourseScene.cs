@@ -614,18 +614,6 @@ namespace Fushigi.ui.widgets
 
                             ImGui.SameLine();
 
-                            if (ImGui.BeginCombo("##WonderView", $"{IconUtil.ICON_EYE}", flags))
-                            {
-                                for (int n = 0; n < 3; n++)
-                                    if (ImGui.Selectable(mViewMode[n]))
-                                        viewport.WonderViewMode = (WonderViewType)n;
-
-                                ImGui.EndCombo();
-                            }
-                            ImGui.SetItemTooltip("Wonder View");
-
-                            ImGui.SameLine();
-
                             if (ImguiHelper.DrawTextToggle(IconUtil.ICON_IMAGE, viewport.ShowBackground, icon_size))
                             {
                                 viewport.ShowBackground = !viewport.ShowBackground;
@@ -634,6 +622,14 @@ namespace Fushigi.ui.widgets
                                         mLayersVisibility[layer] = viewport.ShowBackground;
                             }
                             ImGui.SetItemTooltip("Hide/Show Background Layers");
+
+                            ImGui.SameLine();
+
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_SYNC, true, icon_size))
+                            {
+                                BfresCache.Clear();
+                            }
+                            ImGui.SetItemTooltip("Reload Models");
 
                             ImGui.PopStyleColor(1);
                             ImGui.EndChild();
