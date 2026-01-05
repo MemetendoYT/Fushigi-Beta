@@ -145,7 +145,7 @@ namespace Fushigi.ui.widgets
 
         public static void Draw(ref bool continueDisplay, IPopupModalHost modalHost, AreaParam areaParam)
         {
-            ImGui.SetNextWindowSize(new Vector2(500, 500), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new Vector2(500 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
 
             // Window
             if (ImGui.Begin("Area Settings", ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse))

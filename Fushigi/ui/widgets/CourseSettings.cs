@@ -69,7 +69,7 @@ namespace Fushigi.ui.widgets
 
         public static void Draw(ref bool continueDisplay, IPopupModalHost modalHost, CourseInfo courseInfo, MapAnalysisInfo mapAnalysisInfo, StageLoadInfo stageLoadInfo)
         {
-            ImGui.SetNextWindowSize(new Vector2(500, 500), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new Vector2(500 * MainWindow.dpiScale, 500 * MainWindow.dpiScale ), ImGuiCond.Once);
 
             // Window
             if (ImGui.Begin("Course Settings", ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse))

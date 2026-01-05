@@ -48,18 +48,18 @@
   </ItemGroup>
 
   <ItemGroup>
-	<None Update="res\template.bcett.byml.zs">
+	  <None Update="res\template.bcett.byml.zs">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</None>
-	<None Update="res\template.game__stage__AreaParam.bgyml">
+	  </None>
+	  <None Update="res\template.game__stage__AreaParam.bgyml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</None>
-	<None Update="res\template.game__stage__StageParam.bgyml">
+	  </None>
+	  <None Update="res\template.game__stage__StageParam.bgyml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</None>
-	<None Update="res\VanillaNames.txt">
+	  </None>
+	  <None Update="res\VanillaNames.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</None>
+	  </None>
     <None Update="res\AreaParam.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

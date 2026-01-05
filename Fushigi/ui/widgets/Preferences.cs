@@ -28,7 +28,7 @@ namespace Fushigi.ui.widgets
         public static void Draw(ref bool continueDisplay, GLTaskScheduler glTaskScheduler,
      IPopupModalHost modalHost)
         {
-            ImGui.SetNextWindowSize(new Vector2(700, 300), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new Vector2(700 * MainWindow.dpiScale, 300 * MainWindow.dpiScale), ImGuiCond.Once);
 
             if (ImGui.Begin("Fushigi Settings", ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse))
             {

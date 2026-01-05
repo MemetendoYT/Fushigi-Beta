@@ -9,6 +9,7 @@ using Fushigi.windowing;
 using ImGuiNET;
 using Silk.NET.Core;
 using Silk.NET.OpenGL;
+using Silk.NET.SDL;
 using Silk.NET.Windowing;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
@@ -16,10 +17,11 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using System.Text.Json;
-using static System.Formats.Asn1.AsnWriter;
+
+
 
 namespace Fushigi.ui
 {
@@ -36,9 +38,12 @@ namespace Fushigi.ui
         public static bool reloadLevel = false;
         public static bool addNewArea = false;
         public static bool removeCurrentArea = false;
+        public static float dpiScale = 0;
 
         public MainWindow()
         {
+         
+
             Logger.Logger.LogMessage("MainWindow", "Loading icons");
 
             unsafe
@@ -89,14 +94,35 @@ namespace Fushigi.ui
                         iconConfig->RasterizerMultiply = 1f;
                         iconConfig->GlyphOffset = new Vector2(0);
 
-                        float size = 16;
+
+                        [DllImport("User32.dll")]
+                        static extern uint GetDpiForWindow(IntPtr hWnd);
+
+                        var native = mWindow.Native;
+                        IntPtr hwnd = native.Win32!.Value.Hwnd;
+
+                        uint dpi = GetDpiForWindow(hwnd);
+                        if (dpi == 0)
+                            dpi = 96;
+
+                        dpiScale = dpi / 96f;
+
+                        ImGui.GetStyle().ScaleAllSizes(dpiScale);
+
+                        float size = 16f * dpiScale;
+                        CourseSelect.thumbnailSize *= dpiScale;
                         mDefaultFont = io.Fonts.AddFontFromFileTTF(
                             Path.Combine("res", "Font.ttf"),
                             size, nativeConfig, io.Fonts.GetGlyphRangesDefault());
 
                         io.Fonts.AddFontFromFileTTF(
-                           Path.Combine("res", "NotoSansCJKjp-Medium.otf"),
-                               size, nativeConfigJP, io.Fonts.GetGlyphRangesJapanese());
+                            Path.Combine("res", "NotoSansCJKjp-Medium.otf"),
+                            size, nativeConfigJP, io.Fonts.GetGlyphRangesJapanese());
+
+                        io.Fonts.Build();
+
+
+
 
                         //other fonts go here and follow the same schema
                         GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { IconUtil.MIN_GLYPH_RANGE, IconUtil.MAX_GLYPH_RANGE, 0 }, GCHandleType.Pinned);
@@ -572,7 +598,7 @@ namespace Fushigi.ui
                     ImGui.Separator();
 
                     if (ImGui.MenuItem("Reset User Interface"))
-                        MainWindow.reloadIni = true;
+                        reloadIni = true;
 
                     if (ImGui.MenuItem("Regenerate Parameter Database", ParamDB.sIsInit))
                     {
@@ -649,10 +675,10 @@ namespace Fushigi.ui
             mModalHost.DrawHostedModals();
 
             //Update viewport from any framebuffers being used
-            if (MainWindow.reloadIni)
+            if (reloadIni)
             {
-                ImGui.LoadIniSettingsFromDisk("res/imgui-default.ini");
-                MainWindow.reloadIni = false;
+                ImGui.LoadIniSettingsFromDisk("imgui.ini");
+                reloadIni = false;
             }
 
 

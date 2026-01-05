@@ -24,7 +24,7 @@ namespace Fushigi.ui.widgets
 
         string? selectedWorld;
         string? selectedCourseName;
-        private static readonly Vector2 thumbnailSize = new(200f, 112.5f);
+        public static Vector2 thumbnailSize = new(200f, 112.5f);
         float worldNameSize = 12f;
 
         public CourseSelect(string? selectedCourseName = null)
@@ -35,7 +35,6 @@ namespace Fushigi.ui.widgets
         public void DrawModalContent(Promise<string> promise)
         {
             DrawTabs();
-
             DrawCourses(promise);
         }
 
@@ -67,8 +66,14 @@ namespace Fushigi.ui.widgets
             var fontSize = ImGui.GetFontSize();
             var font = ImGui.GetFont();
             font.FontSize = worldNameSize;
+            if(MainWindow.dpiScale > 1)
+            {
+                ImGui.SetWindowFontScale(0.7f);  
+            }
             ImGui.Text(RomFS.GetCourseEntries()[selectedWorld!].name);
+            ImGui.Dummy(new Vector2(0, ImGui.GetTextLineHeight()));
             font.FontSize = fontSize;
+            ImGui.SetWindowFontScale(1.0f);
 
             if (!ImGui.BeginListBox(selectedWorld, ImGui.GetContentRegionAvail()))
             {

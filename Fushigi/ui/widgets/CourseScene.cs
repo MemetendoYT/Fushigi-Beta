@@ -521,9 +521,9 @@ namespace Fushigi.ui.widgets
                         ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
 
 
-                        if (ImGui.BeginChild("viewport_menu_bar", new Vector2(ImGui.GetWindowWidth(), 30)))
+                        if (ImGui.BeginChild("viewport_menu_bar", new Vector2(ImGui.GetWindowWidth(), 30 * MainWindow.dpiScale)))
                         {
-                            Vector2 icon_size = new Vector2(25, 25);
+                            Vector2 icon_size = new Vector2(25 * MainWindow.dpiScale, 25 * MainWindow.dpiScale);
 
                             ImGui.PushStyleColor(ImGuiCol.Button, 0);
 
@@ -854,12 +854,12 @@ namespace Fushigi.ui.widgets
                 //Save each course area to current romfs folder
                 foreach (var area in course.GetAreas())
                 {
-                    var stageParamFilePath = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam", $"{area}.game__stage__StageParam.bgyml"));
+                    var stageParamFilePath = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam", $"{area.GetName()}.game__stage__StageParam.bgyml"));
+                    Console.WriteLine(stageParamFilePath);
                     bool noFileFound = !File.Exists(stageParamFilePath);
 
                     if (noFileFound)
                     {
-
                          string phiveDir = Path.Combine(
                            UserSettings.GetModRomFSPath(),
                            "Phive",
@@ -1594,14 +1594,14 @@ namespace Fushigi.ui.widgets
 
             List<CourseGroup> groupsToRemove = new List<CourseGroup>();
 
-            if (ImGui.Button("Add Group", new Vector2(100, 22)))
+            if (ImGui.Button("Add Group", new Vector2(100 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)))
             {
                 editContext.AddGroup(new CourseGroup());
             }
 
             ImGui.SameLine();
 
-            if (ImGui.Button("Remove Group", new Vector2(100, 22)) || ImGui.IsKeyPressed(ImGuiKey.Delete))
+            if (ImGui.Button("Remove Group", new Vector2(100 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)) || ImGui.IsKeyPressed(ImGuiKey.Delete))
             {
                 foreach (var group in areaGroups)
                 {
@@ -1623,17 +1623,17 @@ namespace Fushigi.ui.widgets
 
                 ImGui.SameLine();
 
-                if (ImGui.Selectable(name, editContext.IsSelected(group), ImGuiSelectableFlags.None, new Vector2(150, 22)))
+                if (ImGui.Selectable(name, editContext.IsSelected(group), ImGuiSelectableFlags.None, new Vector2(150 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)))
                 {
                     editContext.DeselectAll();
                     editContext.Select(group);
                 }
 
-                ImGui.SameLine(ImGui.GetColumnWidth() - 80);
+                ImGui.SameLine(ImGui.GetColumnWidth() - (80 * MainWindow.dpiScale));
 
                 //ImGui.SetNextItemAllowOverlap();
 
-                if (ImGui.Button($"Add Actor ##{j}", new Vector2(80, 22)))
+                if (ImGui.Button($"Add Actor ##{j}", new Vector2(80 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)))
                 {
                     KeyboardModifier modifier;
                     ImGui.SetWindowFocus(selectedArea.GetName());
@@ -1667,7 +1667,12 @@ namespace Fushigi.ui.widgets
 
                         if (actor != null)
                         {
-                            if (ImGui.Button(actor.mName, new Vector2(ImGui.GetContentRegionAvail().X - ImGui.GetFrameHeight() * 3.2f, 0)))
+                            float dpi = MainWindow.dpiScale;
+
+                            float w = ImGui.GetContentRegionAvail().X - (ImGui.GetFrameHeight() * 3.2f);
+                            w *= dpi; 
+
+                            if (ImGui.Button(actor.mName, new Vector2(w, 0)))
                             {
                                 activeViewport.SelectedActor(actor);
                                 activeViewport.Camera.Target.X = actor.mTranslation.X;
@@ -2824,7 +2829,7 @@ namespace Fushigi.ui.widgets
 
             ImGui.Checkbox("Hide Walls", ref HideWalls);
 
-            if (ImGui.Button("Add Tile Unit", new Vector2(100, 22)))
+            if (ImGui.Button("Add Tile Unit", new Vector2(100 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)))
             {
                 editContext.AddBgUnit(new CourseUnit());
             }
@@ -2908,7 +2913,7 @@ namespace Fushigi.ui.widgets
                                 ImGui.SameLine();
 
                                 //Shift text from selection
-                                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 22);
+                                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + (22 * MainWindow.dpiScale));
                                 ImGui.Text(wallname);
 
                             ImGui.TableNextColumn();
@@ -2940,8 +2945,7 @@ namespace Fushigi.ui.widgets
                             if (ImGui.MenuItem($"Remove {name}"))
                             {
                                 removed_tile_units.Add(unit);
-                                editContext.DeselectAll();
-                                editContext.Select(unit);
+                                reloadUnit = true;
                             }
 
                             ImGui.EndPopup();
@@ -2953,8 +2957,7 @@ namespace Fushigi.ui.widgets
                         if (ImGui.Button("Add Wall"))
                         {
                             editContext.AddWall(unit, new Wall(unit));
-                            editContext.DeselectAll();
-                            editContext.Select(unit);
+                            reloadUnit = true;
                         }
                         ImGui.SameLine();
 
@@ -2967,8 +2970,8 @@ namespace Fushigi.ui.widgets
                                     //TODO is that REALLY how we want to do this?
                                     if (editContext.IsSelected(unit.Walls[i].ExternalRail)) { 
                                         editContext.DeleteWall(unit, unit.Walls[i]);
-                                        editContext.DeselectAll();
-                                        editContext.Select(unit);
+                                        reloadUnit = true;
+
                                     }
 
                                 }
@@ -3002,21 +3005,21 @@ namespace Fushigi.ui.widgets
                                     if (ImGui.MenuItem("Add Internal Rail"))
                                     {
                                         editContext.AddInternalRail(wall, new BGUnitRail(unit) { IsInternal = true });
-                                        editContext.DeselectAll();
-                                        editContext.Select(unit);
+                                        reloadUnit = true;
+
                                     }
 
-                                        if (ImGui.MenuItem("Reverse Rail Points"))
+                                    if (ImGui.MenuItem("Reverse Rail Points"))
                                         editContext.ReverseBgUnitRailPoints(wall);
 
                                     if (ImGui.MenuItem("Remove Rail"))
                                     {
                                         editContext.DeleteWall(unit, wall);
-                                        editContext.DeselectAll();
-                                        editContext.Select(unit);
+                                        reloadUnit = true;
+
                                     }
 
-                                        ImGui.EndPopup();
+                                    ImGui.EndPopup();
                                 }
                             }
 
@@ -3124,6 +3127,7 @@ namespace Fushigi.ui.widgets
                     foreach (var rail in selected)
                         editContext.DeleteRail(rail);
                 }   
+
             }
 
             CourseRail railToDelete = null;

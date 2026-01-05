@@ -219,6 +219,7 @@ public class ImGuiController : IDisposable
             }
 
             _frameBegun = false;
+
             ImGuiNET.ImGui.Render();
             RenderImDrawData(ImGuiNET.ImGui.GetDrawData());
 
