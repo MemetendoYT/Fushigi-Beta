@@ -68,7 +68,7 @@ namespace Fushigi.ui.widgets
             font.FontSize = worldNameSize;
             if(MainWindow.dpiScale > 1)
             {
-                ImGui.SetWindowFontScale(0.7f);  
+                ImGui.SetWindowFontScale(0.5f);  
             }
             ImGui.Text(RomFS.GetCourseEntries()[selectedWorld!].name);
             ImGui.Dummy(new Vector2(0, ImGui.GetTextLineHeight()));
