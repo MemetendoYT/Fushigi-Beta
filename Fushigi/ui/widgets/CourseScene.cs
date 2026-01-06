@@ -503,16 +503,22 @@ namespace Fushigi.ui.widgets
                         {
                             ImGui.SetItemDefaultFocus();
                             activeViewport = viewport;
+                            if (selectedArea != area)
+                                mHasFilledLayers = false;                          
+                            
                             selectedArea = area;
                             currentArea = selectedArea;
                             areaToFocus = null;
                         }
 
 
+                        if (selectedArea != area)
+                            mHasFilledLayers = false;
 
                         activeViewport = viewport;
                         selectedArea = area;
-                        mHasFilledLayers = false;
+
+                 
 
 
                         ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
