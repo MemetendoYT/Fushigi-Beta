@@ -33,7 +33,6 @@ namespace Fushigi
         {
             if (mBootUpPack != null)
                 return mBootUpPack;
-
             byte[] packbytes = FileUtil.DecompressData(GetFileBytes("Pack/Bootup.Nin_NX_NVN.pack.zs"));
             SARC.SARC packSarc = new SARC.SARC(new MemoryStream(packbytes));
 

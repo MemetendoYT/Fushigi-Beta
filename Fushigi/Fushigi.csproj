@@ -9,6 +9,11 @@
     <ApplicationIcon>res\icon1.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+	<DebugType>none</DebugType>
+  </PropertyGroup>
+
+
   <ItemGroup>
     <Content Include="res\icon1.ico" />
   </ItemGroup>

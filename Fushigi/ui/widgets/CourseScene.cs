@@ -848,7 +848,6 @@ namespace Fushigi.ui.widgets
                 foreach (var area in course.GetAreas())
                 {
                     var stageParamFilePath = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam", $"{area.GetName()}.game__stage__StageParam.bgyml"));
-                    Console.WriteLine(stageParamFilePath);
                     bool noFileFound = !File.Exists(stageParamFilePath);
 
                     if (noFileFound)
@@ -4015,7 +4014,6 @@ namespace Fushigi.ui.widgets
             }
 
             var batchAction = ctx.BeginBatchAction();
-            Console.WriteLine("Itsy");
             foreach (var actor in actors)
             {
                 ctx.DeleteActor(actor);

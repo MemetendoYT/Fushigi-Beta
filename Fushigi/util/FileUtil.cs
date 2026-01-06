@@ -27,7 +27,7 @@ namespace Fushigi.util
             }
 
             var compressedBytes = File.ReadAllBytes(filePath);
-            byte[] decompressedData = DecompressData(compressedBytes);
+            byte[] decompressedData = DecompressData(compressedBytes, filePath);
             return decompressedData;
         }
 
@@ -53,6 +53,24 @@ namespace Fushigi.util
             byte[] decompressedData;
 
             if (!IsFileCompressed(fileBytes)) {
+                Console.WriteLine("Error: is at " + "bootup pack :( boowomp");
+                throw new Exception("FileUtil::DecompressData -- File not ZSTD Compressed.");
+            }
+            using (var decompressor = new ZstdSharp.Decompressor())
+            {
+                decompressedData = decompressor.Unwrap(new System.Span<byte>(fileBytes)).ToArray();
+            }
+
+            return decompressedData;
+        }
+
+        public static byte[] DecompressData(byte[] fileBytes, string fileName)
+        {
+            byte[] decompressedData;
+
+            if (!IsFileCompressed(fileBytes))
+            {
+                Console.WriteLine("Error: is at " + fileName);
                 throw new Exception("FileUtil::DecompressData -- File not ZSTD Compressed.");
             }
             using (var decompressor = new ZstdSharp.Decompressor())
