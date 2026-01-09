@@ -53,6 +53,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="res\icon_menu.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="res\template.bcett.byml.zs">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

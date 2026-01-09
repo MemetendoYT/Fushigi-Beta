@@ -222,12 +222,51 @@ namespace Fushigi.ui.widgets
             var newArea = course.GetAreas().Last();
             uint hash = Crc32.Compute(newArea.GetName());
             newArea.mRootHash = hash;
+            var hashMap = new Dictionary<ulong, ulong>();
+      
+           
+                foreach (var actor in newArea.GetActors())
+                {
+                    ulong oldHash = actor.mHash;
+                    ulong newHash = (ulong)(new Random().NextDouble() * ulong.MaxValue);
 
-            foreach (var actor in newArea.GetActors())
-            {
-                actor.mAreaHash = newArea.mRootHash;
-                actor.mHash = (ulong)(new Random().NextDouble() * ulong.MaxValue);
+                    hashMap[oldHash] = newHash;
+
+                    actor.mHash = newHash;
+                    actor.mAreaHash = newArea.mRootHash;
+
+
+                }
+
+
+                foreach (CourseLink link in newArea.mLinkHolder.mLinks)
+                {
+                    if (hashMap.TryGetValue(link.mSource, out ulong newSrc))
+                        link.mSource = newSrc;
+
+                    if (hashMap.TryGetValue(link.mDest, out ulong newDst))
+                        link.mDest = newDst;
+                }
+
+                foreach(CourseGroup group in newArea.mGroupsHolder.mGroups)
+                {
+                    for (int i = 0; i < group.mActors.Count; i++)
+                    {
+                        ulong oldActorHash = group.mActors[i];
+
+                        if (hashMap.TryGetValue(oldActorHash, out ulong newActorHash))
+                            group.mActors[i] = newActorHash;
+                    }
+
             }
+
+
+            foreach (CourseActorToRailLink rail in newArea.mRailLinksHolder.mLinks)
+                {     
+                    if (hashMap.TryGetValue(rail.mSourceActor, out ulong newSrc))
+                        rail.mSourceActor = newSrc;
+
+                }
 
             var areaScene = new CourseAreaScene(newArea, new CourseAreaSceneRoot(newArea));
             areaScenes[newArea] = areaScene;
@@ -1457,7 +1496,7 @@ namespace Fushigi.ui.widgets
 
         private void GlobalLinksPanel()
         {
-            if (!course.IsOneAreaCourse)
+            if (!course.IsOneAreaCourse || course.GetAreaCount() > 1)
             {
             ImGui.Begin("Global Links");
 
@@ -1593,35 +1632,33 @@ namespace Fushigi.ui.widgets
             List<CourseGroup> groupsToRemove = new List<CourseGroup>();
 
             if (ImGui.Button("Add Group", new Vector2(100 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)))
-            {
                 editContext.AddGroup(new CourseGroup());
-            }
 
             ImGui.SameLine();
 
-            if (ImGui.Button("Remove Group", new Vector2(100 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)) || ImGui.IsKeyPressed(ImGuiKey.Delete))
+            if (ImGui.Button("Remove Group", new Vector2(100 * MainWindow.dpiScale, 22 * MainWindow.dpiScale))
+                || ImGui.IsKeyPressed(ImGuiKey.Delete))
             {
                 foreach (var group in areaGroups)
                 {
                     if (editContext.IsSelected(group))
-                    {
                         groupsToRemove.Add(group);
-                    }
                 }
             }
 
             for (int j = 0; j < areaGroups.Count; j++)
             {
                 var group = areaGroups[j];
-                var tree_flags = ImGuiTreeNodeFlags.None;
-                string name = $"Simultaneous Group {areaGroups.IndexOf(group)}";
+                string name = $"Simultaneous Group {j}";
 
                 ImGui.AlignTextToFramePadding();
                 bool expanded = ImGui.TreeNodeEx($"##{name}");
 
                 ImGui.SameLine();
 
-                if (ImGui.Selectable(name, editContext.IsSelected(group), ImGuiSelectableFlags.None, new Vector2(150 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)))
+                if (ImGui.Selectable(name, editContext.IsSelected(group),
+                    ImGuiSelectableFlags.None,
+                    new Vector2(150 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)))
                 {
                     editContext.DeselectAll();
                     editContext.Select(group);
@@ -1629,28 +1666,29 @@ namespace Fushigi.ui.widgets
 
                 ImGui.SameLine(ImGui.GetColumnWidth() - (80 * MainWindow.dpiScale));
 
-                //ImGui.SetNextItemAllowOverlap();
-
                 if (ImGui.Button($"Add Actor ##{j}", new Vector2(80 * MainWindow.dpiScale, 22 * MainWindow.dpiScale)))
                 {
                     KeyboardModifier modifier;
                     ImGui.SetWindowFocus(selectedArea.GetName());
+
                     Task.Run(async () =>
                     {
                         do
                         {
                             using var tokenSource = new CancellationTokenSource();
                             (var picked, modifier) = await activeViewport.PickObject(
-                                            "Select the actor you wish to add to this group. -- Hold SHIFT to add multiple",
-                                            x => x is CourseActor, tokenSource);
+                                "Select the actor you wish to add to this group. -- Hold SHIFT to add multiple",
+                                x => x is CourseActor, tokenSource);
+
                             if (picked is null)
                                 return;
 
                             editContext.AddActorToGroup(group, picked as CourseActor);
+
                         } while ((modifier & KeyboardModifier.Shift) > 0);
                     });
                 }
-                
+
                 if (expanded)
                 {
                     List<CourseActor> actorsToRemove = new List<CourseActor>();
@@ -1660,83 +1698,59 @@ namespace Fushigi.ui.widgets
                         var actorHash = group.mActors[i];
                         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetStyle().FramePadding.X);
 
-                        CourseActor? actor;
-                        selectedArea.mActorHolder.TryGetActor(actorHash, out actor);
+                        selectedArea.mActorHolder.TryGetActor(actorHash, out CourseActor? actor);
 
                         if (actor != null)
                         {
                             float dpi = MainWindow.dpiScale;
 
-                            float w = ImGui.GetContentRegionAvail().X - (ImGui.GetFrameHeight() * 3.2f);
-                            w *= dpi; 
+                            float fullWidth = ImGui.GetContentRegionAvail().X;
 
-                            if (ImGui.Button(actor.mName, new Vector2(w, 0)))
+                            float deleteButtonWidth = ImGui.GetFrameHeight() * 3.2f * dpi;
+                            float actorButtonWidth = fullWidth - deleteButtonWidth;
+
+ 
+                            if (ImGui.Button(actor.mName, new Vector2(actorButtonWidth, 0)))
                             {
                                 activeViewport.SelectedActor(actor);
                                 activeViewport.Camera.Target.X = actor.mTranslation.X;
                                 activeViewport.Camera.Target.Y = actor.mTranslation.Y;
                             }
                             ImGui.SetItemTooltip($"{actor.mPackName}\n{actor.mName}");
+
+                            ImGui.SameLine();
+
+                            Vector2 deletePos = ImGui.GetCursorScreenPos();
+                            bool clicked = ImGui.InvisibleButton(
+                                $"##DeleteActor{i}FromGroup",
+                                new Vector2(deleteButtonWidth, ImGui.GetFrameHeight())
+                            );
+
+                            string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                            Vector2 iconSize = ImGui.CalcTextSize(deleteIcon);
+                            Vector2 iconPos = deletePos + new Vector2(
+                                (deleteButtonWidth - iconSize.X) * 0.5f,
+                                (ImGui.GetFrameHeight() - iconSize.Y) * 0.5f
+                            );
+
+                            uint color = ImGui.GetColorU32(ImGuiCol.Text);
+                            if (!ImGui.IsItemHovered())
+                                color = (color & 0xFFFFFF) | ((uint)((color >> 24) * 0.5f) << 24);
+
+                            ImGui.GetWindowDrawList().AddText(iconPos, color, deleteIcon);
+                            ImGui.SetItemTooltip("Delete Actor from Group");
+
+                            if (clicked)
+                                actorsToRemove.Add(actor);
                         }
-                        else
+
+                        if (actorsToRemove.Count > 0)
                         {
-                            if (ImGui.Button("Actor Not Found"))
-                            {
+                            foreach (var a in actorsToRemove)
+                                editContext.RemoveActorFromGroup(group, a);
 
-                            }
+                            actorsToRemove.Clear();
                         }
-
-                        ImGui.SameLine();
-
-                        var cursorSP = ImGui.GetCursorScreenPos();
-                        var padding = ImGui.GetStyle().FramePadding;
-
-                        uint WithAlphaFactor(uint color, float factor) => color & 0xFFFFFF | ((uint)((color >> 24) * factor) << 24);
-
-                        float deleteButtonWidth = ImGui.GetFrameHeight() * 3.2f;
-
-                        float columnWidth = ImGui.GetContentRegionAvail().X;
-
-                        ImGui.PushClipRect(cursorSP,
-                            cursorSP + new Vector2(columnWidth - deleteButtonWidth, ImGui.GetFrameHeight()), true);
-
-                        //var cursor = ImGui.GetCursorPos();
-                        // ImGui.BeginDisabled();
-                        // if (ImGui.Button("Replace"))
-                        // {
-
-                        // }
-                        // ImGui.EndDisabled();
-                        // cursor.X += ImGui.GetItemRectSize().X + 2;
-
-                        //ImGui.SetCursorPos(cursor);
-
-                        ImGui.PopClipRect();
-                        cursorSP.X += columnWidth - deleteButtonWidth;
-                        ImGui.SetCursorScreenPos(cursorSP);
-
-                        ImGui.SameLine();
-
-                        bool clicked = ImGui.InvisibleButton($"##DeleteActor{i}FromGroup", new Vector2(deleteButtonWidth, ImGui.GetFrameHeight()));
-                        string deleteIcon = IconUtil.ICON_TRASH_ALT;
-                        ImGui.GetWindowDrawList().AddText(cursorSP + new Vector2((deleteButtonWidth - ImGui.CalcTextSize(deleteIcon).X) / 2, padding.Y),
-                            WithAlphaFactor(ImGui.GetColorU32(ImGuiCol.Text), ImGui.IsItemHovered() ? 1 : 0.5f),
-                            deleteIcon);
-
-                        ImGui.SetItemTooltip("Delete Actor from Group");
-
-                        if (clicked)
-                            actorsToRemove.Add(actor);
-
-                    }
-
-                    if (actorsToRemove.Count > 0)
-                    {
-                        foreach (var a in actorsToRemove)
-                        {
-                            editContext.RemoveActorFromGroup(group, a);
-                        }
-                        actorsToRemove.Clear();
                     }
 
                     ImGui.TreePop();
@@ -1746,9 +1760,8 @@ namespace Fushigi.ui.widgets
             if (groupsToRemove.Count > 0)
             {
                 foreach (var g in groupsToRemove)
-                {
                     editContext.DeleteGroup(g);
-                }
+
                 groupsToRemove.Clear();
             }
 
@@ -3089,8 +3102,12 @@ namespace Fushigi.ui.widgets
             if (removed_tile_units.Count > 0)
             {
                 foreach (var tile in removed_tile_units)
+                {
                     editContext.DeleteBgUnit(tile);
+                }
+               
                 removed_tile_units.Clear();
+
             }
         }
 

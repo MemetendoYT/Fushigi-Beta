@@ -39,6 +39,8 @@ namespace Fushigi.ui
         public static bool addNewArea = false;
         public static bool removeCurrentArea = false;
         public static float dpiScale = 0;
+        private GL _gl;
+        public static GLTexture FushigiIcon;
 
         public MainWindow()
         {
@@ -48,6 +50,7 @@ namespace Fushigi.ui
 
             unsafe
             {
+
                 for (int i = 1; i < 10; i++)
                 {
                     using var image = SixLabors.ImageSharp.Image.Load<Rgba32>(Path.Combine("res", $"icon{i}.png"));
@@ -99,6 +102,10 @@ namespace Fushigi.ui
                         static extern uint GetDpiForWindow(IntPtr hWnd);
 
                         var native = mWindow.Native;
+                        _gl = GL.GetApi(mWindow);
+                        FushigiIcon = GLTexture2D.Load(_gl, "res/icon_menu.png");
+
+
                         IntPtr hwnd = native.Win32!.Value.Hwnd;
 
                         uint dpi = GetDpiForWindow(hwnd);
@@ -446,11 +453,41 @@ namespace Fushigi.ui
 
             Console.WriteLine("No translation updates available.");
         }
+
         void DrawMainMenu()
         {
-            /* create a new menubar */
+
             if (ImGui.BeginMainMenuBar())
             {
+                if (ImGui.BeginMenu(" "))
+                {
+                    if (ImGui.MenuItem("Settings"))
+                        mIsShowPreferenceWindow = true;
+
+                    ImGui.EndMenu();
+                }
+
+                float buttonSize = ImGui.GetFrameHeight();
+                float iconSize = buttonSize * 0.75f;
+
+                var min = ImGui.GetItemRectMin();
+                var max = ImGui.GetItemRectMax();
+
+                Vector2 iconMin = new Vector2(
+                    min.X + (buttonSize - iconSize) * 0.5f,
+                    min.Y + (buttonSize - iconSize) * 0.5f
+                );
+
+                Vector2 iconMax = iconMin + new Vector2(iconSize, iconSize);
+
+
+                ImGui.GetWindowDrawList().AddImage(
+                    (IntPtr)FushigiIcon.ID,
+                    iconMin,
+                    iconMax
+                );
+
+
                 if (ImGui.BeginMenu("File"))
                 {
                     if (!string.IsNullOrEmpty(RomFS.GetRoot()) &&
@@ -605,9 +642,6 @@ namespace Fushigi.ui
                     {
                         _ = LoadParamDBWithProgressBar(this);
                     }
-
-                    if (ImGui.MenuItem("Settings"))
-                        mIsShowPreferenceWindow = true;
 
                     /* end Edit menu */
                     ImGui.EndMenu();

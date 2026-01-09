@@ -102,6 +102,9 @@ namespace Fushigi.ui.widgets
         public bool PlayAnimations = false;
         public bool ShowGrid = true;
         public bool ShowBackground = true;
+        bool pasteContext = false;
+        bool copyContext = false;
+        bool deleteContext = false;
 
         Vector2 mSize = Vector2.Zero;
 
@@ -127,6 +130,8 @@ namespace Fushigi.ui.widgets
 
         //TODO make this an ISceneObject? as soon as there's a SceneObj class for each course object
         private object? mHoveredObject;
+
+        List<CourseActor> backupSelection;
 
         Vector2? mMultiSelectStartPos;
         Vector2? mMultiSelectCurrentPos;
@@ -266,7 +271,7 @@ namespace Fushigi.ui.widgets
                     ScreenToWorld(ImGui.GetMousePos());
             }
 
-            if (IsViewportHovered)
+            if (IsViewportHovered && !ImGui.IsPopupOpen("ViewportContextMenu"))
             {
                 Camera.Distance *= MathF.Pow(2, -ImGui.GetIO().MouseWheel / 10);
 
@@ -692,9 +697,51 @@ namespace Fushigi.ui.widgets
                 }
             }
         }
-
         public void Draw(Vector2 size, double deltaSeconds, IDictionary<string, bool> layersVisibility)
         {
+
+            var io = ImGui.GetIO();
+
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Right) && IsViewportHovered)
+            {
+                backupSelection = mEditContext.GetSelectedObjects<CourseActor>().ToList();
+                ImGui.OpenPopup("ViewportContextMenu");
+            }
+
+            if (ImGui.BeginPopup("ViewportContextMenu"))
+            {
+
+                if (ImGui.MenuItem("Copy"))
+                    copyContext = true;
+
+                ImGui.SetItemDefaultFocus();
+
+                if (ImGui.MenuItem("Paste"))
+                    pasteContext = true;
+
+                ImGui.Separator();
+
+                if (ImGui.MenuItem("Delete"))
+                    deleteContext = true;
+
+                bool popupHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
+
+
+                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
+                    IsViewportHovered &&
+                    !popupHovered)
+                {
+                    ImGui.CloseCurrentPopup();
+
+                }
+
+
+                ImGui.EndPopup();
+            }
+
+
+
+
             if (size.X * size.Y == 0)
                 return;
 
@@ -738,8 +785,10 @@ namespace Fushigi.ui.widgets
                 DrawGrid();
             DrawAreaContent();
 
+
             if (!IsViewportHovered)
                 mHoveredObject = null;
+            
 
             CourseActor? hoveredActor = mHoveredObject as CourseActor;
             string actorName;
@@ -765,7 +814,7 @@ namespace Fushigi.ui.widgets
             CourseActor[] selectedActors = areaScene.EditContext.GetSelectedObjects<CourseActor>().ToArray();
 
             if (selectedActors.Length != 0 &&
-                ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd)
+                ((ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd) || copyContext))
             {
                 CopiedMedianPosition = Vector3.Zero;
                 foreach (CourseActor actor in selectedActors)
@@ -779,18 +828,19 @@ namespace Fushigi.ui.widgets
                 {
                     CopiedObjects[i] = selectedActors[i].Clone(mArea);
                 }
+                copyContext = false;    
             }
             bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
             bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
-            if (CopiedObjects.Length != 0 && ImGui.IsWindowHovered() &&
-                ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift)
+            if (CopiedObjects.Length != 0 && IsViewportHovered &&
+                ((ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift) || pasteContext))
             {
                 DoPaste(freshCopy: ctrlAndShift);
+                pasteContext = false;
             }
 
             if (ImGui.IsWindowFocused())
                 InteractionWithFocus(modifiers);
-
 
             ImGui.PopClipRect();
         }
@@ -855,6 +905,8 @@ namespace Fushigi.ui.widgets
                     // else
                     // {
                     newActor.mTranslation = (Vector3)_pos + (actor.mTranslation - CopiedMedianPosition);
+                    newActor.mTranslation.X = MathF.Round(newActor.mTranslation.X * 2) / 2;
+                    newActor.mTranslation.Y = MathF.Round(newActor.mTranslation.Y * 2) / 2;
                     newActor.mTranslation.Z = actor.mTranslation.Z;
                     var n = 0;
                     do
@@ -1237,13 +1289,27 @@ namespace Fushigi.ui.widgets
                 dragRelease = false;
             }
 
-            if (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace)))
+            Console.WriteLine(deleteContext);
+            if (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace)) || deleteContext)
             {
-                var selected = mEditContext.GetSelectedObjects<CourseActor>().ToList();
-                ObjectDeletionRequested?.Invoke(selected);
+                List<CourseActor> selected;
+
+                if (deleteContext)
+                    selected = backupSelection;  
+                else
+                    selected = mEditContext.GetSelectedObjects<CourseActor>().ToList();
+
+                if (selected.Count > 0)
+                {
+                    ObjectDeletionRequested?.Invoke(selected);
+
+                }
+
+                deleteContext = false;
+
             }
 
-            if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? point) &&
+                if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? point) &&
                 mHoveredObject == point &&
                 ImGui.IsMouseDoubleClicked(0))
             {
@@ -1252,6 +1318,7 @@ namespace Fushigi.ui.widgets
 
             if (ImGui.IsKeyPressed(ImGuiKey.Escape))
                 mEditContext.DeselectAll();
+
         }
 
         void DrawGrid()
@@ -1416,20 +1483,20 @@ namespace Fushigi.ui.widgets
 
                         var index = rail.mPoints.IndexOf(selectedPoint);
                         var newPoint = new CourseRail.CourseRailPoint(selectedPoint);
-                        if (UserSettings.GetEnableHalfTile())
-                        {
+                        //if (UserSettings.GetEnableHalfTile())
+                        //{
                             newPoint.mTranslate = new(
                                 MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2,
                                 MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2,
                                 selectedPoint.mTranslate.Z);
-                        }
-                        else
-                        {
-                            newPoint.mTranslate = new(
-                                MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
-                                MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
-                                selectedPoint.mTranslate.Z);
-                        }
+                        //}
+                        //else
+                        //{
+                        //    newPoint.mTranslate = new(
+                        //        MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
+                        //        MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
+                        //        selectedPoint.mTranslate.Z);
+                        //}
 
                         newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
 
@@ -1447,20 +1514,20 @@ namespace Fushigi.ui.widgets
                         Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
 
                         var newPoint = new CourseRail.CourseRailPoint(rail.mType);
-                        if (UserSettings.GetEnableHalfTile())
-                        {
+                        //if (UserSettings.GetEnableHalfTile())
+                        //{
                             newPoint.mTranslate = new(
                             MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2,
                             MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2,
                             0);
-                        }
-                        else
-                        {
-                            newPoint.mTranslate = new(
-                                MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
-                                MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
-                                0);
-                        }
+                        //}
+                        //else
+                        //{
+                        //    newPoint.mTranslate = new(
+                        //        MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
+                        //        MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
+                        //        0);
+                        //}
 
                         newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
 
@@ -1484,16 +1551,16 @@ namespace Fushigi.ui.widgets
                             Vector3 pos = ScreenToWorld(ImGui.GetMousePos());
 
                             // snapping
-                            if (UserSettings.GetEnableHalfTile())
-                            {
+                            //if (UserSettings.GetEnableHalfTile())
+                            //{
                                 pos.X = MathF.Round(pos.X * 2) / 2;
                                 pos.Y = MathF.Round(pos.Y * 2) / 2;
-                            }
-                            else
-                            {
-                                pos.X = MathF.Round(pos.X);
-                                pos.Y = MathF.Round(pos.Y);
-                            }
+                            //}
+                            //else
+                            //{
+                                //pos.X = MathF.Round(pos.X);
+                                //pos.Y = MathF.Round(pos.Y);
+                            //}
 
                             Vector2 pos2D = WorldToScreen(pos);
 
@@ -1563,16 +1630,16 @@ namespace Fushigi.ui.widgets
                             {
                                 Vector3 previewPos = ScreenToWorld(ImGui.GetMousePos());
 
-                                if (UserSettings.GetEnableHalfTile())
-                                {
+                                //if (UserSettings.GetEnableHalfTile())
+                                //{
                                     previewPos.X = MathF.Round(previewPos.X * 2, MidpointRounding.AwayFromZero) / 2;
                                     previewPos.Y = MathF.Round(previewPos.Y * 2, MidpointRounding.AwayFromZero) / 2;
-                                }
-                                else
-                                {
-                                    previewPos.X = MathF.Round(previewPos.X, MidpointRounding.AwayFromZero);
-                                    previewPos.Y = MathF.Round(previewPos.Y, MidpointRounding.AwayFromZero);
-                                }
+                                //}
+                                //else
+                                //{
+                                //   previewPos.X = MathF.Round(previewPos.X, MidpointRounding.AwayFromZero);
+                                //    previewPos.Y = MathF.Round(previewPos.Y, MidpointRounding.AwayFromZero);
+                                //}
 
                                 previewPos.Z = pnt.mTranslate.Z;
 

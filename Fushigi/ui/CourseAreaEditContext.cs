@@ -1,5 +1,6 @@
 ﻿using Fasterflect;
 using Fushigi.course;
+using Fushigi.gl.Bfres;
 using Fushigi.Logger;
 using Fushigi.ui.undo;
 using Fushigi.util;
@@ -228,6 +229,7 @@ namespace Fushigi.ui
             LogDeleting<CourseUnit>();
             CommitAction(area.mUnitHolder.mUnits.RevertableRemove(unit,
                     $"{IconUtil.ICON_TRASH} Delete Tile Unit"));
+
         }
 
         public void AddWall(CourseUnit unit, Wall wall)
