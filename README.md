@@ -19,7 +19,7 @@ Open a CMD or terminal and run the following:
 cd Desktop
 rm -rf Fushigi
 git clone https://github.com/MemetendoYT/Fushigi.git
-cd Fushigi/Fushigi
+cd Fushigi-Beta/Fushigi
 dotnet run -c Release
 ```
 
