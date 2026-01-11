@@ -53,7 +53,6 @@ namespace Fushigi.util
             byte[] decompressedData;
 
             if (!IsFileCompressed(fileBytes)) {
-                Console.WriteLine("Error: is at " + "bootup pack :( boowomp");
                 throw new Exception("FileUtil::DecompressData -- File not ZSTD Compressed.");
             }
             using (var decompressor = new ZstdSharp.Decompressor())
@@ -70,7 +69,6 @@ namespace Fushigi.util
 
             if (!IsFileCompressed(fileBytes))
             {
-                Console.WriteLine("Error: is at " + fileName);
                 throw new Exception("FileUtil::DecompressData -- File not ZSTD Compressed.");
             }
             using (var decompressor = new ZstdSharp.Decompressor())

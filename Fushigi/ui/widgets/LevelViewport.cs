@@ -1289,7 +1289,6 @@ namespace Fushigi.ui.widgets
                 dragRelease = false;
             }
 
-            Console.WriteLine(deleteContext);
             if (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace)) || deleteContext)
             {
                 List<CourseActor> selected;

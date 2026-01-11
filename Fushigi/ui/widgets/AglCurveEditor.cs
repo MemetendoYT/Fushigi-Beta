@@ -1,5 +1,7 @@
 ﻿using Fushigi.agl;
+using Fushigi.Byml.Serializer;
 using Fushigi.env;
+using Fushigi.util;
 using ImGuiNET;
 using Newtonsoft.Json.Linq;
 using System;
@@ -7,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -20,7 +23,8 @@ namespace Fushigi.ui.widgets
         private float[] CurveData;
         private AglCurve.CurveType Type;
         private EnvPalette.EnvSkyLut Lut;
-
+        private EnvPalette EnvPalette;
+        private string Label;
         private Vector2 mouseDownPos;
         private bool mouseDown = false;
 
@@ -28,8 +32,13 @@ namespace Fushigi.ui.widgets
 
         private int KeyCount = 1;
 
-        public void Load(EnvPalette.EnvSkyLut lut)
+        private Key draggingKey = null;
+        private int draggingHandle = -1;
+
+        public void Load(EnvPalette.EnvSkyLut lut, string label, EnvPalette envPalette)
         {
+            Label = label;
+            EnvPalette = envPalette;
             Lut = lut;
             Type = lut.Curve.GetCurveType();
             CurveData = lut.Curve.Data.ToArray();
@@ -51,9 +60,18 @@ namespace Fushigi.ui.widgets
             }
             KeyCount = Keys.Count;
         }
-
+  
         public void Render(int height)
         {
+            if (Label == "Top")
+            {
+                EnvPalette.Sky.LutTexTop.Curve.Data = CurveData.ToList();
+                EnvPalette.Sky.LutTexTop.ColorBegin = Lut.ColorBegin;
+                EnvPalette.Sky.LutTexTop.ColorMiddle = Lut.ColorMiddle;
+                EnvPalette.Sky.LutTexTop.ColorEnd = Lut.ColorEnd;
+
+            }
+
             var width = ImGui.GetWindowWidth() - 200;
 
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 55);
@@ -70,11 +88,9 @@ namespace Fushigi.ui.widgets
             ImGui.PushItemWidth(200);
             if (ImGui.InputInt("Key Count", ref KeyCount, 1, 1))
             {
-                //Keep set to 1 for no empty keys
                 if (KeyCount <= 0)
                     KeyCount = 1;
 
-                //Only increase by 1 for simplicity
                 if (KeyCount > Keys.Count)
                     KeyCount = Keys.Count + 1;
 
@@ -88,6 +104,8 @@ namespace Fushigi.ui.widgets
                 }
 
                 GenerateCurve();
+
+
             }
             ImGui.PopItemWidth();
 
@@ -96,7 +114,6 @@ namespace Fushigi.ui.widgets
             for (float i = 0; i <= 1.1f; i += 0.1f)
             {
                 ImGui.SetCursorPosY((pos.Y + 80) + (1 - i) * height - 8);
-
                 ImGui.Text($"{MathF.Round(i, 2)}");
             }
 
@@ -112,104 +129,114 @@ namespace Fushigi.ui.widgets
             var scaleFactor = new Vector2(width, height);
 
             CalculateGradientBG(Lut, screenPos, (int)width, height);
-
             RenderGrid(width, height);
-
             RenderInterpolatedCurve(width, height);
 
             Vector4[] colors = Lut.UseMiddleColor ?
-          new Vector4[] { Lut.ColorBegin.ToVector4(), Lut.ColorMiddle.ToVector4(), Lut.ColorEnd.ToVector4() } :
-          new Vector4[] { Lut.ColorBegin.ToVector4(), Lut.ColorEnd.ToVector4(), Lut.ColorEnd.ToVector4() };
+                new Vector4[] { Lut.ColorBegin.ToVector4(), Lut.ColorMiddle.ToVector4(), Lut.ColorEnd.ToVector4() } :
+                new Vector4[] { Lut.ColorBegin.ToVector4(), Lut.ColorEnd.ToVector4(), Lut.ColorEnd.ToVector4() };
 
             Vector4 LerpBetweenColors(Vector4 a, Vector4 b, Vector4 c, float t)
             {
-                //bottom to top
                 if (!Lut.UseMiddleColor)
                     return Vector4.Lerp(a, b, t);
 
-                if (t < 0.5f) // Bottom to middle
+                if (t < 0.5f)
                     return Vector4.Lerp(a, b, t / 0.5f);
-                else // Middle to top
+                else
                     return Vector4.Lerp(b, c, (t - 0.5f) / 0.5f);
-            }
-
-            if (ImGui.IsMouseDown(0) && ImGui.IsMouseClicked(0))
-            {
-                mouseDownPos = ImGui.GetMousePos();
-                mouseDown = true;
-                selectedKeys.Clear();
             }
 
             if (ImGui.IsMouseReleased(0))
             {
+                draggingKey = null;
+                draggingHandle = -1;
                 mouseDown = false;
-                foreach (var key in selectedKeys)
-                {
-                    key.PrevValue = key.Value;
-                }
             }
 
-            if (mouseDown && selectedKeys.Count > 0)
-            {
-                var delta = ImGui.GetMousePos() - mouseDownPos;
-                var diff = delta.Y * (1.0f / height);
-                foreach (var key in selectedKeys)
-                    key.Value = Math.Clamp(key.PrevValue - diff, 0, 1f);
-
-                GenerateCurve();
-            }
 
             for (int i = 0; i < KeyCount; i++)
             {
                 float time = i / (KeyCount - 1f);
-
-                //Every key is fixed to a frame based on the number of keys used
                 float x = i == 0 ? 0 : width * time;
 
-                var keyPos = screenPos + new Vector2(x, height - Keys[i].Value * height);
+                var key = Keys[i];
+                var keyPos = screenPos + new Vector2(x, height - key.Value * height);
 
-                float slope_length = 0.06f;
+                float handleLength = 0.20f;
 
-                Vector2 cpOut = keyPos + ((Vector2.Normalize(new Vector2(1, Keys[i].SlopeOut)) * -slope_length) * scaleFactor);
-                Vector2 cpIn = keyPos + ((Vector2.Normalize(new Vector2(1, Keys[i].SlopeIn)) * slope_length) * scaleFactor);
+                Vector2 dirIn = AngleToDir(key.AngleIn);
 
-                var color = LerpBetweenColors(colors[0], colors[1], colors[2], Keys[i].Value);
+                Vector2 cpIn = keyPos + dirIn * handleLength * scaleFactor;
 
-                bool hovered = (ImGui.GetMousePos() - keyPos).Length() < 10.0f;
+                bool hoveredKey = (ImGui.GetMousePos() - keyPos).Length() < 10f;
+                bool hoveredIn = (ImGui.GetMousePos() - cpIn).Length() < 6f;
 
-                if (hovered)
+                if (ImGui.IsMouseClicked(0))
                 {
-                    color = new Vector4(1, 1, 0, 1);
-                }
-                if (hovered && ImGui.IsMouseClicked(0))
-                {
-                    selectedKeys.Clear();
-                    selectedKeys.Add(Keys[i]);
-
-                    Keys[i].PrevValue = Keys[i].Value;
-                    Keys[i].PrevSlopeIn = Keys[i].SlopeIn;
-                    Keys[i].PrevSlopeOut = Keys[i].SlopeOut;
-
-                    mouseDown = true;
-                    mouseDownPos = ImGui.GetMousePos();
-                }
-
-                if (selectedKeys.Contains(Keys[i]))
-                {
-                    color = new Vector4(1, 0, 0, 1);
+                    if (hoveredIn)
+                    {
+                        draggingKey = key;
+                        draggingHandle = 0;
+                    }
+                    else if (hoveredKey)
+                    {
+                        draggingKey = key;
+                        draggingHandle = -1;
+                        key.PrevValue = key.Value;
+                        mouseDownPos = ImGui.GetMousePos();
+                        mouseDown = true;
+                    }
                 }
 
-                var key_color = ImGui.ColorConvertFloat4ToU32(color);
+
+                if (ImGui.IsMouseDown(0) && draggingKey == key)
+                {
+                    GenerateCurve();
+                    if (draggingHandle == 1) // OUT tangent
+                    {
+                        Vector2 delta = ImGui.GetMousePos() - keyPos;
+                        GenerateCurve();
+                    }
+                    else if (draggingHandle == 0) 
+                    {
+                        Vector2 delta = ImGui.GetMousePos() - keyPos;
+                        key.AngleIn = MathF.Atan2(delta.Y, delta.X) * MathUtil.Rad2Deg;
+
+                        // ⭐ Convert angle → slope
+                        float radIn = key.AngleIn * MathUtil.Deg2Rad;
+                        key.SlopeIn = MathF.Tan(radIn);
+
+                        GenerateCurve();
+                    }
+                    else if (draggingHandle == -1)
+                    {
+                        Vector2 delta = ImGui.GetMousePos() - mouseDownPos;
+                        float diff = delta.Y * (1.0f / height);
+                        key.Value = Math.Clamp(key.PrevValue - diff, 0, 1f);
+
+                        GenerateCurve();
+                    }
+                }
+
+
+                var color = LerpBetweenColors(colors[0], colors[1], colors[2], key.Value);
+                var keyColor = ImGui.ColorConvertFloat4ToU32(color);
 
                 ImGui.GetWindowDrawList().AddLine(keyPos, cpIn, 0xFFFFFFFF);
-                ImGui.GetWindowDrawList().AddLine(keyPos, cpOut, 0xFFFFFFFF);
+
 
                 ImGui.GetWindowDrawList().AddCircleFilled(keyPos, 10, 0xFFFFFFFF);
-                ImGui.GetWindowDrawList().AddCircleFilled(keyPos, 8, key_color);
+                ImGui.GetWindowDrawList().AddCircleFilled(keyPos, 8, keyColor);
 
-                ImGui.GetWindowDrawList().AddCircleFilled(cpOut, 5, 0xFFFFFFFF);
                 ImGui.GetWindowDrawList().AddCircleFilled(cpIn, 5, 0xFFFFFFFF);
             }
+        }
+
+        private Vector2 AngleToDir(float angleDeg)
+        {
+            float rad = angleDeg * MathUtil.Deg2Rad;
+            return new Vector2(MathF.Cos(rad), MathF.Sin(rad));
         }
 
         private void GenerateCurve()
@@ -297,8 +324,8 @@ namespace Fushigi.ui.widgets
             var start = lut.ColorBegin.ToVector4();
             var middle = lut.ColorMiddle.ToVector4();
             var end = lut.ColorEnd.ToVector4();
-
             var screenPos = ImGui.GetCursorScreenPos();
+
 
             if (ImGui.ColorEdit4($"Start Color##{label}start", ref start, ImGuiColorEditFlags.NoInputs))
             {
@@ -432,6 +459,11 @@ namespace Fushigi.ui.widgets
             }
         }
 
+        public void Save()
+        {
+           EnvPalette.Save();
+        }
+
         public class Key
         {
             public float Value;
@@ -441,6 +473,7 @@ namespace Fushigi.ui.widgets
             public float PrevValue;
             public float PrevSlopeIn;
             public float PrevSlopeOut;
+            public float AngleIn = 180f;
         }
     }
 }

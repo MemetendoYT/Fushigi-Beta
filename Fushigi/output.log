@@ -3245,3 +3245,401 @@
 [CourseScene]: Loading ObjectTalkingFlower
 [CourseScene]: Loaded ObjectTalkingFlower
 [CourseScene]: Finished loading models
+[Logger]: Initialized logger
+[Program]: Starting Fushigi v1.7.1...
+[Program]: Not running on osx
+[Program]: Loading user settings...
+[Program]: Loading parameter database...
+[Program]: Loading area parameter loader...
+[Program]: Checking for imgui.ini
+[MainWindow]: Loading icons
+[DiscordRPC]: Ready
+[MainWindow]: Initializing Window
+[RomFS]: World001
+[RomFS]: World002
+[RomFS]: World003
+[RomFS]: World004
+[RomFS]: World005
+[RomFS]: World006
+[RomFS]: World007
+[RomFS]: World008
+[RomFS]: World009
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading course files ()
+[EnvPalette]: AA_Yama_Jyoku_Hare
+[ProgressBarDialog]: Loading other resources (this temporarily freezes the app) ()
+[BfshaFile]: Bfsha SecredUber
+[BfshaFile]: Bfsha SecredUber
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading models (0%)
+[CourseScene]: Loading ObjectDokan
+[CourseScene]: Loaded ObjectDokan
+[ProgressBarDialog]: Loading models (5%)
+[CourseScene]: Loading ObjectCoin
+[CourseScene]: Loaded ObjectCoin
+[ProgressBarDialog]: Loading models (9%)
+[CourseScene]: Loading ObjectBlockHatena30
+[CourseScene]: Loaded ObjectBlockHatena30
+[ProgressBarDialog]: Loading models (14%)
+[CourseScene]: Loading EnemyPackun
+[CourseScene]: Loaded EnemyPackun
+[ProgressBarDialog]: Loading models (18%)
+[CourseScene]: Loading ObjectCoinRandom10
+[CourseScene]: Loaded ObjectCoinRandom10
+[ProgressBarDialog]: Loading models (23%)
+[CourseScene]: Loading ObjectFlowerChibi
+[CourseScene]: Loaded ObjectFlowerChibi
+[ProgressBarDialog]: Loading models (27%)
+[CourseScene]: Loading ObjectCoinRandom
+[CourseScene]: Loaded ObjectCoinRandom
+[ProgressBarDialog]: Loading models (32%)
+[CourseScene]: Loading ObjectFlagMiddle
+[CourseScene]: Loaded ObjectFlagMiddle
+[ProgressBarDialog]: Loading models (36%)
+[CourseScene]: Loading ObjectTalkingFlower
+[CourseScene]: Loaded ObjectTalkingFlower
+[ProgressBarDialog]: Loading models (41%)
+[CourseScene]: Loading ObjectBlockRace
+[CourseScene]: Loaded ObjectBlockRace
+[ProgressBarDialog]: Loading models (45%)
+[CourseScene]: Loading MapObjCommonNaraku
+[CourseScene]: Loaded MapObjCommonNaraku
+[ProgressBarDialog]: Loading models (50%)
+[CourseScene]: Loading MapObjCommonColorBox
+[CourseScene]: Loaded MapObjCommonColorBox
+[ProgressBarDialog]: Loading models (55%)
+[CourseScene]: Loading ObjectGoalPole
+[CourseScene]: Loaded ObjectGoalPole
+[ProgressBarDialog]: Loading models (59%)
+[CourseScene]: Loading ObjectGoalToride
+[CourseScene]: Loaded ObjectGoalToride
+[ProgressBarDialog]: Loading models (64%)
+[CourseScene]: Loading NpcCommonerA
+[CourseScene]: Loaded NpcCommonerA
+[ProgressBarDialog]: Loading models (68%)
+[CourseScene]: Loading ItemWonderSeed
+[CourseScene]: Loaded ItemWonderSeed
+[ProgressBarDialog]: Loading models (73%)
+[CourseScene]: Loading NpcPrince
+[CourseScene]: Loaded NpcPrince
+[ProgressBarDialog]: Loading models (77%)
+[CourseScene]: Loading CloudYamaJyoku
+[CourseScene]: Loaded CloudYamaJyoku
+[ProgressBarDialog]: Loading models (82%)
+[CourseScene]: Loading DVYamaJyoku
+[CourseScene]: Loaded DVYamaJyoku
+[ProgressBarDialog]: Loading models (86%)
+[CourseScene]: Loading MapObjCommonBadge
+[CourseScene]: Loaded MapObjCommonBadge
+[ProgressBarDialog]: Loading models (91%)
+[CourseScene]: Loading MapObjYamaJyoku
+[CourseScene]: Loaded MapObjYamaJyoku
+[ProgressBarDialog]: Loading models (95%)
+[CourseScene]: Loading ObjectBadgeSignboard
+[CourseScene]: Loaded ObjectBadgeSignboard
+[CourseScene]: Finished loading models
+[ERROR] [GLTexture]: OpenGL Error: InvalidEnum
+[ERROR] [GLTexture]: OpenGL Error: InvalidEnum
+[CourseAreaEditContext]: Adding CourseUnit
+[CourseAreaEditContext]: Adding BGUnitRail
+[CourseAreaEditContext]: Deleting BGUnitRail
+[CourseAreaEditContext]: Adding BGUnitRail
+[Logger]: Initialized logger
+[Program]: Starting Fushigi v1.7.1...
+[Program]: Not running on osx
+[Program]: Loading user settings...
+[Program]: Loading parameter database...
+[Program]: Loading area parameter loader...
+[Program]: Checking for imgui.ini
+[MainWindow]: Loading icons
+[MainWindow]: Initializing Window
+[RomFS]: World001
+[RomFS]: World002
+[RomFS]: World003
+[RomFS]: World004
+[RomFS]: World005
+[RomFS]: World006
+[RomFS]: World007
+[RomFS]: World008
+[RomFS]: World009
+[DiscordRPC]: Ready
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading course files ()
+[EnvPalette]: AA_Yama_Jyoku_Hare
+[ProgressBarDialog]: Loading other resources (this temporarily freezes the app) ()
+[BfshaFile]: Bfsha SecredUber
+[BfshaFile]: Bfsha SecredUber
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading models (0%)
+[CourseScene]: Loading ObjectDokan
+[CourseScene]: Loaded ObjectDokan
+[ProgressBarDialog]: Loading models (5%)
+[CourseScene]: Loading ObjectCoin
+[CourseScene]: Loaded ObjectCoin
+[ProgressBarDialog]: Loading models (9%)
+[CourseScene]: Loading ObjectBlockHatena30
+[CourseScene]: Loaded ObjectBlockHatena30
+[ProgressBarDialog]: Loading models (14%)
+[CourseScene]: Loading EnemyPackun
+[CourseScene]: Loaded EnemyPackun
+[ProgressBarDialog]: Loading models (18%)
+[CourseScene]: Loading ObjectCoinRandom10
+[CourseScene]: Loaded ObjectCoinRandom10
+[ProgressBarDialog]: Loading models (23%)
+[CourseScene]: Loading ObjectFlowerChibi
+[CourseScene]: Loaded ObjectFlowerChibi
+[ProgressBarDialog]: Loading models (27%)
+[CourseScene]: Loading ObjectCoinRandom
+[CourseScene]: Loaded ObjectCoinRandom
+[ProgressBarDialog]: Loading models (32%)
+[CourseScene]: Loading ObjectFlagMiddle
+[CourseScene]: Loaded ObjectFlagMiddle
+[ProgressBarDialog]: Loading models (36%)
+[CourseScene]: Loading ObjectTalkingFlower
+[CourseScene]: Loaded ObjectTalkingFlower
+[ProgressBarDialog]: Loading models (41%)
+[CourseScene]: Loading ObjectBlockRace
+[CourseScene]: Loaded ObjectBlockRace
+[ProgressBarDialog]: Loading models (45%)
+[CourseScene]: Loading MapObjCommonNaraku
+[CourseScene]: Loaded MapObjCommonNaraku
+[ProgressBarDialog]: Loading models (50%)
+[CourseScene]: Loading MapObjCommonColorBox
+[CourseScene]: Loaded MapObjCommonColorBox
+[ProgressBarDialog]: Loading models (55%)
+[CourseScene]: Loading ObjectGoalPole
+[CourseScene]: Loaded ObjectGoalPole
+[ProgressBarDialog]: Loading models (59%)
+[CourseScene]: Loading ObjectGoalToride
+[CourseScene]: Loaded ObjectGoalToride
+[ProgressBarDialog]: Loading models (64%)
+[CourseScene]: Loading NpcCommonerA
+[CourseScene]: Loaded NpcCommonerA
+[ProgressBarDialog]: Loading models (68%)
+[CourseScene]: Loading ItemWonderSeed
+[CourseScene]: Loaded ItemWonderSeed
+[ProgressBarDialog]: Loading models (73%)
+[CourseScene]: Loading NpcPrince
+[CourseScene]: Loaded NpcPrince
+[ProgressBarDialog]: Loading models (77%)
+[CourseScene]: Loading CloudYamaJyoku
+[CourseScene]: Loaded CloudYamaJyoku
+[ProgressBarDialog]: Loading models (82%)
+[CourseScene]: Loading DVYamaJyoku
+[CourseScene]: Loaded DVYamaJyoku
+[ProgressBarDialog]: Loading models (86%)
+[CourseScene]: Loading MapObjCommonBadge
+[CourseScene]: Loaded MapObjCommonBadge
+[ProgressBarDialog]: Loading models (91%)
+[CourseScene]: Loading MapObjYamaJyoku
+[CourseScene]: Loaded MapObjYamaJyoku
+[ProgressBarDialog]: Loading models (95%)
+[CourseScene]: Loading ObjectBadgeSignboard
+[CourseScene]: Loaded ObjectBadgeSignboard
+[CourseScene]: Finished loading models
+[ERROR] [GLTexture]: OpenGL Error: InvalidEnum
+[ERROR] [GLTexture]: OpenGL Error: InvalidEnum
+[CourseAreaEditContext]: Deleting CourseUnit
+[CourseAreaEditContext]: Deleting CourseUnit
+[Logger]: Initialized logger
+[Program]: Starting Fushigi v1.7.1...
+[Program]: Not running on osx
+[Program]: Loading user settings...
+[Program]: Loading parameter database...
+[Program]: Loading area parameter loader...
+[Program]: Checking for imgui.ini
+[MainWindow]: Loading icons
+[MainWindow]: Initializing Window
+[RomFS]: World001
+[DiscordRPC]: Ready
+[RomFS]: World002
+[RomFS]: World003
+[RomFS]: World004
+[RomFS]: World005
+[RomFS]: World006
+[RomFS]: World007
+[RomFS]: World008
+[RomFS]: World009
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading course files ()
+[EnvPalette]: AA_Yama_Jyoku_Hare
+[ProgressBarDialog]: Loading other resources (this temporarily freezes the app) ()
+[BfshaFile]: Bfsha SecredUber
+[BfshaFile]: Bfsha SecredUber
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading models (0%)
+[CourseScene]: Loading ObjectDokan
+[CourseScene]: Loaded ObjectDokan
+[ProgressBarDialog]: Loading models (5%)
+[CourseScene]: Loading ObjectCoin
+[CourseScene]: Loaded ObjectCoin
+[ProgressBarDialog]: Loading models (9%)
+[CourseScene]: Loading ObjectBlockHatena30
+[CourseScene]: Loaded ObjectBlockHatena30
+[ProgressBarDialog]: Loading models (14%)
+[CourseScene]: Loading EnemyPackun
+[CourseScene]: Loaded EnemyPackun
+[ProgressBarDialog]: Loading models (18%)
+[CourseScene]: Loading ObjectCoinRandom10
+[CourseScene]: Loaded ObjectCoinRandom10
+[ProgressBarDialog]: Loading models (23%)
+[CourseScene]: Loading ObjectFlowerChibi
+[CourseScene]: Loaded ObjectFlowerChibi
+[ProgressBarDialog]: Loading models (27%)
+[CourseScene]: Loading ObjectCoinRandom
+[CourseScene]: Loaded ObjectCoinRandom
+[ProgressBarDialog]: Loading models (32%)
+[CourseScene]: Loading ObjectFlagMiddle
+[CourseScene]: Loaded ObjectFlagMiddle
+[ProgressBarDialog]: Loading models (36%)
+[CourseScene]: Loading ObjectTalkingFlower
+[CourseScene]: Loaded ObjectTalkingFlower
+[ProgressBarDialog]: Loading models (41%)
+[CourseScene]: Loading ObjectBlockRace
+[CourseScene]: Loaded ObjectBlockRace
+[ProgressBarDialog]: Loading models (45%)
+[CourseScene]: Loading MapObjCommonNaraku
+[CourseScene]: Loaded MapObjCommonNaraku
+[ProgressBarDialog]: Loading models (50%)
+[CourseScene]: Loading MapObjCommonColorBox
+[CourseScene]: Loaded MapObjCommonColorBox
+[ProgressBarDialog]: Loading models (55%)
+[CourseScene]: Loading ObjectGoalPole
+[CourseScene]: Loaded ObjectGoalPole
+[ProgressBarDialog]: Loading models (59%)
+[CourseScene]: Loading ObjectGoalToride
+[CourseScene]: Loaded ObjectGoalToride
+[ProgressBarDialog]: Loading models (64%)
+[CourseScene]: Loading NpcCommonerA
+[CourseScene]: Loaded NpcCommonerA
+[ProgressBarDialog]: Loading models (68%)
+[CourseScene]: Loading ItemWonderSeed
+[CourseScene]: Loaded ItemWonderSeed
+[ProgressBarDialog]: Loading models (73%)
+[CourseScene]: Loading NpcPrince
+[CourseScene]: Loaded NpcPrince
+[ProgressBarDialog]: Loading models (77%)
+[CourseScene]: Loading CloudYamaJyoku
+[CourseScene]: Loaded CloudYamaJyoku
+[ProgressBarDialog]: Loading models (82%)
+[CourseScene]: Loading DVYamaJyoku
+[CourseScene]: Loaded DVYamaJyoku
+[ProgressBarDialog]: Loading models (86%)
+[CourseScene]: Loading MapObjCommonBadge
+[CourseScene]: Loaded MapObjCommonBadge
+[ProgressBarDialog]: Loading models (91%)
+[CourseScene]: Loading MapObjYamaJyoku
+[CourseScene]: Loaded MapObjYamaJyoku
+[ProgressBarDialog]: Loading models (95%)
+[CourseScene]: Loading ObjectBadgeSignboard
+[CourseScene]: Loaded ObjectBadgeSignboard
+[CourseScene]: Finished loading models
+[ERROR] [GLTexture]: OpenGL Error: InvalidEnum
+[ERROR] [GLTexture]: OpenGL Error: InvalidEnum
+[CourseAreaEditContext]: Deleting Wall
+[CourseAreaEditContext]: Adding CourseUnit
+[CourseAreaEditContext]: Adding BGUnitRail
+[CourseAreaEditContext]: Adding Wall
+[CourseAreaEditContext]: Adding Wall
+[CourseAreaEditContext]: Adding Wall
+[CourseAreaEditContext]: Adding Wall
+[CourseAreaEditContext]: Adding Wall
+[CourseAreaEditContext]: Adding Wall
+[Logger]: Initialized logger
+[Program]: Starting Fushigi v1.7.1...
+[Program]: Not running on osx
+[Program]: Loading user settings...
+[Program]: Loading parameter database...
+[Program]: Loading area parameter loader...
+[Program]: Checking for imgui.ini
+[MainWindow]: Loading icons
+[MainWindow]: Initializing Window
+[RomFS]: World001
+[RomFS]: World002
+[RomFS]: World003
+[RomFS]: World004
+[RomFS]: World005
+[RomFS]: World006
+[RomFS]: World007
+[RomFS]: World008
+[RomFS]: World009
+[DiscordRPC]: Ready
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading course files ()
+[EnvPalette]: AA_Yama_Jyoku_Hare
+[ProgressBarDialog]: Loading other resources (this temporarily freezes the app) ()
+[BfshaFile]: Bfsha SecredUber
+[BfshaFile]: Bfsha SecredUber
+[RomFS]: GetFileBytes() -- Pack/Bootup.Nin_NX_NVN.pack.zs
+[ProgressBarDialog]: Loading models (0%)
+[CourseScene]: Loading ObjectDokan
+[CourseScene]: Loaded ObjectDokan
+[ProgressBarDialog]: Loading models (5%)
+[CourseScene]: Loading ObjectCoin
+[CourseScene]: Loaded ObjectCoin
+[ProgressBarDialog]: Loading models (9%)
+[CourseScene]: Loading ObjectBlockHatena30
+[CourseScene]: Loaded ObjectBlockHatena30
+[ProgressBarDialog]: Loading models (14%)
+[CourseScene]: Loading EnemyPackun
+[CourseScene]: Loaded EnemyPackun
+[ProgressBarDialog]: Loading models (18%)
+[CourseScene]: Loading ObjectCoinRandom10
+[CourseScene]: Loaded ObjectCoinRandom10
+[ProgressBarDialog]: Loading models (23%)
+[CourseScene]: Loading ObjectFlowerChibi
+[CourseScene]: Loaded ObjectFlowerChibi
+[ProgressBarDialog]: Loading models (27%)
+[CourseScene]: Loading ObjectCoinRandom
+[CourseScene]: Loaded ObjectCoinRandom
+[ProgressBarDialog]: Loading models (32%)
+[CourseScene]: Loading ObjectFlagMiddle
+[CourseScene]: Loaded ObjectFlagMiddle
+[ProgressBarDialog]: Loading models (36%)
+[CourseScene]: Loading ObjectTalkingFlower
+[CourseScene]: Loaded ObjectTalkingFlower
+[ProgressBarDialog]: Loading models (41%)
+[CourseScene]: Loading ObjectBlockRace
+[CourseScene]: Loaded ObjectBlockRace
+[ProgressBarDialog]: Loading models (45%)
+[CourseScene]: Loading MapObjCommonNaraku
+[CourseScene]: Loaded MapObjCommonNaraku
+[ProgressBarDialog]: Loading models (50%)
+[CourseScene]: Loading MapObjCommonColorBox
+[CourseScene]: Loaded MapObjCommonColorBox
+[ProgressBarDialog]: Loading models (55%)
+[CourseScene]: Loading ObjectGoalPole
+[CourseScene]: Loaded ObjectGoalPole
+[ProgressBarDialog]: Loading models (59%)
+[CourseScene]: Loading ObjectGoalToride
+[CourseScene]: Loaded ObjectGoalToride
+[ProgressBarDialog]: Loading models (64%)
+[CourseScene]: Loading NpcCommonerA
+[CourseScene]: Loaded NpcCommonerA
+[ProgressBarDialog]: Loading models (68%)
+[CourseScene]: Loading ItemWonderSeed
+[CourseScene]: Loaded ItemWonderSeed
+[ProgressBarDialog]: Loading models (73%)
+[CourseScene]: Loading NpcPrince
+[CourseScene]: Loaded NpcPrince
+[ProgressBarDialog]: Loading models (77%)
+[CourseScene]: Loading CloudYamaJyoku
+[CourseScene]: Loaded CloudYamaJyoku
+[ProgressBarDialog]: Loading models (82%)
+[CourseScene]: Loading DVYamaJyoku
+[CourseScene]: Loaded DVYamaJyoku
+[ProgressBarDialog]: Loading models (86%)
+[CourseScene]: Loading MapObjCommonBadge
+[CourseScene]: Loaded MapObjCommonBadge
+[ProgressBarDialog]: Loading models (91%)
+[CourseScene]: Loading MapObjYamaJyoku
+[CourseScene]: Loaded MapObjYamaJyoku
+[ProgressBarDialog]: Loading models (95%)
+[CourseScene]: Loading ObjectBadgeSignboard
+[CourseScene]: Loaded ObjectBadgeSignboard
+[CourseScene]: Finished loading models
+[ERROR] [GLTexture]: OpenGL Error: InvalidEnum
+[ERROR] [GLTexture]: OpenGL Error: InvalidEnum
+[CourseAreaEditContext]: Deleting CourseUnit
+[CourseAreaEditContext]: Deleting CourseUnit
+[CourseAreaEditContext]: Deleting CourseUnit

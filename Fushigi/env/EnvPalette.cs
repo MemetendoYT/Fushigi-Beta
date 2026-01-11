@@ -1,45 +1,54 @@
-﻿using Fushigi.Byml.Serializer;
+﻿using Fushigi.agl;
+using Fushigi.Byml;
+using Fushigi.Byml.Serializer;
+using Fushigi.Byml.Writer;
+using Fushigi.gl;
+using Fushigi.Logger;
 using Fushigi.util;
+using ImGuiNET;
+using Microsoft.VisualBasic.FileIO;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using Fushigi.Byml;
-using System.Collections;
-using System.Numerics;
-using Fushigi.agl;
-using Fushigi.gl;
-using ImGuiNET;
+using static Fushigi.env.EnvPalette;
 using static Fushigi.gl.Bfres.GsysEnvironment;
-using System.Diagnostics;
-using Fushigi.Logger;
 
 namespace Fushigi.env
 {
     public class EnvPalette : BymlObject
-    {
+    {  
         [BymlIgnore]
         public string Name { get; set; }
 
-        public EnvBloom Bloom { get; set; }
+        public EnvBloom Bloom { get; set; } = new EnvBloom();
+
         public EnvDepthOfField DOF { get; set; }
         public EnvColorList EnvColor { get; set; }
         public EnvEmission Emission { get; set; }
         public EnvShadow Shadow { get; set; }
         public EnvRim Rim { get; set; }
+
         public EnvSky Sky { get; set; }
         public EnvFogList Fog { get; set; }
-
         public EnvLightList CharLight { get; set; }
         public EnvLightList CloudLight { get; set; }
         public EnvLightList DvLight { get; set; }
         public EnvLightList FieldLight { get; set; }
         public EnvLightList ObjLight { get; set; }
-
+        [BymlIgnore]
         public bool IsApplyFog { get; set; }
+        [BymlIgnore]
         public bool IsApplyEnvColor { get; set; }
+        [BymlIgnore]
         public bool IsApplyObjLight { get; set; }
+
+
 
         public EnvPalette()
         {
@@ -66,6 +75,9 @@ namespace Fushigi.env
             var byml = new Byml.Byml(new MemoryStream(File.ReadAllBytes(file_path)));
             this.Load((BymlHashTable)byml.Root);
             Logger.Logger.LogMessage("EnvPalette", name);
+
+
+
         }
 
         public void Lerp(EnvPalette prevPalette, EnvPalette nextPalette, float ratio)
@@ -191,12 +203,25 @@ namespace Fushigi.env
             LerpSky(prevPalette.Sky, nextPalette.Sky);
         }
 
+        [Serializable]
         public class EnvBloom
         {
             public float Intensity { get; set; }
             public float MaskEnd { get; set; }
             public float MaskRatio { get; set; }
             public float Threshold { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                BymlHashTable bloom = new();
+
+                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskEnd), "MaskEnd");
+                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskRatio), "MaskRatio");
+                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Threshold), "Threshold");
+
+                return bloom;
+            }
         }
 
         public class EnvMapList
@@ -229,6 +254,23 @@ namespace Fushigi.env
 
             public float Power { get; set; }
             public float Width { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityCloud), "IntensityCloud");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityDV), "IntensityDV");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityEnemy), "IntensityEnemy");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityFieldBand), "IntensityFieldBand");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityFieldDeco), "IntensityFieldDeco");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityFieldWall), "IntensityFieldWall");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityObject), "IntensityObject");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityPlayer), "IntensityPlayer");
+                return table;
+            }
+
         }
 
         public class EnvShadow
@@ -237,19 +279,52 @@ namespace Fushigi.env
             public bool EnableDynamicDepthShadow { get; set; }
             public float Latitude { get; set; }
             public float Longitude { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, AOColor.Serialize(), "AOColor");
+                table.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(EnableDynamicDepthShadow), "EnableDynamicDepthShadow");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Latitude), "IntensityDV");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Longitude), "IntensityEnemy");
+                return table;
+            }
         }
 
+
+        [Serializable]
         public class EnvDepthOfField
         {
             public bool Enable { get; set; }
             public float End { get; set; }
             public float MipLevelMax { get; set; }
             public float Start { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                BymlHashTable envDepthOfField = new();
+
+                envDepthOfField.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(Enable), "Enable");
+                envDepthOfField.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Start), "Start");
+                envDepthOfField.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(End), "End");
+                envDepthOfField.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MipLevelMax), "MipLevelMax");
+
+                return envDepthOfField;
+            }
         }
 
         public class EnvEmission
         {
             public Color Color { get; set; }
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+                return table;
+            }
+
         }
 
         public class EnvColorList
@@ -262,6 +337,20 @@ namespace Fushigi.env
             public Color Color5 { get; set; }
             public Color Color6 { get; set; }
             public Color Color7 { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, Color1.Serialize(), "Color1");
+                table.AddNode(BymlNodeId.Hash, Color2.Serialize(), "Color2");
+                table.AddNode(BymlNodeId.Hash, Color3.Serialize(), "Color3");
+                table.AddNode(BymlNodeId.Hash, Color4.Serialize(), "Color4");
+                table.AddNode(BymlNodeId.Hash, Color5.Serialize(), "Color5");
+                table.AddNode(BymlNodeId.Hash, Color6.Serialize(), "Color6");
+                table.AddNode(BymlNodeId.Hash, Color7.Serialize(), "Color7");
+                return table;
+            }
         }
 
         public class EnvFogList
@@ -271,6 +360,18 @@ namespace Fushigi.env
             public EnvFog Main { get; set; } = new EnvFog();
             public EnvFog MainWorld { get; set; } = new EnvFog();
             public EnvFog Option { get; set; } = new EnvFog();
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, Cloud.Serialize(), "Cloud");
+                table.AddNode(BymlNodeId.Hash, CloudWorld.Serialize(), "CloudWorld");
+                table.AddNode(BymlNodeId.Hash, Main.Serialize(), "Main");
+                table.AddNode(BymlNodeId.Hash, MainWorld.Serialize(), "MainWorld");
+                table.AddNode(BymlNodeId.Hash, Option.Serialize(), "Option");
+                return table;
+            }
         }
 
         public class EnvFog
@@ -279,6 +380,17 @@ namespace Fushigi.env
             public float Damp { get; set; }
             public float End { get; set; }
             public float Start { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Damp), "Damp");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(End), "End");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Start), "Start");
+                return table;
+            }
         }
 
         public class EnvLightList
@@ -295,7 +407,51 @@ namespace Fushigi.env
             public EnvLightDirectional SubSpec0 { get; set; }
             public EnvLightDirectional SubSpec1 { get; set; }
             public EnvLightDirectional SubSpec2 { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                if (Hemi != null)
+                    table.AddNode(BymlNodeId.Hash, Hemi.Serialize(), "Hemi");
+
+                if (Main != null)
+                    table.AddNode(BymlNodeId.Hash, Main.Serialize(), "Main");
+
+                if (StageSubDiff0 != null)
+                    table.AddNode(BymlNodeId.Hash, StageSubDiff0.Serialize(), "StageSubDiff0");
+
+                if (StageSubDiff1 != null)
+                    table.AddNode(BymlNodeId.Hash, StageSubDiff1.Serialize(), "StageSubDiff1");
+
+                if (StageSubSpec0 != null)
+                    table.AddNode(BymlNodeId.Hash, StageSubSpec0.Serialize(), "StageSubSpec0");
+
+                if (StageSubSpec1 != null)
+                    table.AddNode(BymlNodeId.Hash, StageSubSpec1.Serialize(), "StageSubSpec1");
+
+                if (SubDiff0 != null)
+                    table.AddNode(BymlNodeId.Hash, SubDiff0.Serialize(), "SubDiff0");
+
+                if (SubDiff1 != null)
+                    table.AddNode(BymlNodeId.Hash, SubDiff1.Serialize(), "SubDiff1");
+
+                if (SubDiff2 != null)
+                    table.AddNode(BymlNodeId.Hash, SubDiff2.Serialize(), "SubDiff2");
+
+                if (SubSpec0 != null)
+                    table.AddNode(BymlNodeId.Hash, SubSpec0.Serialize(), "SubSpec0");
+
+                if (SubSpec1 != null)
+                    table.AddNode(BymlNodeId.Hash, SubSpec1.Serialize(), "SubSpec1");
+
+                if (SubSpec2 != null)
+                    table.AddNode(BymlNodeId.Hash, SubSpec2.Serialize(), "SubSpec2");
+
+                return table;
+            }
         }
+
 
         public class EnvLightDirectional
         {
@@ -303,6 +459,18 @@ namespace Fushigi.env
             public float Intensity { get; set; }
             public float Latitude { get; set; } //degrees
             public float Longitude { get; set; } //degrees
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Latitude), "Latitude");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Longitude), "Longitude");
+
+                return table;
+            }
         }
 
         public class EnvLightHemisphere
@@ -310,6 +478,17 @@ namespace Fushigi.env
             public Color Ground { get; set; }
             public float Intensity { get; set; }
             public Color Sky { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, Ground.Serialize(), "Ground");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+                table.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
+
+                return table;
+            }
         }
 
         public class EnvSky
@@ -322,6 +501,24 @@ namespace Fushigi.env
             public EnvSkyLut LutTexLeftTop { get; set; }
             public EnvSkyLut LutTexRightTop { get; set; }
             public EnvSkyLut LutTexTop { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                BymlHashTable sky = new();
+
+                // Floats
+                sky.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(HorizontalOffset), "HorizontalOffset");
+                sky.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RotDegLeftTop), "RotDegLeftTop");
+                sky.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RotDegRightTop), "RotDegRightTop");
+
+                // Nested LUTs
+                sky.AddNode(BymlNodeId.Hash, LutTexLeft.Serialize(), "LutTexLeft");
+                sky.AddNode(BymlNodeId.Hash, LutTexLeftTop.Serialize(), "LutTexLeftTop");
+                sky.AddNode(BymlNodeId.Hash, LutTexRightTop.Serialize(), "LutTexRightTop");
+                sky.AddNode(BymlNodeId.Hash, LutTexTop.Serialize(), "LutTexTop");
+
+                return sky;
+            }
         }
 
         public class EnvSkyLut
@@ -332,6 +529,22 @@ namespace Fushigi.env
             public float Intensity { get; set; }
             public bool UseMiddleColor { get; set; }
             public EnvSkyLutCurve Curve { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                BymlHashTable lut = new();
+
+                lut.AddNode(BymlNodeId.Hash, ColorBegin.Serialize(), "ColorBegin");
+                lut.AddNode(BymlNodeId.Hash, ColorEnd.Serialize(), "ColorEnd");
+                lut.AddNode(BymlNodeId.Hash, ColorMiddle.Serialize(), "ColorMiddle");
+
+                lut.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+                lut.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(UseMiddleColor), "UseMiddleColor");
+
+                lut.AddNode(BymlNodeId.Hash, Curve.Serialize(), "Curve");
+
+                return lut;
+            }
 
             public static byte[] Lerp(EnvSkyLut previous, EnvSkyLut next, float t)
             {
@@ -417,6 +630,25 @@ namespace Fushigi.env
             public float MaxX { get; set; }
             public string Type { get; set; } //Matches agl curve type
 
+            public BymlHashTable Serialize()
+            {
+                BymlHashTable curve = new();
+
+                curve.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaxX), "MaxX");
+                curve.AddNode(BymlNodeId.String, BymlUtil.CreateNode(Type), "Type");
+                BymlArrayNode dataArray = new();
+
+                if (Data is not null)
+                {
+                    foreach (float f in Data)
+                        dataArray.AddNodeToArray(BymlUtil.CreateNode<float>(f));
+                }
+
+                curve.AddNode(BymlNodeId.Array, dataArray, "Data");
+
+                return curve;
+            }
+
             public AglCurve.CurveType GetCurveType()
             {
                 if (Enum.TryParse(Type, out AglCurve.CurveType curveType))
@@ -435,6 +667,17 @@ namespace Fushigi.env
 
             public Vector4 ToVector4() => new Vector4(R, G, B, A);
 
+            public BymlHashTable Serialize()
+            {
+                BymlHashTable color = new();
+
+                color.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(R), "R");
+                color.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(G), "G");
+                color.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(B), "B");
+                color.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(A), "A");
+
+                return color;
+            }
             public override string ToString()
             {
                 return $"R {R} G {G} B {B} A {A}";
@@ -454,6 +697,51 @@ namespace Fushigi.env
             {
                 return new Color(Vector4.Lerp(a.ToVector4(), b.ToVector4(), t));
             }
+
+
+        }
+        public void Save()
+        {
+
+            // Build BYML root
+            BymlHashTable root = new BymlHashTable();
+
+            //root.AddNode(BymlNodeId.Hash, Bloom.Serialize(), "Bloom");
+            //root.AddNode(BymlNodeId.Hash, DOF.Serialize(), "DOF");
+            root.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
+            root.AddNode(BymlNodeId.Hash, DvLight.Serialize(), "DvLight");
+            root.AddNode(BymlNodeId.Hash, CharLight.Serialize(), "CharLight");
+            root.AddNode(BymlNodeId.Hash, CloudLight.Serialize(), "CloudLight");
+            root.AddNode(BymlNodeId.Hash, FieldLight.Serialize(), "FieldLight");
+            root.AddNode(BymlNodeId.Hash, ObjLight.Serialize(), "ObjLight");
+            root.AddNode(BymlNodeId.Hash, Shadow.Serialize(), "Shadow");
+            root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
+            root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
+
+            if (Rim != null)
+                root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
+            if (Fog != null)
+                root.AddNode(BymlNodeId.Hash, Fog.Serialize(), "Fog");
+            var byml = new Byml.Byml(root);
+
+            var mem = new MemoryStream();
+            byml.Save(mem);
+
+            string modRoot = UserSettings.GetModRomFSPath();
+            string outPath = Path.Combine(
+                modRoot,
+                "Gyml",
+                "Gfx",
+                "EnvPaletteParam",
+                $"{Name}.game__gfx__EnvPaletteParam.bgyml"
+            );
+
+            // Ensure directory exists
+            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+
+            // Write file
+            File.WriteAllBytes(outPath, mem.ToArray());
         }
     }
-}
+
+    }

@@ -156,6 +156,7 @@ namespace Fushigi.course
                     }
 
                     evnPaletteSettings.AddNode(BymlNodeId.Array, wonderPalette, "WonderPaletteList");
+                
                 }
 
                 if (TransPaletteList is not null && TransPaletteList.Count > 0)

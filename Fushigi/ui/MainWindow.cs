@@ -21,8 +21,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-
-
 namespace Fushigi.ui
 {
     public partial class MainWindow : IPopupModalHost
@@ -113,6 +111,7 @@ namespace Fushigi.ui
                             dpi = 96;
 
                         dpiScale = dpi / 96f;
+                        io.ConfigWindowsMoveFromTitleBarOnly = true;
 
                         ImGui.GetStyle().ScaleAllSizes(dpiScale);
 
@@ -127,9 +126,6 @@ namespace Fushigi.ui
                             size, nativeConfigJP, io.Fonts.GetGlyphRangesJapanese());
 
                         io.Fonts.Build();
-
-
-
 
                         //other fonts go here and follow the same schema
                         GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { IconUtil.MIN_GLYPH_RANGE, IconUtil.MAX_GLYPH_RANGE, 0 }, GCHandleType.Pinned);

@@ -1,6 +1,7 @@
 ﻿using Fasterflect;
 using Fushigi.Byml;
 using Fushigi.course;
+using Fushigi.env;
 using Fushigi.gl;
 using Fushigi.gl.Bfres;
 using Fushigi.Logger;
@@ -15,6 +16,7 @@ using Fushigi.ui.widgets;
 using Fushigi.util;
 using ImGuiNET;
 using Silk.NET.OpenGL;
+using Silk.NET.SDL;
 using System.Collections;
 using System.Collections.Immutable;
 using System.ComponentModel;
@@ -39,6 +41,7 @@ namespace Fushigi.ui.widgets
         Dictionary<CourseArea, LevelViewport>? lastCreatedViewports;
         public LevelViewport activeViewport;
         readonly UndoWindow undoWindow;
+        readonly EnvPaletteWindow envPaletteWindow;
         NumVec camSave;
         public static bool saveStatus = true;
 
@@ -57,7 +60,9 @@ namespace Fushigi.ui.widgets
         readonly List<IToolWindow> mOpenToolWindows = [];
 
         bool showAreaSettings = false;
+        bool showTalkingFlower = false;
         bool showCourseSettings = false;
+        bool showPaletteWindow = false;
         public static uint oldAreaParamSize;
         public static uint areaParamSize;
         public static uint oldCourseInfoSize;
@@ -371,6 +376,7 @@ namespace Fushigi.ui.widgets
             this.mPopupModalHost = popupModalHost;
             selectedArea = course.GetArea(0);
             undoWindow = new UndoWindow();
+            envPaletteWindow = new EnvPaletteWindow();
             activeViewport = null!;
             UpdateDRPC();
         }
@@ -484,9 +490,6 @@ namespace Fushigi.ui.widgets
 
             SelectActorAndLayerPanel();
 
-            // Palette Editor Window. INCOMPLETE!
-            //var paletteWindow = new EnvPaletteWindow();
-
             backupTime += deltaSeconds;
             if (backupTime >= UserSettings.GetBackupFreqMinutes() * 60)
             {
@@ -557,8 +560,8 @@ namespace Fushigi.ui.widgets
                         activeViewport = viewport;
                         selectedArea = area;
 
-                 
 
+                        envPaletteWindow.Load(gl, area.mAreaParams, area.mInitEnvPalette);
 
                         ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
 
@@ -610,12 +613,17 @@ namespace Fushigi.ui.widgets
                                 if (selected)
                                     ImGui.SetItemDefaultFocus();
                             }
+                            if (showTalkingFlower)
+                                TalkingFlower.Draw(ref showTalkingFlower, mPopupModalHost);
 
                             if (showAreaSettings)
                                 AreaSettings.Draw(ref showAreaSettings, mPopupModalHost, area.mAreaParams);
 
                             if (showCourseSettings)
                                 CourseSettings.Draw(ref showCourseSettings, mPopupModalHost, course.mCourseInfo, course.mMapAnalysisInfo, course.mStageLoadInfo);
+
+                            if (showPaletteWindow)
+                                envPaletteWindow.Draw(ref showPaletteWindow, mPopupModalHost);
 
                             var flags = ImGuiComboFlags.NoArrowButton | ImGuiComboFlags.WidthFitPreview;
                             if (ImGui.BeginCombo($"##EnvPalette", $"{IconUtil.ICON_PALETTE}", flags))
@@ -672,6 +680,22 @@ namespace Fushigi.ui.widgets
                                 BfresCache.Clear();
                             }
                             ImGui.SetItemTooltip("Reload Models");
+
+                            ImGui.SameLine();
+
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_PAINT_BRUSH, true, icon_size))
+                            {
+                                showPaletteWindow = true;
+                            }
+                            ImGui.SetItemTooltip("Palette Editor");
+
+                            ImGui.SameLine();
+
+                            if (ImGui.Button(IconUtil.ICON_LIST, icon_size))
+                                showTalkingFlower = true;
+                            ImGui.SetItemTooltip("View Talking Flower Voice Lines");
+
+                            ImGui.SameLine();
 
                             ImGui.PopStyleColor(1);
                             ImGui.EndChild();
@@ -980,6 +1004,10 @@ namespace Fushigi.ui.widgets
                     Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area {area.GetName()}...");
                     Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area parameters for {area.GetName()}...");
 
+                    var name = area.mAreaParams.EnvPaletteSetting.InitPaletteBaseName;
+
+                    envPaletteWindow.SavePalette();
+
                     if (backup)
                     {
                         area.Save(resource_table, Path.Combine(backupFolder, "BancMapUnit"), false);
@@ -1033,7 +1061,7 @@ namespace Fushigi.ui.widgets
                 else
                     resource_table.Save();
 
-                //Save resource table
+
                 if (backup)
                     course.Save();
                 else
@@ -1206,8 +1234,8 @@ namespace Fushigi.ui.widgets
 
             return new List<CourseActor>() { goalPole, airWall, noRevivalArea, goalPrince, goalSeed, goalPoplin, goalFort };
         }
-
-         private void SelectActorAndLayerPanel()
+            
+        private void SelectActorAndLayerPanel()
          {
             ImGui.Begin("Actors and Layers");
 
@@ -3075,8 +3103,12 @@ namespace Fushigi.ui.widgets
                     if (unit.mModelType is CourseUnit.ModelType.SemiSolid or CourseUnit.ModelType.Bridge)
                     {
                         if (ImGui.Button("Add Belt"))
-                            editContext.AddBeltRail(unit, new BGUnitRail(unit) {IsClosed = false});
-                        ImGui.SameLine();
+                        {
+                            editContext.AddBeltRail(unit, new BGUnitRail(unit) { IsClosed = false });
+                            editContext.DeselectAll();
+                            editContext.Select(unit);
+                        }
+                            ImGui.SameLine();
                         if (ImGui.Button("Remove Belt"))
                         {
                             editContext.WithSuspendUpdateDo(() =>
@@ -3084,7 +3116,11 @@ namespace Fushigi.ui.widgets
                                 for (int i = unit.mBeltRails.Count - 1; i >= 0; i--)
                                 {
                                     if (editContext.IsSelected(unit.mBeltRails[i]))
+                                    {
                                         editContext.DeleteBeltRail(unit, unit.mBeltRails[i]);
+                                        editContext.DeselectAll();
+                                        editContext.Select(unit);
+                                    }
                                 }
                             });
                         }
@@ -3103,12 +3139,13 @@ namespace Fushigi.ui.widgets
             {
                 foreach (var tile in removed_tile_units)
                 {
+                    areaScenes[selectedArea].RemoveSceneObjectsForUnit(tile);
                     editContext.DeleteBgUnit(tile);
                 }
-               
-                removed_tile_units.Clear();
 
-            }
+                    removed_tile_units.Clear();
+                    editContext.DeselectAll();
+                }
         }
 
         private async void CourseRailsView(CourseRailHolder railHolder)

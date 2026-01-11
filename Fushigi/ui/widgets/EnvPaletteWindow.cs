@@ -1,10 +1,14 @@
 ﻿using Fushigi.agl;
 using Fushigi.Bfres;
+using Fushigi.Byml;
 using Fushigi.course;
 using Fushigi.env;
 using Fushigi.gl.Bfres.AreaData;
+using Fushigi.ui.modal;
 using Fushigi.util;
+using FuzzySharp.Edits;
 using ImGuiNET;
+using Newtonsoft.Json.Linq;
 using Silk.NET.OpenGL;
 using Silk.NET.SDL;
 using System;
@@ -17,6 +21,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static Fushigi.env.EnvPalette;
 
 namespace Fushigi.ui.widgets
 {
@@ -24,76 +29,86 @@ namespace Fushigi.ui.widgets
     {
         private AreaParam AreaParam;
         private EnvPalette EnvPalette;
-        private AreaResourceManager AreaResources;
+        private string Label;
 
         public EnvPaletteWindow() { }
 
         private GL _gl;
+        bool showTop = false;
+        bool showBottom = false;
+        private string activeCurveEditor = null;
+        public EnvPalette.EnvSkyLut CurrentLut;
 
         public void Load(GL gl, AreaParam areaParam, EnvPalette envPalette)
         {
             _gl = gl;
             AreaParam = areaParam;
             EnvPalette = envPalette;
+
         }
 
-        public void Reload()
-        {
-            //AreaResources.ReloadPalette(_gl, this.EnvPalette);
-        }
 
         public void Update()
         {
-            //AreaResources.ReloadPalette(_gl, this.EnvPalette);
+            AreaResourceManager.ActiveArea.ReloadPalette(_gl, EnvPalette);
         }
 
-        public void Render()
+        public void Draw(ref bool continueDisplay, IPopupModalHost modalHost)
         {
-            if (ImGui.Begin("Env Palette"))
+            ImGui.SetNextWindowSize(new Vector2(500 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
+
+            bool open = ImGui.Begin("Palette Window", ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse);
+
+            if (open)
             {
+                if (ImGui.Button("Close"))
+                    continueDisplay = false;
+
                 PaletteDropdown();
 
-                ImGui.BeginTabBar("EnvTabs");
-
-                if (ImGui.BeginTabItem("Sky"))
+                if (ImGui.BeginTabBar("EnvTabs"))
                 {
-                    RenderSkyboxUI();
-                    ImGui.EndTabItem();
-                }
+                    if (ImGui.BeginTabItem("Sky"))
+                    {
+                        RenderSkyboxUI();
+                        ImGui.EndTabItem();
+                    }
 
-                if (ImGui.BeginTabItem("Env Colors"))
-                {
-                    RenderEnvColorUI();
-                    ImGui.EndTabItem();
-                }
+                    if (ImGui.BeginTabItem("Env Colors"))
+                    {
+                        RenderEnvColorUI();
+                        ImGui.EndTabItem();
+                    }
 
-                if (ImGui.BeginTabItem("Rim Lighting"))
-                {
-                    RenderRimUI();
-                    ImGui.EndTabItem();
-                }
+                    if (ImGui.BeginTabItem("Rim Lighting"))
+                    {
+                        RenderRimUI();
+                        ImGui.EndTabItem();
+                    }
 
-                if (ImGui.BeginTabItem("Hemi Lighting"))
-                {
-                    RenderLightsHemiUI();
-                    ImGui.EndTabItem();
-                }
+                    if (ImGui.BeginTabItem("Hemi Lighting"))
+                    {
+                        RenderLightsHemiUI();
+                        ImGui.EndTabItem();
+                    }
 
-                if (ImGui.BeginTabItem("Directional Lighting"))
-                {
-                    RenderLightsUI();
-                    ImGui.EndTabItem();
-                }
+                    if (ImGui.BeginTabItem("Directional Lighting"))
+                    {
+                        RenderLightsUI();
+                        ImGui.EndTabItem();
+                    }
 
-                if (ImGui.BeginTabItem("Fog"))
-                {
-                    RenderFogUI();
-                    ImGui.EndTabItem();
-                }
+                    if (ImGui.BeginTabItem("Fog"))
+                    {
+                        RenderFogUI();
+                        ImGui.EndTabItem();
+                    }
 
-                ImGui.EndTabBar();
-                ImGui.End();
+                    ImGui.EndTabBar();
+                }
             }
+
+            ImGui.End(); 
         }
 
         private void PaletteDropdown()
@@ -108,19 +123,21 @@ namespace Fushigi.ui.widgets
 
                 //  Work / Gyml / Gfx / EnvPaletteParam / AW_Hajimari_Sougen_HajimariDokan.game__gfx__EnvPaletteParam.gyml
 
-                bool selected = this.EnvPalette.Name == name;
+                bool selected = this.EnvPalette?.Name == palette;
                 if (ImGui.Selectable($"{name} : {palette}", selected))
                 {
-                    //AreaResources.TransitionEnvPalette(this.EnvPalette.Name, palette);
+                    AreaResourceManager.ActiveArea.TransitionEnvPalette(EnvPalette?.Name, palette);
 
-                    // EnvPalette.Load(palette);
-                    //  this.Reload();
+                    if (EnvPalette == null)
+                        EnvPalette = new EnvPalette(palette);
+                    else
+                        EnvPalette.Load(palette);
                 }
                 if (selected)
                     ImGui.SetItemDefaultFocus();
             }
 
-            if (ImGui.BeginCombo("Area Palette List", $"EnvPalette.Name", ImGuiComboFlags.HeightLarge))
+            if (ImGui.BeginCombo("Area Palette List", EnvPalette?.Name, ImGuiComboFlags.HeightLarge))
             {
                 SelectPalette($"Default Palette", this.AreaParam.EnvPaletteSetting.InitPaletteBaseName);
 
@@ -142,17 +159,17 @@ namespace Fushigi.ui.widgets
                 ImGui.EndCombo();
             }
 
-            if (ImGui.BeginCombo("EnvPalette", $"{EnvPalette.Name}", ImGuiComboFlags.HeightLarge))
+            if (ImGui.BeginCombo("EnvPalette", EnvPalette?.Name, ImGuiComboFlags.HeightLarge))
             {
                 var dir = Path.Combine(UserSettings.GetRomFSPath(), "Gyml", "Gfx", "EnvPaletteParam");
                 foreach (var file in Directory.GetFiles(dir))
                 {
                     string name = Path.GetFileName(file).Replace(".game__gfx__EnvPaletteParam.bgyml", "");
-                    bool select = EnvPalette.Name == name;
+                    bool select = EnvPalette?.Name == name;
                     if (ImGui.Selectable(name, select))
                     {
                         EnvPalette.Load(name);
-                        this.Reload();
+                        this.Update();
                     }
                     if (select)
                         ImGui.SetItemDefaultFocus();
@@ -169,7 +186,7 @@ namespace Fushigi.ui.widgets
 
         public void RenderRimUI()
         {
-            if (EnvPalette.Rim == null)
+            if (EnvPalette.Rim == null || EnvPalette == null)
                 return;
 
             ImGui.Columns(2);
@@ -201,7 +218,7 @@ namespace Fushigi.ui.widgets
 
         public void RenderEnvColorUI()
         {
-            if (EnvPalette.EnvColor == null)
+            if (EnvPalette.EnvColor == null || EnvPalette == null)
                 return;
 
             ImGui.Columns(2);
@@ -348,7 +365,7 @@ namespace Fushigi.ui.widgets
             ImGui.NextColumn();
 
         }
-
+       
         public void RenderDirectionalLights(string label, EnvPalette.EnvLightDirectional dir)
         {
             if (dir == null)
@@ -383,7 +400,10 @@ namespace Fushigi.ui.widgets
             ImGui.PushItemWidth(ImGui.GetColumnWidth() - 2);
 
             if (ImGui.DragFloat($"##Longitude{label}long", ref longitude))
+            {
                 dir.Longitude = longitude;
+                this.Update();
+            }
 
             ImGui.PopItemWidth();
 
@@ -392,7 +412,10 @@ namespace Fushigi.ui.widgets
             ImGui.PushItemWidth(ImGui.GetColumnWidth() - 2);
 
             if (ImGui.DragFloat($"##Latitude{label}lat", ref latitude))
+            {
                 dir.Latitude = latitude;
+                this.Update();
+            }
 
             ImGui.PopItemWidth();
 
@@ -405,7 +428,7 @@ namespace Fushigi.ui.widgets
             ImGui.NextColumn();
         }
 
-        static Vector3 GetDirectionalVector(float latitude, float longitude)
+        static System.Numerics.Vector3 GetDirectionalVector(float latitude, float longitude)
         {
             // Convert latitude and longitude from degrees to radians
             float latRad = latitude * MathUtil.Deg2Rad;
@@ -415,102 +438,88 @@ namespace Fushigi.ui.widgets
             float y = MathF.Sin(latRad);
             float z = MathF.Cos(latRad) * MathF.Cos(lonRad);
 
-            var dir = new Vector3(x, y, z);
-            return Vector3.Normalize(-dir);
+            var dir = new System.Numerics.Vector3(x, y, z);
+            return System.Numerics.Vector3.Normalize(-dir);
         }
 
         public void RenderPostEffectUI()
         {
         }
+        public void RenderCurveEditor(string label)
+        {
+            ImGui.SetNextWindowSize(new Vector2(500 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
+            var io = ImGui.GetIO();
+            if (ImGui.Begin("Curve Editor - " + label, ImGuiWindowFlags.NoCollapse))
+            {
+                if (ImGui.Button("Close"))
+                    activeCurveEditor = null;
 
+                CurveEditors[label].Render(400);
+            }
+            Update();
+            ImGui.End();
+        }
         public void RenderSkyboxUI()
         {
-            if (EnvPalette.Sky == null)
+            if (EnvPalette == null || EnvPalette.Sky == null)
                 return;
 
-            if (ImGui.CollapsingHeader("Preview", ImGuiTreeNodeFlags.DefaultOpen))
-            {
-                //if (AreaResources.VRSkybox.SkyTexture != null)
-                  //  ImGui.Image((IntPtr)AreaResources.VRSkybox.SkyTexture.ID, new Vector2(400, 128));
-            }
+            ImGui.Columns(1);
 
             RenderSkyboxLUTUI("Top", EnvPalette.Sky.LutTexTop);
             RenderSkyboxLUTUI("Left", EnvPalette.Sky.LutTexLeft);
             RenderSkyboxLUTUI("Top Left", EnvPalette.Sky.LutTexLeftTop);
             RenderSkyboxLUTUI("Top Right", EnvPalette.Sky.LutTexRightTop);
+            ImGui.Columns(1);
         }
 
         private bool open_popup = false;
         private string popup_lut = "";
-        private AglCurveEditor AglCurveEditor = new AglCurveEditor();
+        private Dictionary<string, AglCurveEditor> CurveEditors = new();
+
+
 
         public void RenderSkyboxLUTUI(string label, EnvPalette.EnvSkyLut lut)
         {
-            if (ImGui.CollapsingHeader(label, ImGuiTreeNodeFlags.DefaultOpen))
+            if (ImGui.CollapsingHeader($"{label}##{label}_SkyboxLUT"))
             {
                 var screenPos = ImGui.GetCursorScreenPos();
-                if (ImGui.Button($"{IconUtil.ICON_EDIT}", new Vector2(30, 30)))
-                {
-                    ImGui.OpenPopup("gradient_popup");
-                    open_popup = true;
-                    popup_lut = label;
-                    AglCurveEditor.Load(lut);
-                }
 
+                if (ImGui.Button($"{IconUtil.ICON_EDIT}##{label}", new Vector2(30, 30)))
+                {
+                    activeCurveEditor = label;
+                    if (!CurveEditors.TryGetValue(label, out var editor))
+                    {
+                        editor = new AglCurveEditor();
+                        CurveEditors[label] = editor;
+                    }
+                    editor.Load(lut, label, EnvPalette);
+                    CurrentLut = lut;
+                }
+                EnvPalette.Sky.LutTexRightTop = lut;
                 ImGui.SameLine();
 
                 if (ImGui.BeginChild($"Grad{label}", new Vector2(ImGui.GetColumnWidth() - 2, 30)))
-                {
                     CalculateGradient(lut, screenPos, 400, 30);
-                }
 
                 ImGui.EndChild();
             }
 
-            if (popup_lut == label && ImGui.Begin("gradient_popup", ref open_popup, ImGuiWindowFlags.NoNav))
+            if (activeCurveEditor == label)
             {
-                if (ImGui.CollapsingHeader("Presets", ImGuiTreeNodeFlags.DefaultOpen))
+                if (CurrentLut != lut)
                 {
-                    if (ImGui.BeginChild($"PresetList{label}", new Vector2(ImGui.GetWindowWidth() - 2, 60)))
-                    {
-                    }
-                    ImGui.EndChild();
+                    var editor = CurveEditors[label];
+                    editor.Load(lut, label, EnvPalette);  
+                    CurrentLut = lut;
                 }
-                if (ImGui.CollapsingHeader($"{label} Params", ImGuiTreeNodeFlags.DefaultOpen))
-                {
-                    ImGui.Columns(2);
-
-                    if (label == "Top")
-                        DrawFloatSlider("Horizontal Offset", EnvPalette.Sky, "HorizontalOffset", 0, 1.5f);
-                    if (label == "Top Left")
-                        DrawFloat("Rotation", EnvPalette.Sky, "RotDegLeftTop");
-                    if (label == "Top Right")
-                        DrawFloat("Rotation", EnvPalette.Sky, "RotDegRightTop");
-
-                    bool useMiddle = lut.UseMiddleColor;
-
-                    ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Use Middle");
-
-                    ImGui.NextColumn();
-
-                    if (ImGui.Checkbox("##Use Middle", ref useMiddle))
-                    {
-                        lut.UseMiddleColor = useMiddle;
-                        this.Update();
-                    }
-                    ImGui.NextColumn();
-
-                    ImGui.Columns(1);
-                }
-                if (ImGui.CollapsingHeader($"{label} Gradient", ImGuiTreeNodeFlags.DefaultOpen))
-                {
-                    AglCurveEditor.Render(400);
-                }
-
-                ImGui.EndPopup();
             }
+
+
+            if (activeCurveEditor == label)
+                RenderCurveEditor(label);
         }
+
 
         public void CalculateGradient(EnvPalette.EnvSkyLut lut, Vector2 screenPos, int width, float height)
         {
@@ -582,7 +591,11 @@ namespace Fushigi.ui.widgets
             }
             ImGui.NextColumn();
         }
-
+        public void SavePalette()
+        {
+            foreach (var editor in CurveEditors.Values)
+                editor.Save();
+        }
         private void DrawFloatSlider(string label, object obj, string property, float min, float max)
         {
             ImGui.AlignTextToFramePadding();

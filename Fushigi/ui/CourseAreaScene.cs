@@ -64,6 +64,38 @@ namespace Fushigi.ui
             mNeedsUpdate = false;
         }
 
+        public void RemoveSceneObjectsForUnit(CourseUnit unit)
+        {
+            var keysToRemove = new List<object>();
+
+            keysToRemove.Add(unit);
+
+            foreach (var wall in unit.Walls)
+            {
+                keysToRemove.Add(wall);
+
+                if (wall.ExternalRail != null)
+                    keysToRemove.Add(wall.ExternalRail);
+
+                foreach (var rail in wall.InternalRails)
+                    keysToRemove.Add(rail);
+            }
+
+            foreach (var belt in unit.mBeltRails)
+                keysToRemove.Add(belt);
+
+            foreach (var key in keysToRemove)
+            {
+                if (mCourseSceneObjects.TryGetValue(key, out var entry))
+                {
+                    mCourseSceneObjects.Remove(key);
+                    mOrderedSceneObjects.Remove(entry.obj);
+                }
+            }
+
+            // Force immediate rebuild so UI + viewport update instantly
+            Update();
+        }
         public bool TryGetObjFor(object courseObject, [NotNullWhen(true)] out ISceneObject? sceneObject)
         {
             bool success = mCourseSceneObjects.TryGetValue(courseObject, out var entry);

@@ -1,4 +1,5 @@
 ﻿using Fushigi.Byml;
+using Fushigi.env;
 using Fushigi.gl;
 using Fushigi.Logger;
 using Fushigi.rstb;
@@ -174,6 +175,7 @@ namespace Fushigi.course
                     refArr.AddNodeToArray(BymlUtil.CreateNode(refPath));
                 }
 
+          
                 stageParamRoot.AddNode(BymlNodeId.Array, refArr, "RefStages");
 
                 var byml = new Byml.Byml(stageParamRoot);

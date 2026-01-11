@@ -306,6 +306,7 @@ namespace Fushigi.gl.Bfres
                     break;
             }
 
+
             this.SetRim(envPalette.Rim);
             this.SetShadow(envPalette.Shadow);
         }
