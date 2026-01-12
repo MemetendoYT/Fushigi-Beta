@@ -97,9 +97,16 @@ namespace Fushigi.gl.Bfres
 
             TopTexture.Load(64, 1, palette.Sky.LutTexTop.ComputeRgba8());
             LeftTexture.Load(64, 1, palette.Sky.LutTexLeft.ComputeRgba8());
-            TopLeftTexture.Load(64, 1, palette.Sky.LutTexLeftTop.ComputeRgba8());
-            TopRightTexture.Load(64, 1, palette.Sky.LutTexRightTop.ComputeRgba8());
 
+            if (palette.Sky.LutTexLeftTop != null)
+            {
+                TopLeftTexture.Load(64, 1, palette.Sky.LutTexLeftTop.ComputeRgba8());
+            }
+
+            if (palette.Sky.LutTexRightTop != null)
+            {
+                TopRightTexture.Load(64, 1, palette.Sky.LutTexRightTop.ComputeRgba8());
+            }
             SetMaterialParams(palette.Sky.RotDegLeftTop, palette.Sky.RotDegRightTop, palette.Sky.HorizontalOffset);
         }
 

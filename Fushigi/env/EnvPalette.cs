@@ -42,7 +42,7 @@ namespace Fushigi.env
         public EnvLightList DvLight { get; set; }
         public EnvLightList FieldLight { get; set; }
         public EnvLightList ObjLight { get; set; }
-
+        public EnvInfo Info { get; set; }
         public bool IsApplyBloom { get; set; }
         public bool IsApplyCharLight { get; set; }
         public bool IsApplyCloudLight { get; set; }
@@ -51,6 +51,8 @@ namespace Fushigi.env
         public bool IsApplySky { get; set; }
         public bool IsApplyEnvColor { get; set; }
         public bool IsApplyEmission { get; set; }
+
+        public bool IsApplyInfo { get; set; }
         [BymlIgnore]
         public bool IsApplyObjLight { get; set; }
 
@@ -399,7 +401,26 @@ namespace Fushigi.env
             }
         }
 
-        public class EnvLightList
+        public class EnvInfo
+        {
+            public string LocationType { get; set; }
+
+            public string WeatherType { get; set; }
+
+            public string WonderType { get; set; }
+
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+                table.AddNode(BymlNodeId.String, BymlUtil.CreateNode(LocationType), "LocationType");
+                table.AddNode(BymlNodeId.String, BymlUtil.CreateNode(WeatherType), "WeatherType");
+                table.AddNode(BymlNodeId.String, BymlUtil.CreateNode(WonderType), "WonderType");
+                return table;
+            }
+
+        }
+            public class EnvLightList
         {
             public EnvLightHemisphere Hemi { get; set; }
             public EnvLightDirectional Main { get; set; }
@@ -723,6 +744,7 @@ namespace Fushigi.env
             root.AddNode(BymlNodeId.Hash, Shadow.Serialize(), "Shadow");
             root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
             root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
+            root.AddNode(BymlNodeId.Hash, Info.Serialize(), "Info");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyBloom), "IsApplyBloom");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCharLight), "IsApplyCharLight");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCloudLight), "IsApplyCloudLight");
@@ -731,6 +753,8 @@ namespace Fushigi.env
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplySky), "IsApplySky");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvColor), "IsApplyEnvColor");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEmission), "IsApplyEmission");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyInfo), "IsApplyInfo");
+
 
 
             if (Rim != null)

@@ -33,21 +33,64 @@ namespace Fushigi.ui.widgets
 
         public EnvPaletteWindow() { }
 
+        bool hasInitialized = false;
         private GL _gl;
         bool showTop = false;
         bool showBottom = false;
         private string activeCurveEditor = null;
         public EnvPalette.EnvSkyLut CurrentLut;
 
+        private static readonly Dictionary<string, string> LocationType = new Dictionary<string, string>()
+        {
+            { "None", "None" },
+            { "Hot", "FirePlace"},
+            { "Underwater Fixed Camera", "UnderWaterFixCamera"},
+            { "Forest", "Forest_Sunbeams" },
+            { "Grass", "GrassField" },
+            { "Spore", "Forest_Spore" },
+            {"Desert", "WhiteDesert" },
+            {"Green Spore", "Green_Spore"},
+            {"Underwater", "UnderWater" },
+            {"Cave Dust", "CaveDust"},
+            {"Underwater Area", "UnderWaterArea" },
+            {"EDDemoTimeLineA", "EDDemoTimeLineA" },
+            {"EDDemoTimeLineB", "EDDemoTimeLineB" }
+        };
+
+        private static readonly Dictionary<string, string> WeatherType = new Dictionary<string, string>()
+        {
+            { "None", "None"},
+            { "Rain", "Rain" },
+            { "Lens Flare", "LensFlare" },
+            { "Snow", "Snow" },
+            {"SnowBirdEye", "SnowBirdEye"},
+            {"Blizzard", "Blizzard" }
+        };
+
+        private static readonly Dictionary<string, string> WonderType = new Dictionary<string, string>()
+        {
+            { "None", "None"},
+            { "Wonder Goomba", "WonderKuribo" },
+            { "Wonder Music", "WonderMusic" },
+            { "Wonder Snow", "WonderSnow" },
+            { "Wonder Stripe", "WonderStripe"},
+            { "Wonder Flowerdust", "WonderDefaultFlowerdust" },
+            {"WonderOverlookMove", "WonderOverlookMove"},
+            {"Wonder Bowser", "WonderBowserLast" },
+            {"Default", "Default" },
+            {"WonderDarkFlower", "WonderDarkFlower" },
+            {"WonderWaterball", "WonderWaterball" }
+        };
+
         public void Load(GL gl, AreaParam areaParam, EnvPalette envPalette)
         {
             _gl = gl;
             AreaParam = areaParam;
             EnvPalette = envPalette;
-
+      
         }
 
-     
+
         public void Update()
         {
             AreaResourceManager.ActiveArea.ReloadPalette(_gl, EnvPalette);
@@ -59,6 +102,27 @@ namespace Fushigi.ui.widgets
 
             bool open = ImGui.Begin("Palette Window", ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse);
 
+            if (!hasInitialized)
+            {
+                if (!CurveEditors.TryGetValue("Top", out var top))
+                    CurveEditors["Top"] = top = new AglCurveEditor();
+
+                if (!CurveEditors.TryGetValue("TopRight", out var topRight))
+                    CurveEditors["TopRight"] = topRight = new AglCurveEditor();
+
+                if (!CurveEditors.TryGetValue("TopLeft", out var topLeft))
+                    CurveEditors["TopLeft"] = topLeft = new AglCurveEditor();
+
+                if (!CurveEditors.TryGetValue("Left", out var left))
+                    CurveEditors["Left"] = left = new AglCurveEditor();
+
+                top.Load(EnvPalette.Sky.LutTexTop, "Top", EnvPalette);
+                topRight.Load(EnvPalette.Sky.LutTexRightTop, "TopRight", EnvPalette);
+                topLeft.Load(EnvPalette.Sky.LutTexLeftTop, "TopLeft", EnvPalette);
+                left.Load(EnvPalette.Sky.LutTexLeft, "Left", EnvPalette);
+
+                hasInitialized = true;
+            }
             if (open)
             {
                 if (ImGui.Button("Close"))
@@ -110,6 +174,12 @@ namespace Fushigi.ui.widgets
                         ImGui.EndTabItem();
                     }
 
+                    if (ImGui.BeginTabItem("Info"))
+                    {
+                        RenderInfoUI();
+                        ImGui.EndTabItem();
+                    }
+
                     if (ImGui.BeginTabItem("Apply Elements"))
                     {
                         RenderToggleUI();
@@ -130,9 +200,25 @@ namespace Fushigi.ui.widgets
             ImGui.NextColumn();
 
             ImGui.Indent();
-
             DrawFloatSlider("Intensity", EnvPalette.Bloom, "Intensity", 0, 1f);
-            DrawFloatSlider("Mask End", EnvPalette.Bloom, "MaskEnd", 0, 1f);
+            DrawFloat("Mask End", EnvPalette.Bloom, "MaskEnd");
+            DrawFloatSlider("Mask Ratio", EnvPalette.Bloom, "MaskRatio", 0, 1f);
+            DrawFloatSlider("Threshold", EnvPalette.Bloom, "Threshold", 0, 1f);
+
+            ImGui.Columns(1);
+
+
+        }
+
+        private void EffectUI()
+        {
+            ImGui.Columns(2);
+            ImGui.NextColumn();
+            ImGui.NextColumn();
+
+            ImGui.Indent();
+            DrawFloatSlider("Intensity", EnvPalette.Bloom, "Intensity", 0, 1f);
+            DrawFloat("Mask End", EnvPalette.Bloom, "MaskEnd");
             DrawFloatSlider("Mask Ratio", EnvPalette.Bloom, "MaskRatio", 0, 1f);
             DrawFloatSlider("Threshold", EnvPalette.Bloom, "Threshold", 0, 1f);
 
@@ -208,7 +294,59 @@ namespace Fushigi.ui.widgets
             }
 
         }
+        private void RenderInfoUI()
+        {
+            string value = "";
+            if (EnvPalette.Info == null)
+                EnvPalette.Info = new EnvPalette.EnvInfo();
+   
 
+            if (EnvPalette.Info.LocationType == null) {
+                value = "None";
+                EnvPalette.Info.LocationType = "None";
+            }
+            else 
+                value = EnvPalette.Info.LocationType;
+
+            Console.WriteLine("LocationType " + value);
+            int index = LocationType.Values.ToList().IndexOf(value);
+            ImGui.Text("Location Type");
+            if (ImGui.Combo("##LocationType", ref index, LocationType.Keys.ToArray(), LocationType.Count(), 10))
+                EnvPalette.Info.LocationType = LocationType.Values.ToArray()[index];
+
+
+            if (EnvPalette.Info.WeatherType == null)
+            {
+                value = "None";
+                EnvPalette.Info.WeatherType = "None";
+            }
+            else
+                value = EnvPalette.Info.WeatherType;
+            
+
+            Console.WriteLine("WeatherType " + value);
+            index = WeatherType.Values.ToList().IndexOf(value);
+            ImGui.Text("Weather Type");
+            if (ImGui.Combo("##WeatherType", ref index, WeatherType.Keys.ToArray(), WeatherType.Count(), 10))
+                EnvPalette.Info.WeatherType = WeatherType.Values.ToArray()[index];
+
+            if (EnvPalette.Info.WonderType == null)
+            {
+                value = "None";
+                EnvPalette.Info.WonderType = "None";
+            }
+            else
+                value = EnvPalette.Info.WonderType;
+        
+
+            Console.WriteLine("WonderType " + value);
+            index = WonderType.Values.ToList().IndexOf(value);
+            ImGui.Text("Wonder Type");
+            if (ImGui.Combo("##WonderType", ref index, WonderType.Keys.ToArray(), WonderType.Count(), 10))
+                EnvPalette.Info.WonderType = WonderType.Values.ToArray()[index];
+
+
+        }
         public void RenderEnvMapUI()
         {
 
@@ -305,6 +443,11 @@ namespace Fushigi.ui.widgets
             bool emission = EnvPalette.IsApplyEmission;
             ImGui.Checkbox("Enable Emission", ref emission);
             EnvPalette.IsApplyEmission = emission;
+
+            bool info = EnvPalette.IsApplyInfo;
+            ImGui.Checkbox("Enable Info", ref info);
+            EnvPalette.IsApplyInfo = info;
+
         }
 
         public void RenderFogUI(string label, EnvPalette.EnvFog fog)

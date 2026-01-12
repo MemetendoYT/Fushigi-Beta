@@ -311,6 +311,7 @@ namespace Fushigi.gl.Bfres
             this.SetShadow(envPalette.Shadow);
         }
 
+  
         public void SetShadow(EnvPalette.EnvShadow shadow)
         {
             if (shadow == null) return;
