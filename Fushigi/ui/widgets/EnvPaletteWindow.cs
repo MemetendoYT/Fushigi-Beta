@@ -47,7 +47,7 @@ namespace Fushigi.ui.widgets
 
         }
 
-
+     
         public void Update()
         {
             AreaResourceManager.ActiveArea.ReloadPalette(_gl, EnvPalette);
@@ -55,7 +55,7 @@ namespace Fushigi.ui.widgets
 
         public void Draw(ref bool continueDisplay, IPopupModalHost modalHost)
         {
-            ImGui.SetNextWindowSize(new Vector2(500 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new Vector2(600 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
 
             bool open = ImGui.Begin("Palette Window", ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse);
 
@@ -68,6 +68,12 @@ namespace Fushigi.ui.widgets
 
                 if (ImGui.BeginTabBar("EnvTabs"))
                 {
+                    if (ImGui.BeginTabItem("Bloom"))
+                    {
+                        RenderBloomUI();
+                        ImGui.EndTabItem();
+                    }
+
                     if (ImGui.BeginTabItem("Sky"))
                     {
                         RenderSkyboxUI();
@@ -104,11 +110,35 @@ namespace Fushigi.ui.widgets
                         ImGui.EndTabItem();
                     }
 
+                    if (ImGui.BeginTabItem("Apply Elements"))
+                    {
+                        RenderToggleUI();
+                        ImGui.EndTabItem();
+                    }
+
                     ImGui.EndTabBar();
                 }
             }
 
             ImGui.End(); 
+        }
+
+        private void RenderBloomUI()
+        {
+            ImGui.Columns(2);
+            ImGui.NextColumn();
+            ImGui.NextColumn();
+
+            ImGui.Indent();
+
+            DrawFloatSlider("Intensity", EnvPalette.Bloom, "Intensity", 0, 1f);
+            DrawFloatSlider("Mask End", EnvPalette.Bloom, "MaskEnd", 0, 1f);
+            DrawFloatSlider("Mask Ratio", EnvPalette.Bloom, "MaskRatio", 0, 1f);
+            DrawFloatSlider("Threshold", EnvPalette.Bloom, "Threshold", 0, 1f);
+
+            ImGui.Columns(1);
+
+
         }
 
         private void PaletteDropdown()
@@ -245,6 +275,36 @@ namespace Fushigi.ui.widgets
 
             if (ImGui.CollapsingHeader("CloudWorld"))
                 RenderFogUI("CloudWorld", EnvPalette.Fog.CloudWorld);
+        }
+        public void RenderToggleUI()
+        {
+            bool bloom = EnvPalette.IsApplyBloom;
+            ImGui.Checkbox("Enable Bloom", ref bloom);
+            EnvPalette.IsApplyBloom = bloom;
+
+            bool charlight = EnvPalette.IsApplyCharLight;
+            ImGui.Checkbox("Enable Char Light", ref charlight);
+            EnvPalette.IsApplyCharLight = charlight;
+
+            bool cloudlight = EnvPalette.IsApplyCloudLight;
+            ImGui.Checkbox("Enable Cloud Light", ref cloudlight);
+            EnvPalette.IsApplyCloudLight = cloudlight;
+
+            bool dvlight = EnvPalette.IsApplyDvLight;
+            ImGui.Checkbox("Enable DV Light", ref dvlight);
+            EnvPalette.IsApplyDvLight = dvlight;
+
+            bool sky = EnvPalette.IsApplySky;
+            ImGui.Checkbox("Enable Sky", ref sky);
+            EnvPalette.IsApplySky = sky;
+
+            bool fog = EnvPalette.IsApplyFog;
+            ImGui.Checkbox("Enable Fog", ref fog);
+            EnvPalette.IsApplyFog = fog;
+
+            bool emission = EnvPalette.IsApplyEmission;
+            ImGui.Checkbox("Enable Emission", ref emission);
+            EnvPalette.IsApplyEmission = emission;
         }
 
         public void RenderFogUI(string label, EnvPalette.EnvFog fog)

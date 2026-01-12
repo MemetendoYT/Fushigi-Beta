@@ -510,6 +510,12 @@ namespace Fushigi.ui.widgets
                 }
             }
 
+            if (showTalkingFlower)
+                TalkingFlower.Draw(ref showTalkingFlower, mPopupModalHost);
+
+            if (showPaletteWindow)
+                envPaletteWindow.Draw(ref showPaletteWindow, mPopupModalHost);
+
             ulong selectionVersionBefore = areaScenes[selectedArea].EditContext.SelectionVersion;
 
 
@@ -613,17 +619,13 @@ namespace Fushigi.ui.widgets
                                 if (selected)
                                     ImGui.SetItemDefaultFocus();
                             }
-                            if (showTalkingFlower)
-                                TalkingFlower.Draw(ref showTalkingFlower, mPopupModalHost);
+
 
                             if (showAreaSettings)
                                 AreaSettings.Draw(ref showAreaSettings, mPopupModalHost, area.mAreaParams);
 
                             if (showCourseSettings)
                                 CourseSettings.Draw(ref showCourseSettings, mPopupModalHost, course.mCourseInfo, course.mMapAnalysisInfo, course.mStageLoadInfo);
-
-                            if (showPaletteWindow)
-                                envPaletteWindow.Draw(ref showPaletteWindow, mPopupModalHost);
 
                             var flags = ImGuiComboFlags.NoArrowButton | ImGuiComboFlags.WidthFitPreview;
                             if (ImGui.BeginCombo($"##EnvPalette", $"{IconUtil.ICON_PALETTE}", flags))

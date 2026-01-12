@@ -21,6 +21,7 @@ using static Fushigi.gl.Bfres.GsysEnvironment;
 
 namespace Fushigi.env
 {
+    [Serializable]
     public class EnvPalette : BymlObject
     {  
         [BymlIgnore]
@@ -41,10 +42,15 @@ namespace Fushigi.env
         public EnvLightList DvLight { get; set; }
         public EnvLightList FieldLight { get; set; }
         public EnvLightList ObjLight { get; set; }
-        [BymlIgnore]
+
+        public bool IsApplyBloom { get; set; }
+        public bool IsApplyCharLight { get; set; }
+        public bool IsApplyCloudLight { get; set; }
+        public bool IsApplyDvLight { get; set; }
         public bool IsApplyFog { get; set; }
-        [BymlIgnore]
+        public bool IsApplySky { get; set; }
         public bool IsApplyEnvColor { get; set; }
+        public bool IsApplyEmission { get; set; }
         [BymlIgnore]
         public bool IsApplyObjLight { get; set; }
 
@@ -706,7 +712,7 @@ namespace Fushigi.env
             // Build BYML root
             BymlHashTable root = new BymlHashTable();
 
-            //root.AddNode(BymlNodeId.Hash, Bloom.Serialize(), "Bloom");
+            root.AddNode(BymlNodeId.Hash, Bloom.Serialize(), "Bloom");
             //root.AddNode(BymlNodeId.Hash, DOF.Serialize(), "DOF");
             root.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
             root.AddNode(BymlNodeId.Hash, DvLight.Serialize(), "DvLight");
@@ -717,6 +723,15 @@ namespace Fushigi.env
             root.AddNode(BymlNodeId.Hash, Shadow.Serialize(), "Shadow");
             root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
             root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyBloom), "IsApplyBloom");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCharLight), "IsApplyCharLight");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCloudLight), "IsApplyCloudLight");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDvLight), "IsApplyDvLight");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFog), "IsApplyFog");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplySky), "IsApplySky");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvColor), "IsApplyEnvColor");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEmission), "IsApplyEmission");
+
 
             if (Rim != null)
                 root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
