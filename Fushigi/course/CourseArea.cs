@@ -91,10 +91,30 @@ namespace Fushigi.course
                 mAreaParams = new AreaParam(new Byml.Byml(new MemoryStream(File.ReadAllBytes(areaParamPath))));
 
             //Load env settings
-            if (mAreaParams.EnvPaletteSetting != null && mAreaParams.EnvPaletteSetting.InitPaletteBaseName != null)
-                mInitEnvPalette = new EnvPalette(mAreaParams.EnvPaletteSetting.InitPaletteBaseName);
-            else
-                mInitEnvPalette = new EnvPalette();
+            try
+            {
+                if (mAreaParams.EnvPaletteSetting != null &&
+                    mAreaParams.EnvPaletteSetting.InitPaletteBaseName != null)
+                {
+                    Console.WriteLine("Loading palette: " +
+                        mAreaParams.EnvPaletteSetting.InitPaletteBaseName);
+
+                    mInitEnvPalette = new EnvPalette(
+                        mAreaParams.EnvPaletteSetting.InitPaletteBaseName
+                    );
+                }
+                else
+                {
+                    Console.WriteLine("Loading empty palette");
+                    mInitEnvPalette = new EnvPalette();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("PALETTE LOAD ERROR:");
+                Console.WriteLine(ex);
+                throw;
+            }
 
             string levelPath = "";
             if (!loadTemplate)

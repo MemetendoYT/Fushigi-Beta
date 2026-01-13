@@ -6,6 +6,7 @@ using Fushigi.gl;
 using Fushigi.Logger;
 using Fushigi.util;
 using ImGuiNET;
+using Microsoft.Msagl.Drawing;
 using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections;
@@ -30,6 +31,8 @@ namespace Fushigi.env
         public EnvBloom Bloom { get; set; } = new EnvBloom();
 
         public EnvDepthOfField DOF { get; set; }
+
+        public EnvGlobalIllumination GI { get; set; }
         public EnvColorList EnvColor { get; set; }
         public EnvEmission Emission { get; set; }
         public EnvShadow Shadow { get; set; }
@@ -46,15 +49,20 @@ namespace Fushigi.env
         public bool IsApplyBloom { get; set; }
         public bool IsApplyCharLight { get; set; }
         public bool IsApplyCloudLight { get; set; }
+        public bool IsApplyDOF { get; set; }
         public bool IsApplyDvLight { get; set; }
-        public bool IsApplyFog { get; set; }
-        public bool IsApplySky { get; set; }
-        public bool IsApplyEnvColor { get; set; }
         public bool IsApplyEmission { get; set; }
-
-        public bool IsApplyInfo { get; set; }
-        [BymlIgnore]
+        public bool IsApplyEnvColor { get; set; }
+        public bool IsApplyEnvMap { get; set; }
+        public bool IsApplyFieldLight { get; set; }
+        public bool IsApplyFog { get; set; }
+        public bool IsApplyGI { get; set; }
         public bool IsApplyObjLight { get; set; }
+        public bool IsApplyRim { get; set; }
+        public bool IsApplyShadow { get; set; }
+        public bool IsApplySky { get; set; }
+        public bool IsApplyInfo { get; set; }
+
 
 
 
@@ -294,8 +302,8 @@ namespace Fushigi.env
 
                 table.AddNode(BymlNodeId.Hash, AOColor.Serialize(), "AOColor");
                 table.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(EnableDynamicDepthShadow), "EnableDynamicDepthShadow");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Latitude), "IntensityDV");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Longitude), "IntensityEnemy");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Latitude), "Latitude");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Longitude), "Longitude");
                 return table;
             }
         }
@@ -316,7 +324,7 @@ namespace Fushigi.env
                 envDepthOfField.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(Enable), "Enable");
                 envDepthOfField.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Start), "Start");
                 envDepthOfField.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(End), "End");
-                envDepthOfField.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MipLevelMax), "MipLevelMax");
+                envDepthOfField.AddNode(BymlNodeId.Int, BymlUtil.CreateNode(MipLevelMax), "MipLevelMax");
 
                 return envDepthOfField;
             }
@@ -361,6 +369,26 @@ namespace Fushigi.env
             }
         }
 
+        public class EnvGlobalIllumination
+        {
+            public uint BlurLevel { get; set; }
+            public float Intensity { get; set; } 
+            public float Ratio { get; set; }
+            public float RimIntensity { get; set; } 
+            public float RimPow { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Int, BymlUtil.CreateNode(BlurLevel), "BlurLevel");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Ratio), "Ratio");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RimIntensity), "RimIntensity");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RimPow), "RimPow");
+                return table;
+            }
+        }
         public class EnvFogList
         {
             public EnvFog Cloud { get; set; } = new EnvFog();
@@ -732,9 +760,7 @@ namespace Fushigi.env
 
             // Build BYML root
             BymlHashTable root = new BymlHashTable();
-
             root.AddNode(BymlNodeId.Hash, Bloom.Serialize(), "Bloom");
-            //root.AddNode(BymlNodeId.Hash, DOF.Serialize(), "DOF");
             root.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
             root.AddNode(BymlNodeId.Hash, DvLight.Serialize(), "DvLight");
             root.AddNode(BymlNodeId.Hash, CharLight.Serialize(), "CharLight");
@@ -745,24 +771,30 @@ namespace Fushigi.env
             root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
             root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
             root.AddNode(BymlNodeId.Hash, Info.Serialize(), "Info");
+
+            if(DOF != null)
+                root.AddNode(BymlNodeId.Hash, DOF.Serialize(), "DOF");
+
+            root.AddNode(BymlNodeId.Hash, GI.Serialize(), "GI");
+            root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
+            root.AddNode(BymlNodeId.Hash, Fog.Serialize(), "Fog");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyBloom), "IsApplyBloom");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCharLight), "IsApplyCharLight");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCloudLight), "IsApplyCloudLight");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDOF), "IsApplyDOF");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDvLight), "IsApplyDvLight");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFog), "IsApplyFog");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplySky), "IsApplySky");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvColor), "IsApplyEnvColor");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEmission), "IsApplyEmission");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvColor), "IsApplyEnvColor");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvMap), "IsApplyEnvMap");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFieldLight), "IsApplyFieldLight");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFog), "IsApplyFog");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyGI), "IsApplyGI");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyObjLight), "IsApplyObjLight");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyRim), "IsApplyRim");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyShadow), "IsApplyShadow");
+            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplySky), "IsApplySky");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyInfo), "IsApplyInfo");
-
-
-
-            if (Rim != null)
-                root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
-            if (Fog != null)
-                root.AddNode(BymlNodeId.Hash, Fog.Serialize(), "Fog");
             var byml = new Byml.Byml(root);
-
             var mem = new MemoryStream();
             byml.Save(mem);
 

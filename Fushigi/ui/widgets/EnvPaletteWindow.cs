@@ -1,4 +1,5 @@
-﻿using Fushigi.agl;
+﻿using Fasterflect;
+using Fushigi.agl;
 using Fushigi.Bfres;
 using Fushigi.Byml;
 using Fushigi.course;
@@ -98,7 +99,7 @@ namespace Fushigi.ui.widgets
 
         public void Draw(ref bool continueDisplay, IPopupModalHost modalHost)
         {
-            ImGui.SetNextWindowSize(new Vector2(600 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new Vector2(800 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
 
             bool open = ImGui.Begin("Palette Window", ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse);
 
@@ -150,9 +151,27 @@ namespace Fushigi.ui.widgets
                         ImGui.EndTabItem();
                     }
 
+                    if (ImGui.BeginTabItem("DOF"))
+                    {
+                        RenderDOFUI();
+                        ImGui.EndTabItem();
+                    }
+
+                    if (ImGui.BeginTabItem("GI"))
+                    {
+                        RenderGIUI();
+                        ImGui.EndTabItem();
+                    }
+
                     if (ImGui.BeginTabItem("Rim Lighting"))
                     {
                         RenderRimUI();
+                        ImGui.EndTabItem();
+                    }
+
+                    if (ImGui.BeginTabItem("Shadow"))
+                    {
+                        RenderShadowUI();
                         ImGui.EndTabItem();
                     }
 
@@ -195,6 +214,10 @@ namespace Fushigi.ui.widgets
 
         private void RenderBloomUI()
         {
+
+            if (EnvPalette.Bloom == null)
+                EnvPalette.Bloom = new EnvPalette.EnvBloom();
+
             ImGui.Columns(2);
             ImGui.NextColumn();
             ImGui.NextColumn();
@@ -210,17 +233,73 @@ namespace Fushigi.ui.widgets
 
         }
 
-        private void EffectUI()
+        private void RenderDOFUI()
         {
+            if (EnvPalette.DOF == null)
+            {
+
+                if (ImGui.Button("Add DOF"))
+                    EnvPalette.DOF = new EnvPalette.EnvDepthOfField();
+
+            }
+            else
+            {
+                if (ImGui.Button("Remove DOF"))
+                {
+                    EnvPalette.DOF = null;
+                    return;
+                }
+
+                ImGui.Columns(2);
+                ImGui.NextColumn();
+                ImGui.NextColumn();
+
+                ImGui.Indent();
+                DrawCheckbox("Enable", EnvPalette.DOF, "Enable");
+                DrawFloat("End", EnvPalette.DOF, "End");
+                DrawIntSlider("Mip Map", EnvPalette.DOF, "MipLevelMax", 0, 8);
+                DrawFloat("Start", EnvPalette.DOF, "Start");
+
+                ImGui.Columns(1);
+
+            }
+
+        }
+
+        private void RenderGIUI()
+        {
+            if (EnvPalette.GI == null)
+                EnvPalette.GI = new EnvPalette.EnvGlobalIllumination();
+
             ImGui.Columns(2);
             ImGui.NextColumn();
             ImGui.NextColumn();
 
             ImGui.Indent();
-            DrawFloatSlider("Intensity", EnvPalette.Bloom, "Intensity", 0, 1f);
-            DrawFloat("Mask End", EnvPalette.Bloom, "MaskEnd");
-            DrawFloatSlider("Mask Ratio", EnvPalette.Bloom, "MaskRatio", 0, 1f);
-            DrawFloatSlider("Threshold", EnvPalette.Bloom, "Threshold", 0, 1f);
+
+            DrawIntSliderU("Blur Level", EnvPalette.GI, "BlurLevel", 0, 10);
+            DrawFloatSlider("Intensity", EnvPalette.GI, "Intensity", 0f, 1f);
+            DrawFloatSlider("Ratio", EnvPalette.GI, "RimIntensity", 0f, 1f);
+            DrawFloat("RimIntensity", EnvPalette.GI, "RimIntensity");
+            DrawFloat("RimPow", EnvPalette.GI, "RimPow");
+            ImGui.Columns(1);
+        }
+
+
+        private void RenderShadowUI()
+        {
+            if (EnvPalette.Shadow == null)
+                EnvPalette.Shadow = new EnvPalette.EnvShadow();
+
+            ImGui.Columns(2);
+            ImGui.NextColumn();
+            ImGui.NextColumn();
+
+            ImGui.Indent();
+            DrawCheckbox("Dynamic Depth Shadows", EnvPalette.Shadow, "EnableDynamicDepthShadow");
+            DrawFloat("Latitude", EnvPalette.Shadow, "Latitude");
+            DrawFloat("Longitude", EnvPalette.Shadow, "Longitude");
+            DrawColor("AOColor", EnvPalette.Shadow, "AOColor");
 
             ImGui.Columns(1);
 
@@ -387,7 +466,7 @@ namespace Fushigi.ui.widgets
         public void RenderEnvColorUI()
         {
             if (EnvPalette.EnvColor == null || EnvPalette == null)
-                return;
+                 EnvPalette.EnvColor = new EnvPalette.EnvColorList();
 
             ImGui.Columns(2);
 
@@ -416,38 +495,38 @@ namespace Fushigi.ui.widgets
         }
         public void RenderToggleUI()
         {
-            bool bloom = EnvPalette.IsApplyBloom;
-            ImGui.Checkbox("Enable Bloom", ref bloom);
-            EnvPalette.IsApplyBloom = bloom;
+            DrawToggle("Enable Bloom", EnvPalette.Bloom, EnvPalette, nameof(EnvPalette.IsApplyBloom));
+            DrawToggle("Enable Char Light", EnvPalette.CharLight, EnvPalette, nameof(EnvPalette.IsApplyCharLight));
+            DrawToggle("Enable Cloud Light", EnvPalette.CloudLight, EnvPalette, nameof(EnvPalette.IsApplyCloudLight));
+            DrawToggle("Enable DOF", EnvPalette.DOF, EnvPalette, nameof(EnvPalette.IsApplyDOF));
+            DrawToggle("Enable DV Light", EnvPalette.DvLight, EnvPalette, nameof(EnvPalette.IsApplyDvLight));
+            DrawToggle("Enable Emission", EnvPalette.Emission, EnvPalette, nameof(EnvPalette.IsApplyEmission));
+            DrawToggle("Enable Env Color", EnvPalette.EnvColor, EnvPalette, nameof(EnvPalette.IsApplyEnvColor));
+            //DrawToggle("Enable Env Map", EnvPalette.EnvMap, EnvPalette, nameof(EnvPalette.IsApplyEnvMap));
+            DrawToggle("Enable Field Light", EnvPalette.FieldLight, EnvPalette, nameof(EnvPalette.IsApplyFieldLight));
+            DrawToggle("Enable Fog", EnvPalette.Fog, EnvPalette, nameof(EnvPalette.IsApplyFog));
+            DrawToggle("Enable GI", EnvPalette.GI, EnvPalette, nameof(EnvPalette.IsApplyGI));
+            DrawToggle("Enable Obj Light", EnvPalette.ObjLight, EnvPalette, nameof(EnvPalette.IsApplyObjLight));
+            DrawToggle("Enable Rim", EnvPalette.Rim, EnvPalette, nameof(EnvPalette.IsApplyRim));
+            DrawToggle("Enable Shadow", EnvPalette.Shadow, EnvPalette, nameof(EnvPalette.IsApplyShadow));
+            DrawToggle("Enable Sky", EnvPalette.Sky, EnvPalette, nameof(EnvPalette.IsApplySky));
+            DrawToggle("Enable Info", EnvPalette.Info, EnvPalette, nameof(EnvPalette.IsApplyInfo));
 
-            bool charlight = EnvPalette.IsApplyCharLight;
-            ImGui.Checkbox("Enable Char Light", ref charlight);
-            EnvPalette.IsApplyCharLight = charlight;
+        }
+        private void DrawToggle(string label, object subsystem, EnvPalette palette, string property)
+        {
+ 
+            if (subsystem == null)
+            {
+                ImGui.TextDisabled($"{label} (Not Added)");
+                return;
+            }
 
-            bool cloudlight = EnvPalette.IsApplyCloudLight;
-            ImGui.Checkbox("Enable Cloud Light", ref cloudlight);
-            EnvPalette.IsApplyCloudLight = cloudlight;
+            var prop = palette.GetType().GetProperty(property);
+            bool v = (bool)prop.GetValue(palette);
 
-            bool dvlight = EnvPalette.IsApplyDvLight;
-            ImGui.Checkbox("Enable DV Light", ref dvlight);
-            EnvPalette.IsApplyDvLight = dvlight;
-
-            bool sky = EnvPalette.IsApplySky;
-            ImGui.Checkbox("Enable Sky", ref sky);
-            EnvPalette.IsApplySky = sky;
-
-            bool fog = EnvPalette.IsApplyFog;
-            ImGui.Checkbox("Enable Fog", ref fog);
-            EnvPalette.IsApplyFog = fog;
-
-            bool emission = EnvPalette.IsApplyEmission;
-            ImGui.Checkbox("Enable Emission", ref emission);
-            EnvPalette.IsApplyEmission = emission;
-
-            bool info = EnvPalette.IsApplyInfo;
-            ImGui.Checkbox("Enable Info", ref info);
-            EnvPalette.IsApplyInfo = info;
-
+            if (ImGui.Checkbox(label, ref v))
+                prop.SetValue(palette, v);
         }
 
         public void RenderFogUI(string label, EnvPalette.EnvFog fog)
@@ -467,6 +546,10 @@ namespace Fushigi.ui.widgets
 
         public void RenderLightsHemiUI()
         {
+
+            if (EnvPalette.ObjLight == null)
+                EnvPalette.ObjLight = new EnvPalette.EnvLightList();
+
             RenderLightsHemiUI("ObjLight", EnvPalette.ObjLight);
             RenderLightsHemiUI("CharLight", EnvPalette.CharLight);
             RenderLightsHemiUI("FieldLight", EnvPalette.FieldLight);
@@ -476,6 +559,8 @@ namespace Fushigi.ui.widgets
 
         public void RenderLightsUI()
         {
+
+
             if (ImGui.CollapsingHeader("ObjLight", ImGuiTreeNodeFlags.DefaultOpen))
                 RenderLightsUI("ObjLight", EnvPalette.ObjLight);
 
@@ -665,7 +750,7 @@ namespace Fushigi.ui.widgets
         public void RenderSkyboxUI()
         {
             if (EnvPalette == null || EnvPalette.Sky == null)
-                return;
+                 EnvPalette.Sky = new EnvPalette.EnvSky();
 
             ImGui.Columns(1);
 
@@ -778,7 +863,21 @@ namespace Fushigi.ui.widgets
             }
             ImGui.NextColumn();
         }
+        private void DrawCheckbox(string label, object obj, string property)
+        {
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text(label);
+            ImGui.NextColumn();
 
+            var prop = obj.GetType().GetProperty(property);
+            var v = (bool)prop.GetValue(obj);
+            if (ImGui.Checkbox($"##{label}", ref v))
+            {
+                prop.SetValue(obj, v);
+                Update();
+            }
+            ImGui.NextColumn();
+        }
         private void DrawFloat(string label, object obj, string property)
         {
             ImGui.AlignTextToFramePadding();
@@ -799,6 +898,43 @@ namespace Fushigi.ui.widgets
             foreach (var editor in CurveEditors.Values)
                 editor.Save();
         }
+        private void DrawIntSlider(string label, object obj, string property, int min, int max)
+        {
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text(label);
+            ImGui.NextColumn();
+
+            var prop = obj.GetType().GetProperty(property);
+            float f = (float)prop.GetValue(obj);
+            int v = (int)f;
+            if (ImGui.SliderInt($"##{label}", ref v, min, max))
+            {
+                prop.SetValue(obj, v);
+                Update();
+            }
+            ImGui.NextColumn();
+        }
+
+        private void DrawIntSliderU(string label, object obj, string property, int min, int max)
+        {
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text(label);
+            ImGui.NextColumn();
+
+            var prop = obj.GetType().GetProperty(property);
+
+            uint f = (uint)prop.GetValue(obj);
+            int v = (int)f;
+
+            if (ImGui.SliderInt($"##{label}", ref v, min, max))
+            {
+                prop.SetValue(obj, (uint)v); 
+                Update();
+            }
+
+            ImGui.NextColumn();
+        }
+
         private void DrawFloatSlider(string label, object obj, string property, float min, float max)
         {
             ImGui.AlignTextToFramePadding();
