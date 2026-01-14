@@ -111,7 +111,6 @@ namespace Fushigi.course
             }
             catch (Exception ex)
             {
-                Console.WriteLine("PALETTE LOAD ERROR:");
                 Console.WriteLine(ex);
                 throw;
             }

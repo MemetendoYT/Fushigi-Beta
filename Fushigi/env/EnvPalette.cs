@@ -30,6 +30,7 @@ namespace Fushigi.env
 
         public EnvBloom Bloom { get; set; }
 
+        public EnvMapList EnvMap { get; set; }
         public EnvDepthOfField DOF { get; set; }
 
         public EnvGlobalIllumination GI { get; set; }
@@ -561,16 +562,19 @@ namespace Fushigi.env
             {
                 BymlHashTable sky = new();
 
-                // Floats
+       
                 sky.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(HorizontalOffset), "HorizontalOffset");
                 sky.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RotDegLeftTop), "RotDegLeftTop");
                 sky.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RotDegRightTop), "RotDegRightTop");
 
-                // Nested LUTs
-                sky.AddNode(BymlNodeId.Hash, LutTexLeft.Serialize(), "LutTexLeft");
-                sky.AddNode(BymlNodeId.Hash, LutTexLeftTop.Serialize(), "LutTexLeftTop");
-                sky.AddNode(BymlNodeId.Hash, LutTexRightTop.Serialize(), "LutTexRightTop");
-                sky.AddNode(BymlNodeId.Hash, LutTexTop.Serialize(), "LutTexTop");
+                if (LutTexLeft != null)
+                    sky.AddNode(BymlNodeId.Hash, LutTexLeft.Serialize(), "LutTexLeft");
+                if (LutTexLeftTop != null)
+                    sky.AddNode(BymlNodeId.Hash, LutTexLeftTop.Serialize(), "LutTexLeftTop");
+                if(LutTexRightTop != null)
+                    sky.AddNode(BymlNodeId.Hash, LutTexRightTop.Serialize(), "LutTexRightTop");
+                if (LutTexTop != null)
+                    sky.AddNode(BymlNodeId.Hash, LutTexTop.Serialize(), "LutTexTop");
 
                 return sky;
             }

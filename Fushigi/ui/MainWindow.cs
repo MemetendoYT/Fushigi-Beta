@@ -684,7 +684,6 @@ namespace Fushigi.ui
 
             if(addNewArea)
             {
-                Console.WriteLine("ADD");
                 AddArea();
 
             }

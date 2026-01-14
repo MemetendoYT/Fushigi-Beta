@@ -463,6 +463,10 @@ namespace Fushigi.ui.widgets
 
         public void Save()
         {
+            if(EnvPalette == null)
+            {
+                EnvPalette = new EnvPalette();
+            }
            EnvPalette.Save();
         }
 

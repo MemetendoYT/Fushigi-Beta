@@ -28,7 +28,7 @@ namespace Fushigi.gl.Bfres
         private GLTexture2D TopRightTexture;
 
         private GLFramebuffer RenderedSkyFbo;
-
+        private static readonly byte[] BlackPixel = new byte[] { 0, 0, 0, 255 };
         public VRSkybox(GL gl, string file_name = $"VRModel")
         {
             Init(gl, file_name);
@@ -93,21 +93,50 @@ namespace Fushigi.gl.Bfres
         public void SetPalette(EnvPalette palette)
         {
             if (palette.Sky == null)
+            {
+                TopTexture.Load(1, 1, BlackPixel);
+                LeftTexture.Load(1, 1, BlackPixel);
+                TopLeftTexture.Load(1, 1, BlackPixel);
+                TopRightTexture.Load(1, 1, BlackPixel);
                 return;
+            }
+
 
             if (palette.Sky.LutTexTop != null)
+            {
                 TopTexture.Load(64, 1, palette.Sky.LutTexTop.ComputeRgba8());
+            }
+            else
+            {
+                TopTexture.Load(1, 1, BlackPixel);
+            }
 
             if (palette.Sky.LutTexLeft != null)
+            {
                 LeftTexture.Load(64, 1, palette.Sky.LutTexLeft.ComputeRgba8());
+            }
+            else
+            {
+                LeftTexture.Load(1, 1, BlackPixel);
+            }
 
             if (palette.Sky.LutTexLeftTop != null)
+            {
                 TopLeftTexture.Load(64, 1, palette.Sky.LutTexLeftTop.ComputeRgba8());
+            }
+            else
+            {
+                TopLeftTexture.Load(1, 1, BlackPixel);
+            }
 
             if (palette.Sky.LutTexRightTop != null)
+            {
                 TopRightTexture.Load(64, 1, palette.Sky.LutTexRightTop.ComputeRgba8());
-
-            SetMaterialParams(palette.Sky.RotDegLeftTop, palette.Sky.RotDegRightTop, palette.Sky.HorizontalOffset);
+            }
+            else
+            {
+                TopRightTexture.Load(1, 1, BlackPixel);
+            }
         }
 
         //Sets the bfres material parameters
