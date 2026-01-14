@@ -28,7 +28,7 @@ namespace Fushigi.env
         [BymlIgnore]
         public string Name { get; set; }
 
-        public EnvBloom Bloom { get; set; } = new EnvBloom();
+        public EnvBloom Bloom { get; set; }
 
         public EnvDepthOfField DOF { get; set; }
 
@@ -760,24 +760,52 @@ namespace Fushigi.env
 
             // Build BYML root
             BymlHashTable root = new BymlHashTable();
-            root.AddNode(BymlNodeId.Hash, Bloom.Serialize(), "Bloom");
-            root.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
-            root.AddNode(BymlNodeId.Hash, DvLight.Serialize(), "DvLight");
-            root.AddNode(BymlNodeId.Hash, CharLight.Serialize(), "CharLight");
-            root.AddNode(BymlNodeId.Hash, CloudLight.Serialize(), "CloudLight");
-            root.AddNode(BymlNodeId.Hash, FieldLight.Serialize(), "FieldLight");
-            root.AddNode(BymlNodeId.Hash, ObjLight.Serialize(), "ObjLight");
-            root.AddNode(BymlNodeId.Hash, Shadow.Serialize(), "Shadow");
-            root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
-            root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
-            root.AddNode(BymlNodeId.Hash, Info.Serialize(), "Info");
 
-            if(DOF != null)
+            if (Bloom != null)
+                root.AddNode(BymlNodeId.Hash, Bloom.Serialize(), "Bloom");
+
+            if (Sky != null)
+                root.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
+
+            if (DvLight != null)
+                root.AddNode(BymlNodeId.Hash, DvLight.Serialize(), "DvLight");
+
+            if (CharLight != null)
+                root.AddNode(BymlNodeId.Hash, CharLight.Serialize(), "CharLight");
+
+            if (CloudLight != null)
+                root.AddNode(BymlNodeId.Hash, CloudLight.Serialize(), "CloudLight");
+
+            if (FieldLight != null)
+                root.AddNode(BymlNodeId.Hash, FieldLight.Serialize(), "FieldLight");
+
+            if (ObjLight != null)
+                root.AddNode(BymlNodeId.Hash, ObjLight.Serialize(), "ObjLight");
+
+            if (Shadow != null)
+                root.AddNode(BymlNodeId.Hash, Shadow.Serialize(), "Shadow");
+
+            if (EnvColor != null)
+                root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
+
+            if (Emission != null)
+                root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
+
+            if (Info != null)
+                root.AddNode(BymlNodeId.Hash, Info.Serialize(), "Info");
+
+            if (DOF != null)
                 root.AddNode(BymlNodeId.Hash, DOF.Serialize(), "DOF");
 
-            root.AddNode(BymlNodeId.Hash, GI.Serialize(), "GI");
-            root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
-            root.AddNode(BymlNodeId.Hash, Fog.Serialize(), "Fog");
+            if (GI != null)
+                root.AddNode(BymlNodeId.Hash, GI.Serialize(), "GI");
+
+            if (Rim != null)
+                root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
+
+            if (Fog != null)
+                root.AddNode(BymlNodeId.Hash, Fog.Serialize(), "Fog");
+
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyBloom), "IsApplyBloom");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCharLight), "IsApplyCharLight");
             root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCloudLight), "IsApplyCloudLight");

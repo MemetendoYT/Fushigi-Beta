@@ -37,6 +37,8 @@ namespace Fushigi.ui.widgets
 
         public void Load(EnvPalette.EnvSkyLut lut, string label, EnvPalette envPalette)
         {
+            if (lut == null)
+                return;
             Label = label;
             EnvPalette = envPalette;
             Lut = lut;

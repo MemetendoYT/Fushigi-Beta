@@ -214,21 +214,34 @@ namespace Fushigi.ui.widgets
 
         private void RenderBloomUI()
         {
-
             if (EnvPalette.Bloom == null)
-                EnvPalette.Bloom = new EnvPalette.EnvBloom();
+            {
+                if (ImGui.Button("Add Bloom"))
+                    EnvPalette.Bloom = new EnvPalette.EnvBloom();
+            }
+            else
+            {
+                if (ImGui.Button("Remove Bloom"))
+                {
+                    EnvPalette.Bloom = null;
+                    return;
+                }
 
-            ImGui.Columns(2);
-            ImGui.NextColumn();
-            ImGui.NextColumn();
 
-            ImGui.Indent();
-            DrawFloatSlider("Intensity", EnvPalette.Bloom, "Intensity", 0, 1f);
-            DrawFloat("Mask End", EnvPalette.Bloom, "MaskEnd");
-            DrawFloatSlider("Mask Ratio", EnvPalette.Bloom, "MaskRatio", 0, 1f);
-            DrawFloatSlider("Threshold", EnvPalette.Bloom, "Threshold", 0, 1f);
 
-            ImGui.Columns(1);
+                ImGui.Columns(2);
+                ImGui.NextColumn();
+                ImGui.NextColumn();
+
+                ImGui.Indent();
+                DrawFloatSlider("Intensity", EnvPalette.Bloom, "Intensity", 0, 1f);
+                DrawFloat("Mask End", EnvPalette.Bloom, "MaskEnd");
+                DrawFloatSlider("Mask Ratio", EnvPalette.Bloom, "MaskRatio", 0, 1f);
+                DrawFloatSlider("Threshold", EnvPalette.Bloom, "Threshold", 0, 1f);
+
+                ImGui.Columns(1);
+
+            }
 
 
         }
@@ -237,10 +250,8 @@ namespace Fushigi.ui.widgets
         {
             if (EnvPalette.DOF == null)
             {
-
                 if (ImGui.Button("Add DOF"))
                     EnvPalette.DOF = new EnvPalette.EnvDepthOfField();
-
             }
             else
             {
@@ -269,27 +280,51 @@ namespace Fushigi.ui.widgets
         private void RenderGIUI()
         {
             if (EnvPalette.GI == null)
-                EnvPalette.GI = new EnvPalette.EnvGlobalIllumination();
+            {
+                if (ImGui.Button("Add GI"))
+                    EnvPalette.GI = new EnvPalette.EnvGlobalIllumination();
+            }
+            else
+            {
+                if (ImGui.Button("Remove GI"))
+                {
+                    EnvPalette.GI = null;
+                    return;
+                }
 
-            ImGui.Columns(2);
-            ImGui.NextColumn();
-            ImGui.NextColumn();
 
-            ImGui.Indent();
+                ImGui.Columns(2);
+                ImGui.NextColumn();
+                ImGui.NextColumn();
 
-            DrawIntSliderU("Blur Level", EnvPalette.GI, "BlurLevel", 0, 10);
-            DrawFloatSlider("Intensity", EnvPalette.GI, "Intensity", 0f, 1f);
-            DrawFloatSlider("Ratio", EnvPalette.GI, "RimIntensity", 0f, 1f);
-            DrawFloat("RimIntensity", EnvPalette.GI, "RimIntensity");
-            DrawFloat("RimPow", EnvPalette.GI, "RimPow");
-            ImGui.Columns(1);
+                ImGui.Indent();
+
+                DrawIntSliderU("Blur Level", EnvPalette.GI, "BlurLevel", 0, 10);
+                DrawFloatSlider("Intensity", EnvPalette.GI, "Intensity", 0f, 1f);
+                DrawFloatSlider("Ratio", EnvPalette.GI, "RimIntensity", 0f, 1f);
+                DrawFloat("RimIntensity", EnvPalette.GI, "RimIntensity");
+                DrawFloat("RimPow", EnvPalette.GI, "RimPow");
+                ImGui.Columns(1);
+
+            }
         }
 
 
         private void RenderShadowUI()
         {
             if (EnvPalette.Shadow == null)
-                EnvPalette.Shadow = new EnvPalette.EnvShadow();
+            {
+                if (ImGui.Button("Add Shadow"))
+                    EnvPalette.Shadow = new EnvPalette.EnvShadow();
+            }
+            else
+            {
+                if (ImGui.Button("Remove Shadow"))
+                {
+                    EnvPalette.Shadow = null;
+                    return;
+                }
+            
 
             ImGui.Columns(2);
             ImGui.NextColumn();
@@ -303,7 +338,7 @@ namespace Fushigi.ui.widgets
 
             ImGui.Columns(1);
 
-
+            }
         }
 
         private void PaletteDropdown()
@@ -377,54 +412,66 @@ namespace Fushigi.ui.widgets
         {
             string value = "";
             if (EnvPalette.Info == null)
-                EnvPalette.Info = new EnvPalette.EnvInfo();
-   
-
-            if (EnvPalette.Info.LocationType == null) {
-                value = "None";
-                EnvPalette.Info.LocationType = "None";
-            }
-            else 
-                value = EnvPalette.Info.LocationType;
-
-            Console.WriteLine("LocationType " + value);
-            int index = LocationType.Values.ToList().IndexOf(value);
-            ImGui.Text("Location Type");
-            if (ImGui.Combo("##LocationType", ref index, LocationType.Keys.ToArray(), LocationType.Count(), 10))
-                EnvPalette.Info.LocationType = LocationType.Values.ToArray()[index];
-
-
-            if (EnvPalette.Info.WeatherType == null)
             {
-                value = "None";
-                EnvPalette.Info.WeatherType = "None";
+                if (ImGui.Button("Add Info"))
+                    EnvPalette.Info = new EnvPalette.EnvInfo();
             }
             else
-                value = EnvPalette.Info.WeatherType;
-            
-
-            Console.WriteLine("WeatherType " + value);
-            index = WeatherType.Values.ToList().IndexOf(value);
-            ImGui.Text("Weather Type");
-            if (ImGui.Combo("##WeatherType", ref index, WeatherType.Keys.ToArray(), WeatherType.Count(), 10))
-                EnvPalette.Info.WeatherType = WeatherType.Values.ToArray()[index];
-
-            if (EnvPalette.Info.WonderType == null)
             {
-                value = "None";
-                EnvPalette.Info.WonderType = "None";
+                if (ImGui.Button("Remove Info"))
+                {
+                    EnvPalette.Info = null;
+                    return;
+                }
+
+
+
+                if (EnvPalette.Info.LocationType == null)
+                {
+                    value = "None";
+                    EnvPalette.Info.LocationType = "None";
+                }
+                else
+                    value = EnvPalette.Info.LocationType;
+
+                Console.WriteLine("LocationType " + value);
+                int index = LocationType.Values.ToList().IndexOf(value);
+                ImGui.Text("Location Type");
+                if (ImGui.Combo("##LocationType", ref index, LocationType.Keys.ToArray(), LocationType.Count(), 10))
+                    EnvPalette.Info.LocationType = LocationType.Values.ToArray()[index];
+
+
+                if (EnvPalette.Info.WeatherType == null)
+                {
+                    value = "None";
+                    EnvPalette.Info.WeatherType = "None";
+                }
+                else
+                    value = EnvPalette.Info.WeatherType;
+
+
+                Console.WriteLine("WeatherType " + value);
+                index = WeatherType.Values.ToList().IndexOf(value);
+                ImGui.Text("Weather Type");
+                if (ImGui.Combo("##WeatherType", ref index, WeatherType.Keys.ToArray(), WeatherType.Count(), 10))
+                    EnvPalette.Info.WeatherType = WeatherType.Values.ToArray()[index];
+
+                if (EnvPalette.Info.WonderType == null)
+                {
+                    value = "None";
+                    EnvPalette.Info.WonderType = "None";
+                }
+                else
+                    value = EnvPalette.Info.WonderType;
+
+
+                Console.WriteLine("WonderType " + value);
+                index = WonderType.Values.ToList().IndexOf(value);
+                ImGui.Text("Wonder Type");
+                if (ImGui.Combo("##WonderType", ref index, WonderType.Keys.ToArray(), WonderType.Count(), 10))
+                    EnvPalette.Info.WonderType = WonderType.Values.ToArray()[index];
+
             }
-            else
-                value = EnvPalette.Info.WonderType;
-        
-
-            Console.WriteLine("WonderType " + value);
-            index = WonderType.Values.ToList().IndexOf(value);
-            ImGui.Text("Wonder Type");
-            if (ImGui.Combo("##WonderType", ref index, WonderType.Keys.ToArray(), WonderType.Count(), 10))
-                EnvPalette.Info.WonderType = WonderType.Values.ToArray()[index];
-
-
         }
         public void RenderEnvMapUI()
         {
@@ -433,65 +480,101 @@ namespace Fushigi.ui.widgets
 
         public void RenderRimUI()
         {
-            if (EnvPalette.Rim == null || EnvPalette == null)
-                return;
+            if (EnvPalette.Rim == null)
+            {
+                if (ImGui.Button("Add Rim"))
+                    EnvPalette.Rim = new EnvPalette.EnvRim();
+            }
+            else
+            {
+                if (ImGui.Button("Remove Rim"))
+                {
+                    EnvPalette.Rim = null;
+                    return;
+                }
 
-            ImGui.Columns(2);
+                ImGui.Columns(2);
 
-            DrawColor("Rim Color", EnvPalette.Rim, "Color");
-            DrawFloat("Rim Width", EnvPalette.Rim, "Width");
-            DrawFloat("Rim Power", EnvPalette.Rim, "Power");
+                DrawColor("Rim Color", EnvPalette.Rim, "Color");
+                DrawFloat("Rim Width", EnvPalette.Rim, "Width");
+                DrawFloat("Rim Power", EnvPalette.Rim, "Power");
 
-            ImGui.AlignTextToFramePadding();
-            ImGui.Text("Rim Amount:");
-            ImGui.NextColumn();
-            ImGui.NextColumn();
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text("Rim Amount:");
+                ImGui.NextColumn();
+                ImGui.NextColumn();
 
-            ImGui.Indent();
+                ImGui.Indent();
 
-            DrawFloatSlider("Object", EnvPalette.Rim, "IntensityObject", 0, 1f);
-            DrawFloatSlider("Player", EnvPalette.Rim, "IntensityPlayer", 0, 1f);
-            DrawFloatSlider("Enemy", EnvPalette.Rim, "IntensityEnemy", 0, 1f);
+                DrawFloatSlider("Object", EnvPalette.Rim, "IntensityObject", 0, 1f);
+                DrawFloatSlider("Player", EnvPalette.Rim, "IntensityPlayer", 0, 1f);
+                DrawFloatSlider("Enemy", EnvPalette.Rim, "IntensityEnemy", 0, 1f);
 
-            DrawFloatSlider("Field Band", EnvPalette.Rim, "IntensityFieldBand", 0, 1f);
-            DrawFloatSlider("Field Wall", EnvPalette.Rim, "IntensityFieldWall", 0, 1f);
-            DrawFloatSlider("Field Deco", EnvPalette.Rim, "IntensityFieldDeco", 0, 1f);
+                DrawFloatSlider("Field Band", EnvPalette.Rim, "IntensityFieldBand", 0, 1f);
+                DrawFloatSlider("Field Wall", EnvPalette.Rim, "IntensityFieldWall", 0, 1f);
+                DrawFloatSlider("Field Deco", EnvPalette.Rim, "IntensityFieldDeco", 0, 1f);
 
-            DrawFloatSlider("Cloud", EnvPalette.Rim, "IntensityCloud", 0, 1f);
-            DrawFloatSlider("DV", EnvPalette.Rim, "IntensityDV", 0, 1f);
+                DrawFloatSlider("Cloud", EnvPalette.Rim, "IntensityCloud", 0, 1f);
+                DrawFloatSlider("DV", EnvPalette.Rim, "IntensityDV", 0, 1f);
 
-            ImGui.Columns(1);
+                ImGui.Columns(1);
+
+            }
         }
 
         public void RenderEnvColorUI()
         {
-            if (EnvPalette.EnvColor == null || EnvPalette == null)
-                 EnvPalette.EnvColor = new EnvPalette.EnvColorList();
+            if (EnvPalette.EnvColor == null)
+            {
+                if (ImGui.Button("Add EnvColor"))
+                    EnvPalette.EnvColor = new EnvPalette.EnvColorList();
+            }
+            else
+            {
+                if (ImGui.Button("Remove EnvColor"))
+                {
+                    EnvPalette.EnvColor = null;
+                    return;
+                }
 
-            ImGui.Columns(2);
 
-            for (int i = 0; i < 8; i++)
-                DrawColor($"Color {i}", EnvPalette.EnvColor, $"Color{i}");
+                ImGui.Columns(2);
 
-            ImGui.Columns(1);
+                for (int i = 0; i < 8; i++)
+                    DrawColor($"Color {i}", EnvPalette.EnvColor, $"Color{i}");
+
+                ImGui.Columns(1);
+            }
         }
 
         public void RenderFogUI()
         {
             if (EnvPalette.Fog == null)
-                return;
+            {
+                if (ImGui.Button("Add Fog"))
+                    EnvPalette.Fog = new EnvPalette.EnvFogList();
+            }
+            else
+            {
+                if (ImGui.Button("Remove Fog"))
+                {
+                    EnvPalette.Fog = null;
+                    return;
+                }
 
-            if (ImGui.CollapsingHeader("Main"))
-                RenderFogUI("Main", EnvPalette.Fog.Main);
+                if (ImGui.CollapsingHeader("Main"))
+                    RenderFogUI("Main", EnvPalette.Fog.Main);
 
-            if (ImGui.CollapsingHeader("MainWorld"))
-                RenderFogUI("MainWorld", EnvPalette.Fog.MainWorld);
+                if (ImGui.CollapsingHeader("MainWorld"))
+                    RenderFogUI("MainWorld", EnvPalette.Fog.MainWorld);
 
-            if (ImGui.CollapsingHeader("Cloud"))
-                RenderFogUI("Cloud", EnvPalette.Fog.Cloud);
+                if (ImGui.CollapsingHeader("Cloud"))
+                    RenderFogUI("Cloud", EnvPalette.Fog.Cloud);
 
-            if (ImGui.CollapsingHeader("CloudWorld"))
-                RenderFogUI("CloudWorld", EnvPalette.Fog.CloudWorld);
+                if (ImGui.CollapsingHeader("CloudWorld"))
+                    RenderFogUI("CloudWorld", EnvPalette.Fog.CloudWorld);
+
+            }
         }
         public void RenderToggleUI()
         {
@@ -560,21 +643,20 @@ namespace Fushigi.ui.widgets
         public void RenderLightsUI()
         {
 
-
             if (ImGui.CollapsingHeader("ObjLight", ImGuiTreeNodeFlags.DefaultOpen))
-                RenderLightsUI("ObjLight", EnvPalette.ObjLight);
+                EnvPalette.ObjLight = RenderLightsUI("ObjLight", EnvPalette.ObjLight);
 
             if (ImGui.CollapsingHeader("CharLight", ImGuiTreeNodeFlags.DefaultOpen))
-                RenderLightsUI("CharLight", EnvPalette.CharLight);
+                EnvPalette.CharLight = RenderLightsUI("CharLight", EnvPalette.CharLight);
 
             if (ImGui.CollapsingHeader("FieldLight", ImGuiTreeNodeFlags.DefaultOpen))
-                RenderLightsUI("FieldLight", EnvPalette.FieldLight);
+                EnvPalette.FieldLight = RenderLightsUI("FieldLight", EnvPalette.FieldLight);
 
             if (ImGui.CollapsingHeader("DvLight", ImGuiTreeNodeFlags.DefaultOpen))
-                RenderLightsUI("DvLight", EnvPalette.DvLight);
+                EnvPalette.DvLight = RenderLightsUI("DvLight", EnvPalette.DvLight);
 
             if (ImGui.CollapsingHeader("CloudLight", ImGuiTreeNodeFlags.DefaultOpen))
-                RenderLightsUI("CloudLight", EnvPalette.CloudLight);
+                EnvPalette.CloudLight = RenderLightsUI("CloudLight", EnvPalette.CloudLight);
         }
 
         public void RenderLightsHemiUI(string label, EnvPalette.EnvLightList list)
@@ -589,29 +671,44 @@ namespace Fushigi.ui.widgets
             ImGui.Columns(1);
         }
 
-        public void RenderLightsUI(string label, EnvPalette.EnvLightList list)
+        public EnvPalette.EnvLightList RenderLightsUI(string label, EnvPalette.EnvLightList list)
         {
             if (list == null)
-                return;
+            {
+                if (ImGui.Button($"Add {label}"))
+                {
 
-            ImGui.Columns(6);
+                    return new EnvPalette.EnvLightList();
+                }
+            }
+            else
+            {
+                if (ImGui.Button($"Remove {label}"))
+                {
 
-            ImGui.Text("Name"); ImGui.NextColumn();
-            ImGui.Text("Color"); ImGui.NextColumn();
-            ImGui.Text("Intensity"); ImGui.NextColumn();
-            ImGui.Text("Longitude"); ImGui.NextColumn();
-            ImGui.Text("Latitude"); ImGui.NextColumn();
-            ImGui.Text("Dir"); ImGui.NextColumn();
+                    return null;
+                }
 
-            RenderDirectionalLights($"{label} Main", list.Main);
-            RenderDirectionalLights($"{label} SubDiff0", list.SubDiff0);
-            RenderDirectionalLights($"{label} SubDiff1", list.SubDiff1);
-            RenderDirectionalLights($"{label} SubDiff2", list.SubDiff2);
-            RenderDirectionalLights($"{label} SubSpec0", list.SubSpec0);
-            RenderDirectionalLights($"{label} SubSpec1", list.SubSpec1);
-            RenderDirectionalLights($"{label} SubSpec2", list.SubSpec2);
+                ImGui.Columns(6);
 
-            ImGui.Columns(1);
+                ImGui.Text("Name"); ImGui.NextColumn();
+                ImGui.Text("Color"); ImGui.NextColumn();
+                ImGui.Text("Intensity"); ImGui.NextColumn();
+                ImGui.Text("Longitude"); ImGui.NextColumn();
+                ImGui.Text("Latitude"); ImGui.NextColumn();
+                ImGui.Text("Dir"); ImGui.NextColumn();
+
+                RenderDirectionalLights($"{label} Main", list.Main);
+                RenderDirectionalLights($"{label} SubDiff0", list.SubDiff0);
+                RenderDirectionalLights($"{label} SubDiff1", list.SubDiff1);
+                RenderDirectionalLights($"{label} SubDiff2", list.SubDiff2);
+                RenderDirectionalLights($"{label} SubSpec0", list.SubSpec0);
+                RenderDirectionalLights($"{label} SubSpec1", list.SubSpec1);
+                RenderDirectionalLights($"{label} SubSpec2", list.SubSpec2);
+
+                ImGui.Columns(1);
+            }
+            return list;
         }
 
         public void RenderHemiLights(string label, EnvPalette.EnvLightHemisphere hemi)
@@ -749,16 +846,33 @@ namespace Fushigi.ui.widgets
         }
         public void RenderSkyboxUI()
         {
-            if (EnvPalette == null || EnvPalette.Sky == null)
-                 EnvPalette.Sky = new EnvPalette.EnvSky();
 
-            ImGui.Columns(1);
+            if (EnvPalette.Sky == null)
+            {
+                if (ImGui.Button($"Add Sky"))
+                    EnvPalette.Sky = new EnvPalette.EnvSky();
+            }
+            else
+            {
+                if (ImGui.Button("Remove Sky"))
+                {
+                    EnvPalette.Sky = null;
+                    Update();
+                    return;
+                }
 
-            RenderSkyboxLUTUI("Top", EnvPalette.Sky.LutTexTop);
-            RenderSkyboxLUTUI("Left", EnvPalette.Sky.LutTexLeft);
-            RenderSkyboxLUTUI("Top Left", EnvPalette.Sky.LutTexLeftTop);
-            RenderSkyboxLUTUI("Top Right", EnvPalette.Sky.LutTexRightTop);
-            ImGui.Columns(1);
+                ImGui.Separator();
+
+                ImGui.Columns(1);
+
+                EnvPalette.Sky.LutTexLeft = RenderSkyboxLUTUI("Left", EnvPalette.Sky.LutTexLeft);
+                EnvPalette.Sky.LutTexLeftTop = RenderSkyboxLUTUI("Top Left", EnvPalette.Sky.LutTexLeftTop);
+                EnvPalette.Sky.LutTexRightTop = RenderSkyboxLUTUI("Top Right", EnvPalette.Sky.LutTexRightTop);
+                EnvPalette.Sky.LutTexTop = RenderSkyboxLUTUI("Top", EnvPalette.Sky.LutTexTop);
+
+
+                ImGui.Columns(1);
+            }
         }
 
         private bool open_popup = false;
@@ -767,12 +881,45 @@ namespace Fushigi.ui.widgets
 
 
 
-        public void RenderSkyboxLUTUI(string label, EnvPalette.EnvSkyLut lut)
+        public EnvPalette.EnvSkyLut RenderSkyboxLUTUI(string label, EnvPalette.EnvSkyLut lut)
         {
-            if (ImGui.CollapsingHeader($"{label}##{label}_SkyboxLUT"))
-            {
-                var screenPos = ImGui.GetCursorScreenPos();
 
+
+            if (lut == null)
+            {
+                if (ImGui.Button($"Add {label}"))
+                {
+                    lut = new EnvPalette.EnvSkyLut();
+                    lut.Curve = new EnvSkyLutCurve
+                    {
+                        Type = "Linear",
+                        MaxX = 1f,
+                        Data = new List<float> { 0f, 1f } 
+                    };
+
+                }
+            }
+            else
+            {
+                if (ImGui.Button($"Remove {label}"))
+                {
+                    if (activeCurveEditor == label)
+                    {
+                        activeCurveEditor = null;
+                        CurrentLut = null;
+                    }
+
+                    CurveEditors.Remove(label);
+
+                    return null;
+                }
+
+
+            }
+            var screenPos = ImGui.GetCursorScreenPos();
+
+            if (lut != null)
+            {
                 if (ImGui.Button($"{IconUtil.ICON_EDIT}##{label}", new Vector2(30, 30)))
                 {
                     activeCurveEditor = label;
@@ -784,34 +931,41 @@ namespace Fushigi.ui.widgets
                     editor.Load(lut, label, EnvPalette);
                     CurrentLut = lut;
                 }
-                EnvPalette.Sky.LutTexRightTop = lut;
                 ImGui.SameLine();
 
                 if (ImGui.BeginChild($"Grad{label}", new Vector2(ImGui.GetColumnWidth() - 2, 30)))
                     CalculateGradient(lut, screenPos, 400, 30);
 
                 ImGui.EndChild();
-            }
+                ImGui.Separator();
 
-            if (activeCurveEditor == label)
-            {
-                if (CurrentLut != lut)
+
+                if (activeCurveEditor == label)
                 {
-                    var editor = CurveEditors[label];
-                    editor.Load(lut, label, EnvPalette);  
-                    CurrentLut = lut;
+                    if (CurrentLut != lut)
+                    {
+                        var editor = CurveEditors[label];
+                        editor.Load(lut, label, EnvPalette);
+                        CurrentLut = lut;
+                    }
                 }
+
+
+                if (activeCurveEditor == label)
+                    RenderCurveEditor(label);
+
+                return lut;
             }
-
-
-            if (activeCurveEditor == label)
-                RenderCurveEditor(label);
+                return lut;
         }
 
 
         public void CalculateGradient(EnvPalette.EnvSkyLut lut, Vector2 screenPos, int width, float height)
         {
             var pos = screenPos;
+
+            if (lut == null)
+                return;
 
             var type = lut.Curve.GetCurveType();
             var data = lut.Curve.Data.ToArray();
