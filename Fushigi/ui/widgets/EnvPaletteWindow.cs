@@ -123,7 +123,21 @@ namespace Fushigi.ui.widgets
                 topLeft.Load(EnvPalette.Sky.LutTexLeftTop, "TopLeft", EnvPalette);
                 left.Load(EnvPalette.Sky.LutTexLeft, "Left", EnvPalette);
                 }
+                if (EnvPalette.Info == null)
+                    EnvPalette.Info = new EnvInfo();
+
+                if (EnvPalette.Info.LocationType == null)
+                    EnvPalette.Info.LocationType = "None";
+
+                if (EnvPalette.Info.WeatherType == null)
+                    EnvPalette.Info.WeatherType = "None";
+
+                if (EnvPalette.Info.WonderType == null)
+                    EnvPalette.Info.WonderType = "None";
+
                 hasInitialized = true;
+
+
             }
             if (open)
             {

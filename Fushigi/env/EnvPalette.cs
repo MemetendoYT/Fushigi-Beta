@@ -94,7 +94,6 @@ namespace Fushigi.env
             Logger.Logger.LogMessage("EnvPalette", name);
 
 
-
         }
 
         public void Lerp(EnvPalette prevPalette, EnvPalette nextPalette, float ratio)
