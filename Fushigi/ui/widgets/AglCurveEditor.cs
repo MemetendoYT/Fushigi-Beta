@@ -42,8 +42,13 @@ namespace Fushigi.ui.widgets
             Label = label;
             EnvPalette = envPalette;
             Lut = lut;
-            Type = lut.Curve.GetCurveType();
-            CurveData = lut.Curve.Data.ToArray();
+            Type = AglCurve.CurveType.Linear;
+            if(lut.Curve != null)
+                Type = lut.Curve.GetCurveType();
+
+            CurveData = new float[] { 0f, 1f };
+            if (lut.Curve != null)
+                CurveData = lut.Curve.Data.ToArray();
 
             Keys.Clear();
 
@@ -67,7 +72,10 @@ namespace Fushigi.ui.widgets
         {
             if (Label == "Top")
             {
-                EnvPalette.Sky.LutTexTop.Curve.Data = CurveData.ToList();
+                if (EnvPalette.Sky.LutTexTop.Curve != null)
+                {
+                    EnvPalette.Sky.LutTexTop.Curve.Data = CurveData.ToList();
+                }
                 EnvPalette.Sky.LutTexTop.ColorBegin = Lut.ColorBegin;
                 EnvPalette.Sky.LutTexTop.ColorMiddle = Lut.ColorMiddle;
                 EnvPalette.Sky.LutTexTop.ColorEnd = Lut.ColorEnd;
@@ -270,9 +278,11 @@ namespace Fushigi.ui.widgets
                 for (int i = 0; i < KeyCount; i++)
                     data[i] = this.Keys[i].Value;
 
-                this.Lut.Curve.Data = data.ToList();
+                if(this.Lut.Curve != null)
+                    this.Lut.Curve.Data = data.ToList();
             }
-            this.CurveData = this.Lut.Curve.Data.ToArray();
+            if (this.Lut.Curve != null)
+                this.CurveData = this.Lut.Curve.Data.ToArray();
         }
 
         public void RenderGrid(float width, float height)
@@ -391,8 +401,13 @@ namespace Fushigi.ui.widgets
         {
             var pos = screenPos;
 
-            var type = lut.Curve.GetCurveType();
-            var data = lut.Curve.Data.ToArray();
+            var type = AglCurve.CurveType.Linear;
+            if(lut.Curve != null)
+                type = lut.Curve.GetCurveType();
+
+            var data = new float[] { 0f, 1f };
+            if (lut.Curve != null)
+                data = lut.Curve.Data.ToArray();
 
             Vector4[] colors = lut.UseMiddleColor ?
                 new Vector4[] { lut.ColorBegin.ToVector4(), lut.ColorMiddle.ToVector4(), lut.ColorEnd.ToVector4() } :
@@ -413,7 +428,9 @@ namespace Fushigi.ui.widgets
             for (int i = 0; i < width; i++)
             {
                 float time = i / (width - 1f);
-                float x = MathF.Min(AglCurve.Interpolate(data, type, time), lut.Curve.MaxX);
+                float x = 1;
+                if(lut.Curve != null)
+                   x = MathF.Min(AglCurve.Interpolate(data, type, time), lut.Curve.MaxX);
 
                 //Use "X" to lerp between the colors to get
                 Vector4 color = LerpBetweenColors(colors[0], colors[1], colors[2], x);

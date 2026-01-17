@@ -1,6 +1,8 @@
 ﻿using Fushigi.Byml;
 using Fushigi.course;
+using Fushigi.env;
 using Fushigi.gl;
+using Fushigi.gl.Bfres.AreaData;
 using Fushigi.param;
 using Fushigi.ui.modal;
 using Fushigi.util;
@@ -143,8 +145,10 @@ namespace Fushigi.ui.widgets
             { "World Map: Special World", "World09" },
         };
 
-        public static void Draw(ref bool continueDisplay, IPopupModalHost modalHost, AreaParam areaParam)
+        static LevelViewport Viewport;
+        public static void Draw(ref bool continueDisplay, IPopupModalHost modalHost, AreaParam areaParam, LevelViewport viewport)
         {
+            Viewport = viewport;
             ImGui.SetNextWindowSize(new Vector2(500 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
 
             // Window
@@ -274,7 +278,12 @@ namespace Fushigi.ui.widgets
             {
                 if (ImGui.InputText("##InitialPalette", ref initPal, 1024))
                 {
+                    string oldPalette = areaParam.EnvPaletteSetting.InitPaletteBaseName;
                     areaParam.EnvPaletteSetting.InitPaletteBaseName = initPal;
+                    string palette = areaParam.EnvPaletteSetting.InitPaletteBaseName;
+                    Viewport.EnvironmentData.TransitionEnvPalette(oldPalette, palette);
+                  
+                  
                 }
                 ImGui.TreePop();
             }
@@ -295,10 +304,15 @@ namespace Fushigi.ui.widgets
                     {
                         var palette = transPal[i];
                         palette = parsePalette(palette);
+                        string oldPalette = palette;
                         string[] parts = palette.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         if (ImGui.InputText($"##TransitionPalette{i}", ref palette, 1024))
+                        {
+  
+                            Viewport.EnvironmentData.TransitionEnvPalette(oldPalette, palette);
                             palette = revertPalette(palette);
-                        transPal[i] = palette;
+                            transPal[i] = palette;
+                        }
                     }
                 }
 
@@ -322,9 +336,10 @@ namespace Fushigi.ui.widgets
                     {
                         var palette = wonderPal[i];
                         palette = parsePalette(palette);
-
+                        string oldPalette = palette;
                         if (ImGui.InputText($"##WonderPalette{i}", ref palette, 1024))
                         {
+                            Viewport.EnvironmentData.TransitionEnvPalette(oldPalette, palette);
                             palette = revertPalette(palette);
                             wonderPal[i] = palette;
                         }
@@ -349,11 +364,14 @@ namespace Fushigi.ui.widgets
                     for (int i = 0; i < eventPal.Count; i++)
                     {
                         var palette = eventPal[i];
-                        parsePalette(palette);
+                        palette = parsePalette(palette);
+                        string oldPalette = palette;
                         if (ImGui.InputText($"##EventPalette{i}", ref palette, 1024))
                         {
+                            Viewport.EnvironmentData.TransitionEnvPalette(oldPalette, palette);
                             palette = revertPalette(palette);
                             eventPal[i] = palette;
+
                         }
                     }
                 }

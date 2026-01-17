@@ -77,8 +77,17 @@ namespace Fushigi.gl.Bfres.AreaData
 
         public void TransitionEnvPalette(string current, string next)
         {
-            prevPalette = new EnvPalette(current);
-            nextPalette = new EnvPalette(next);
+            var newPrev = new EnvPalette(current);
+            var newNext = new EnvPalette(next);
+
+            if (newNext.Name == null)
+                return;
+
+            if (newPrev.Name == null)
+                newPrev = newNext;
+
+            prevPalette = newPrev;
+            nextPalette = newNext;
 
             ratio = 0;
             isEnvPaletteTransition = true;

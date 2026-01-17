@@ -4,10 +4,12 @@ using Fushigi.Bfres;
 using Fushigi.Byml.Serializer;
 using Fushigi.course;
 using Fushigi.course.distance_view;
+using Fushigi.env;
 using Fushigi.gl;
 using Fushigi.gl.Bfres;
 using Fushigi.gl.Bfres.AreaData;
 using Fushigi.param;
+using Fushigi.ui.modal;
 using Fushigi.ui.undo;
 using Fushigi.util;
 using ImGuiNET;
@@ -121,6 +123,7 @@ namespace Fushigi.ui.widgets
         public AreaResourceManager EnvironmentData = new AreaResourceManager(gl, area.mInitEnvPalette);
         public static bool updateSkinA = false;
         public static bool updateSkinB = false;
+        Dictionary<string, List<ulong>> mCopiedLinks = [];
 
         private readonly HashSet<CourseUnit> mRegisteredUnits = [];
 
@@ -270,6 +273,7 @@ namespace Fushigi.ui.widgets
                 Camera.Target += ScreenToWorld(ImGui.GetMousePos() - ImGui.GetIO().MouseDelta) -
                     ScreenToWorld(ImGui.GetMousePos());
             }
+            var io = ImGui.GetIO();
 
             if (IsViewportHovered && !ImGui.IsPopupOpen("ViewportContextMenu"))
             {
@@ -282,24 +286,27 @@ namespace Fushigi.ui.widgets
                 var zoomedCameraSpeed = MathF.Floor(zoomSpeedFactor) * baseCameraSpeed;
                 var dt = (float)deltaSeconds;
 
-                if (ImGui.IsKeyDown(ImGuiKey.LeftArrow) || ImGui.IsKeyDown(ImGuiKey.A) && !ImGui.GetIO().KeyCtrl)
+                if (!io.WantTextInput)
                 {
-                    Camera.Target.X -= zoomedCameraSpeed * dt;
-                }
+                    if (ImGui.IsKeyDown(ImGuiKey.LeftArrow) || ImGui.IsKeyDown(ImGuiKey.A) && !ImGui.GetIO().KeyCtrl)
+                    {
+                        Camera.Target.X -= zoomedCameraSpeed * dt;
+                    }
 
-                if (ImGui.IsKeyDown(ImGuiKey.RightArrow) || ImGui.IsKeyDown(ImGuiKey.D) && !ImGui.GetIO().KeyCtrl)
-                {
-                    Camera.Target.X += zoomedCameraSpeed * dt;
-                }
+                    if (ImGui.IsKeyDown(ImGuiKey.RightArrow) || ImGui.IsKeyDown(ImGuiKey.D) && !ImGui.GetIO().KeyCtrl)
+                    {
+                        Camera.Target.X += zoomedCameraSpeed * dt;
+                    }
 
-                if (ImGui.IsKeyDown(ImGuiKey.UpArrow) || ImGui.IsKeyDown(ImGuiKey.W) && !ImGui.GetIO().KeyCtrl)
-                {
-                    Camera.Target.Y += zoomedCameraSpeed * dt;
-                }
+                    if (ImGui.IsKeyDown(ImGuiKey.UpArrow) || ImGui.IsKeyDown(ImGuiKey.W) && !ImGui.GetIO().KeyCtrl)
+                    {
+                        Camera.Target.Y += zoomedCameraSpeed * dt;
+                    }
 
-                if (ImGui.IsKeyDown(ImGuiKey.DownArrow) || ImGui.IsKeyDown(ImGuiKey.S) && !ImGui.GetIO().KeyCtrl)
-                {
-                    Camera.Target.Y -= zoomedCameraSpeed * dt;
+                    if (ImGui.IsKeyDown(ImGuiKey.DownArrow) || ImGui.IsKeyDown(ImGuiKey.S) && !ImGui.GetIO().KeyCtrl)
+                    {
+                        Camera.Target.Y -= zoomedCameraSpeed * dt;
+                    }
                 }
             }
         }
@@ -702,7 +709,7 @@ namespace Fushigi.ui.widgets
 
             var io = ImGui.GetIO();
 
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Right) && IsViewportHovered)
+            if ((ImGui.IsMouseClicked(ImGuiMouseButton.Right) || ImGui.IsKeyPressed(ImGuiKey.Menu)) && IsViewportHovered)
             {
                 backupSelection = mEditContext.GetSelectedObjects<CourseActor>().ToList();
                 ImGui.OpenPopup("ViewportContextMenu");
@@ -724,12 +731,176 @@ namespace Fushigi.ui.widgets
                 if (ImGui.MenuItem("Delete"))
                     deleteContext = true;
 
-                bool popupHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
+
+                if (mEditContext.IsSingleObjectSelected(out CourseActor? mSelectedActor))
+                {
+                    if(CourseScene.showGlobalLinkWindow) { 
+
+                        ImGui.Separator();
+
+                        if (ImGui.MenuItem("Make Global Link Src")) {
+                            setGlobalSrc = true;
+                            globalHash = mSelectedActor.mHash;
+                        }
 
 
-                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-                    IsViewportHovered &&
-                    !popupHovered)
+                        if (ImGui.MenuItem("Make Global Link Dst")) {
+                            setGlobalDst = true;
+                            globalHash = mSelectedActor.mHash;
+                        }
+                    }
+
+                        ImGui.Separator();
+
+                        if (ImGui.MenuItem("Copy Src Link"))
+                        {
+                        mCopiedLinks = mArea.mLinkHolder.GetDestHashesFromSrc(mSelectedActor.mHash);
+                        }
+
+
+                    if (ImGui.MenuItem("Paste Src Link"))
+                    {
+                        var total = 0;
+                        var batch = mEditContext.BeginBatchAction();
+                        foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                        {
+                            for (int i = 0; i < hashArray.Count; i++)
+                            {
+                                var link = new CourseLink(linkName)
+                                {
+                                    mSource = mSelectedActor.mHash,
+                                    mDest = hashArray[i]
+                                };
+                                if (!mArea.mLinkHolder.mLinks.Contains(link))
+                                {
+                                    mEditContext.AddLink(link);
+                                    total++;
+                                }
+                            }
+                        }
+                        batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
+
+                    }
+
+                    ImGui.Separator();
+                    if (ImGui.MenuItem("Copy Dst Link"))
+                    {
+                        mCopiedLinks = mArea.mLinkHolder.GetSrcHashesFromDest(mSelectedActor.mHash);
+                    }
+
+
+                    if (ImGui.MenuItem("Paste Dst Link"))
+                    {
+                        var total = 0;
+                        var batch = mEditContext.BeginBatchAction();
+                        foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                        {
+                            for (int i = 0; i < hashArray.Count; i++)
+                            {
+                                var link = new CourseLink(linkName)
+                                {
+                                    mSource = hashArray[i],
+                                    mDest = mSelectedActor.mHash
+                                };
+                                if (!mArea.mLinkHolder.mLinks.Contains(link))
+                                {
+                                    mEditContext.AddLink(link);
+                                    total++;
+                                }
+                            }
+                        }
+                        batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
+
+                    }
+                }
+
+                if (mEditContext.GetSelectedObjects<CourseActor>().ToArray().Length > 1) {
+                    ImGui.Separator();
+                    var actors = mEditContext.GetSelectedObjects<CourseActor>().ToArray();
+                    if (ImGui.MenuItem("Paste Src Links"))
+                    {
+                        var total = 0;
+                        var batch = mEditContext.BeginBatchAction();
+                        foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                        {
+                            for (int i = 0; i < hashArray.Count; i++)
+                            {
+                                var link = new CourseLink(linkName)
+                                {
+                                    mSource = 0,
+                                    mDest = 0
+                                };
+                                if (actors.Length > 1)
+                                {
+                                    foreach (CourseActor actor in actors)
+                                    {
+                                        link = new CourseLink(linkName)
+                                        {
+                                            mSource = actor.mHash,
+                                            mDest = hashArray[i]
+                                        };
+                                        if (!mArea.mLinkHolder.mLinks.Contains(link))
+                                        {
+                                            mEditContext.AddLink(link);
+                                            total++;
+                                        }
+                                    }
+                                }
+                                if (!mArea.mLinkHolder.mLinks.Contains(link))
+                                {
+                                    mEditContext.AddLink(link);
+                                    total++;
+                                }
+                            }
+                        }
+                        batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
+                    }
+
+
+                    if (ImGui.MenuItem("Paste Dst Links"))
+                    {
+                        var total = 0;
+                        var batch = mEditContext.BeginBatchAction();
+                        foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                        {
+                            for (int i = 0; i < hashArray.Count; i++)
+                            {
+                                var link = new CourseLink(linkName)
+                                {
+                                    mSource = 0,
+                                    mDest = 0
+                                };
+                                if (actors.Length > 1)
+                                {
+                                    foreach (CourseActor actor in actors)
+                                    {
+                                        link = new CourseLink(linkName)
+                                        {
+                                            mSource = hashArray[i],
+                                            mDest = actor.mHash,
+                                        };
+                                        if (!mArea.mLinkHolder.mLinks.Contains(link))
+                                        {
+                                            mEditContext.AddLink(link);
+                                            total++;
+                                        }
+                                    }
+                                }
+                                if (!mArea.mLinkHolder.mLinks.Contains(link))
+                                {
+                                    mEditContext.AddLink(link);
+                                    total++;
+                                }
+                            }
+                        }
+                        batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
+                    }
+              
+                    }
+                 bool popupHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
+
+
+                if ((ImGui.IsMouseClicked(ImGuiMouseButton.Left) && IsViewportHovered && !popupHovered) || ImGui.IsMouseClicked(ImGuiMouseButton.Middle))
                 {
                     ImGui.CloseCurrentPopup();
 
@@ -839,7 +1010,7 @@ namespace Fushigi.ui.widgets
                 pasteContext = false;
             }
 
-            if (ImGui.IsWindowFocused())
+            if (IsViewportHovered || IsViewportActive)
                 InteractionWithFocus(modifiers);
 
             ImGui.PopClipRect();
@@ -1393,6 +1564,9 @@ namespace Fushigi.ui.widgets
         }
 
         private static Vector2[] s_actorRectPolygon = new Vector2[4];
+        public static bool setGlobalSrc;
+        public static ulong globalHash;
+        public static bool setGlobalDst;
 
         void DrawAreaContent()
         {

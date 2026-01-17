@@ -91,7 +91,6 @@ namespace Fushigi.course
                 mAreaParams = new AreaParam(new Byml.Byml(new MemoryStream(File.ReadAllBytes(areaParamPath))));
 
             //Load env settings
-            Console.WriteLine("before");
             try
             {
                 if (mAreaParams.EnvPaletteSetting != null &&
@@ -106,7 +105,6 @@ namespace Fushigi.course
                 }
                 else
                 {
-                    Console.WriteLine("Loading empty palette");
                     mInitEnvPalette = new EnvPalette();
                 }
             }
@@ -126,7 +124,6 @@ namespace Fushigi.course
             else {                 
                 levelPath = "res/template.bcett.byml.zs";
             }
-            Console.WriteLine("After");
             byte[] levelBytes = FileUtil.DecompressFile(levelPath);
             var byml = new Byml.Byml(new MemoryStream(levelBytes));
 
@@ -194,7 +191,6 @@ namespace Fushigi.course
             {
                 mUnitHolder = new();
             }
-            Console.WriteLine("iiiiiiiii");
         }
 
         public void Save(RSTB resource_table)

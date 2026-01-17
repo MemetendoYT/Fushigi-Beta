@@ -338,10 +338,12 @@ namespace Fushigi.gl.Bfres
         {
             if (lightList == null) return;
 
-            this.HemiSkyColor = lightList.Hemi.Sky.ToVector4() * lightList.Hemi.Intensity;
+            if (lightList.Hemi != null) { 
+                this.HemiSkyColor = lightList.Hemi.Sky.ToVector4() * lightList.Hemi.Intensity;
+
             this.HemiGroundColor = lightList.Hemi.Ground.ToVector4() * lightList.Hemi.Intensity;
             this.HemiDirection = new Vector4(0, 1, 0, 0);
-
+            }
             var direction = GetDirectionalVector(lightList.Main.Latitude, lightList.Main.Longitude);
 
             this.LightDirection0 = new Vector4(direction.X, direction.Y, direction.Z, lightList.Main.Intensity);

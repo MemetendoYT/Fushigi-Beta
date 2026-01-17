@@ -28,7 +28,12 @@ namespace Fushigi.gl.Bfres
         private GLTexture2D TopRightTexture;
 
         private GLFramebuffer RenderedSkyFbo;
-        private static readonly byte[] BlackPixel = new byte[] { 0, 0, 0, 255 };
+
+        // Canonical empty LUT: 64x1 RGBA8 all zeros
+        private static readonly byte[] EmptyLut = Enumerable
+            .Repeat<byte>(0, 64 * 4)
+            .ToArray();
+
         public VRSkybox(GL gl, string file_name = $"VRModel")
         {
             Init(gl, file_name);
@@ -69,7 +74,7 @@ namespace Fushigi.gl.Bfres
         /// </summary>
         public void SetPaletteLerp(EnvPalette previous, EnvPalette next, float t)
         {
-            if (next.Sky == null)
+            if (previous?.Sky == null || next?.Sky == null)
                 return;
 
             var prevSky = previous.Sky;
@@ -89,54 +94,47 @@ namespace Fushigi.gl.Bfres
 
         /// <summary>
         /// Sets the skybox using an env palette.
+        /// Enforces Nintendo-style invariants: always 64x1 LUTs.
         /// </summary>
         public void SetPalette(EnvPalette palette)
         {
-            if (palette.Sky == null)
+            if (palette?.Sky == null)
             {
-                TopTexture.Load(1, 1, BlackPixel);
-                LeftTexture.Load(1, 1, BlackPixel);
-                TopLeftTexture.Load(1, 1, BlackPixel);
-                TopRightTexture.Load(1, 1, BlackPixel);
+                // No sky: load neutral empty LUTs but keep dimensions 64x1
+                TopTexture.Load(64, 1, EmptyLut);
+                LeftTexture.Load(64, 1, EmptyLut);
+                TopLeftTexture.Load(64, 1, EmptyLut);
+                TopRightTexture.Load(64, 1, EmptyLut);
                 return;
             }
 
+            var sky = palette.Sky;
 
-            if (palette.Sky.LutTexTop != null)
-            {
-                TopTexture.Load(64, 1, palette.Sky.LutTexTop.ComputeRgba8());
-            }
+            // Top
+            if (sky.LutTexTop != null)
+                TopTexture.Load(64, 1, sky.LutTexTop.ComputeRgba8());
             else
-            {
-                TopTexture.Load(1, 1, BlackPixel);
-            }
+                TopTexture.Load(64, 1, EmptyLut);
 
-            if (palette.Sky.LutTexLeft != null)
-            {
-                LeftTexture.Load(64, 1, palette.Sky.LutTexLeft.ComputeRgba8());
-            }
+            // Left
+            if (sky.LutTexLeft != null)
+                LeftTexture.Load(64, 1, sky.LutTexLeft.ComputeRgba8());
             else
-            {
-                LeftTexture.Load(1, 1, BlackPixel);
-            }
+                LeftTexture.Load(64, 1, EmptyLut);
 
-            if (palette.Sky.LutTexLeftTop != null)
-            {
-                TopLeftTexture.Load(64, 1, palette.Sky.LutTexLeftTop.ComputeRgba8());
-            }
+            // TopLeft
+            if (sky.LutTexLeftTop != null)
+                TopLeftTexture.Load(64, 1, sky.LutTexLeftTop.ComputeRgba8());
             else
-            {
-                TopLeftTexture.Load(1, 1, BlackPixel);
-            }
+                TopLeftTexture.Load(64, 1, EmptyLut);
 
-            if (palette.Sky.LutTexRightTop != null)
-            {
-                TopRightTexture.Load(64, 1, palette.Sky.LutTexRightTop.ComputeRgba8());
-            }
+            // TopRight
+            if (sky.LutTexRightTop != null)
+                TopRightTexture.Load(64, 1, sky.LutTexRightTop.ComputeRgba8());
             else
-            {
-                TopRightTexture.Load(1, 1, BlackPixel);
-            }
+                TopRightTexture.Load(64, 1, EmptyLut);
+
+            SetMaterialParams(sky.RotDegLeftTop, sky.RotDegRightTop, sky.HorizontalOffset);
         }
 
         //Sets the bfres material parameters
@@ -147,11 +145,11 @@ namespace Fushigi.gl.Bfres
 
             foreach (var mesh in model.Meshes)
             {
-                mesh.MaterialRender.SetParam("const_float2", 1f); //offset
-                mesh.MaterialRender.SetParam("const_float3", 0f); //top rotation
+                mesh.MaterialRender.SetParam("const_float2", 1f);              // offset
+                mesh.MaterialRender.SetParam("const_float3", 0f);              // top rotation?
                 mesh.MaterialRender.SetParam("const_float4", rotTopLeft);
                 mesh.MaterialRender.SetParam("const_float5", rotTopRight);
-                mesh.MaterialRender.SetParam("const_float6", 0f); //another offset set to 0
+                mesh.MaterialRender.SetParam("const_float6", 0f);              // another offset set to 0
                 mesh.MaterialRender.SetParam("const_float7", horizontal_offset - 0.5f);
             }
         }
