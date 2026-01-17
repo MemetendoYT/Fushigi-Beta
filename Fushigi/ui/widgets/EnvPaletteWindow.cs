@@ -536,7 +536,6 @@ namespace Fushigi.ui.widgets
             if (temp.Rim == null || EnvPalette.Rim != null)
                 return false;
 
-            Console.WriteLine("it edo bte ijuiort ioje byikjortuk");
             return true;
         }
 
