@@ -280,5 +280,7 @@ namespace Fushigi.course
         public CourseGroupHolder mGroupsHolder;
         public CourseUnitHolder mUnitHolder;
         public EnvPalette mInitEnvPalette;
+        public bool hasPickCompleted;
+        internal bool hasStartedPick;
     }
 }

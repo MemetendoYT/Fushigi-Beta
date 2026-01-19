@@ -44,8 +44,15 @@ namespace Fushigi.ui.widgets
         readonly EnvPaletteWindow envPaletteWindow;
         NumVec camSave;
         public static bool saveStatus = true;
-
-
+        private bool areaSwitched;
+        private LevelViewport pendingViewport;
+        private string globalLinkType;
+        private CourseActor globalSource;
+        private CourseActor pendingSource = null;
+        private bool runGlobalPicker;
+        private bool runGlobal;
+        private CourseAreaEditContext pendingEditContext;
+        private string startingArea;
         (object? courseObj, FullPropertyCapture capture)
            propertyCapture = (null,
             FullPropertyCapture.Empty);
@@ -333,7 +340,7 @@ namespace Fushigi.ui.widgets
                 cs.viewports[area] = viewport;
                 cs.lastSavedAction[area] = null;
 
-                var localAreaScene = areaScene; // ← THIS is the correct capture
+                var localAreaScene = areaScene;
 
                 viewport.ObjectDeletionRequested += (objs) =>
                 {
@@ -342,7 +349,7 @@ namespace Fushigi.ui.widgets
                     {
                         _ = cs.DeleteObjectsWithWarningPrompt(
                             objs,
-                            localAreaScene.EditContext,   // ← THIS is the fix
+                            localAreaScene.EditContext,   
                             "Delete objects"
                         );
                     }
@@ -522,7 +529,6 @@ namespace Fushigi.ui.widgets
             if (showGlobalLinkWindow)
                 DrawGlobalLinksPanel(ref showGlobalLinkWindow, mPopupModalHost, gLink, linkNumb);
 
-
             ulong selectionVersionBefore = areaScenes[selectedArea].EditContext.SelectionVersion;
 
 
@@ -568,14 +574,27 @@ namespace Fushigi.ui.widgets
 
 
                         if (selectedArea != area)
+                        {
                             mHasFilledLayers = false;
+                            areaSwitched = true;
+                        }
 
                         activeViewport = viewport;
                         selectedArea = area;
 
+                        if (isPickingSecondArea && selectedArea.GetName() != secondPickArea && !pickingComplete)
+                        {
+                            startedPicker = true;
+                            oldViewport.CancelPick();
+                        }
+
+                        if (startedPicker && selectedArea.GetName() != startingArea && !pickingComplete)
+                        {
+                            RunGlobalPicker();
+                        }
 
                         envPaletteWindow.Load(gl, area.mAreaParams, area.mInitEnvPalette);
-
+            
                         ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
 
 
@@ -1813,9 +1832,13 @@ namespace Fushigi.ui.widgets
             var editContext = areaScenes[selectedArea].EditContext;
 
             bool status = ImGui.Begin("Selection Parameters", ImGuiWindowFlags.AlwaysVerticalScrollbar);
-
-            if (editContext.IsSingleObjectSelected(out CourseActor? mSelectedActor))
+            if (editContext.IsSingleObjectSelected(out CourseActor? mSelectedActor) || startedPicker)
             {
+                if(mSelectedActor == null && startedPicker)
+                {
+                    mSelectedActor = globalSource;
+                }
+
                 //invalidate current action if there has been external changes
                 if (propertyCapture.capture.HasChangesSinceLastCheckpoint())
                 {
@@ -1917,6 +1940,10 @@ namespace Fushigi.ui.widgets
                     ImGui.Text("Links");
                     ImGui.Separator();
 
+                    var destHashes = selectedArea.mLinkHolder.GetDestHashesFromSrc(mSelectedActor.mHash);
+
+                    var sourceTree = ImGui.TreeNodeEx("Source Links", ImGuiTreeNodeFlags.DefaultOpen);
+                    ImGui.SameLine();
                     if (ImGui.BeginCombo("##Add Link", "Add Link", ImGuiComboFlags.WidthFitPreview))
                     {
                         for (int i = 0; i < mLinkTypes.Length; i++)
@@ -1948,6 +1975,7 @@ namespace Fushigi.ui.widgets
 
                         ImGui.EndCombo();
                     }
+                    ImGui.SetItemTooltip("Links this actor is the source of");
                     ImGui.SameLine();
                     if (ImGui.Button($"{IconUtil.ICON_COPY}"))
                     {
@@ -1978,44 +2006,7 @@ namespace Fushigi.ui.widgets
                         batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
                     }
                     ImGui.SetItemTooltip("Paste Source Links");
-                    ImGui.SameLine();
-                    if (ImGui.Button($"{IconUtil.ICON_CLONE}"))
-                    {
-                        mCopiedLinks = selectedArea.mLinkHolder.GetSrcHashesFromDest(mSelectedActor.mHash);
-                    }
-                    ImGui.SetItemTooltip("Copy Destination Links");
-                    ImGui.SameLine();
-                    if (ImGui.Button($"{IconUtil.ICON_CLIPBOARD_CHECK}") && mCopiedLinks.Count > 0)
-                    {
-                        var total = 0;
-                        var batch = editContext.BeginBatchAction();
 
-                        foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
-                        {
-                            for (int i = 0; i < hashArray.Count; i++)
-                            {
-                                var link = new CourseLink(linkName)
-                                {
-                                    mSource = hashArray[i], 
-                                    mDest = mSelectedActor.mHash    
-                                };
-
-                                if (!selectedArea.mLinkHolder.mLinks.Contains(link))
-                                {
-                                    editContext.AddLink(link);
-                                    total++;
-                                }
-                            }
-                        }
-
-                        batch.Commit($"{IconUtil.ICON_CLIPBOARD_CHECK} Paste {total} Link{(total == 1 ? "" : "s")}");
-                    }
-                    ImGui.SetItemTooltip("Paste Destination Links");
-
-                        var destHashes = selectedArea.mLinkHolder.GetDestHashesFromSrc(mSelectedActor.mHash);
-
-                    var sourceTree = ImGui.TreeNodeEx("Source Links", ImGuiTreeNodeFlags.DefaultOpen);
-                    ImGui.SetItemTooltip("Links this actor is the source of");
                     if (sourceTree)
                     {
                         ImGui.Indent();
@@ -2126,7 +2117,73 @@ namespace Fushigi.ui.widgets
                     var sourceHashes = selectedArea.mLinkHolder.GetSrcHashesFromDest(mSelectedActor.mHash);
 
                     var destTree = ImGui.TreeNodeEx("Destination Links", ImGuiTreeNodeFlags.DefaultOpen);
+                    ImGui.SameLine();
+                    if (ImGui.BeginCombo("##Add Link", "Add Link", ImGuiComboFlags.WidthFitPreview))
+                    {
+                        for (int i = 0; i < mLinkTypes.Length; i++)
+                        {
+                            var linkType = mLinkTypes[i];
+
+                            if (ImGui.Selectable(linkType))
+                            {
+                                KeyboardModifier modifier;
+                                ImGui.SetWindowFocus(selectedArea.GetName());
+                                Task.Run(async () =>
+                                {
+                                    do
+                                    {
+                                        (var pickedDest, modifier) = await PickLinkDestInViewportFor(mSelectedActor);
+                                        if (pickedDest is null)
+                                            return;
+
+                                        var link = new CourseLink(linkType)
+                                        {
+                                            mSource = pickedDest.mHash,
+                                            mDest = mSelectedActor.mHash
+                                        };
+                                        editContext.AddLink(link);
+                                    } while ((modifier & KeyboardModifier.Shift) > 0);
+                                });
+                            }
+                        }
+
+                        ImGui.EndCombo();
+                    }
                     ImGui.SetItemTooltip("Links this actor is the destination of");
+
+                    ImGui.SameLine();
+                    if (ImGui.Button($"{IconUtil.ICON_COPY}"))
+                    {
+                        mCopiedLinks = selectedArea.mLinkHolder.GetSrcHashesFromDest(mSelectedActor.mHash);
+                    }
+                    ImGui.SetItemTooltip("Copy Destination Links");
+                    ImGui.SameLine();
+                    if (ImGui.Button($"{IconUtil.ICON_PASTE}") && mCopiedLinks.Count > 0)
+                    {
+                        var total = 0;
+                        var batch = editContext.BeginBatchAction();
+
+                        foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                        {
+                            for (int i = 0; i < hashArray.Count; i++)
+                            {
+                                var link = new CourseLink(linkName)
+                                {
+                                    mSource = hashArray[i],
+                                    mDest = mSelectedActor.mHash
+                                };
+
+                                if (!selectedArea.mLinkHolder.mLinks.Contains(link))
+                                {
+                                    editContext.AddLink(link);
+                                    total++;
+                                }
+                            }
+                        }
+
+                        batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
+                    }
+                    ImGui.SetItemTooltip("Paste Destination Links");
                     if (destTree)
                     {
                         ImGui.Indent();
@@ -2205,9 +2262,35 @@ namespace Fushigi.ui.widgets
                     ImGui.Separator();
 
                     var glDestHashes = course.GetGlobalLinks().GetDestHashesFromSrc(mSelectedActor.mHash);
+                
                     var glDestIDs = course.GetGlobalLinks().GetIndicesOfLinksWithSrc_ForDelete(mSelectedActor.mHash);
-
+                  
                     var glSourceTree = ImGui.TreeNodeEx("Global Source Links", ImGuiTreeNodeFlags.DefaultOpen);
+                    ImGui.SameLine();
+                    if (ImGui.BeginCombo("##Add Global Link Src", "Add Global Link", ImGuiComboFlags.WidthFitPreview))
+                    {
+                        for (int i = 0; i < mLinkTypes.Length; i++)
+                        {
+                            var linkType = mLinkTypes[i];
+
+                            if (ImGui.Selectable(linkType))
+                            {
+                                reverseGlobalLink = false;
+                                pickingComplete = false;
+                                globalLinkType = linkType;
+                                globalSource = mSelectedActor;
+                                startingArea = selectedArea.GetName();
+                                if (globalSource != null)
+                                {
+                                    startedPicker = true;
+                                    RunGlobalPicker();
+                                }
+                            }
+                        }
+
+                        ImGui.EndCombo();
+                    }
+      
                     ImGui.SetItemTooltip("Global Links this actor is the source of");
                     if (glSourceTree)
                     {
@@ -2229,6 +2312,31 @@ namespace Fushigi.ui.widgets
                                         gLink = course.GetGlobalLinks().mLinks[i];
                                         linkNumb = i;
                                     }
+                                    ImGui.SameLine();
+
+                                    var cursorSP = ImGui.GetCursorScreenPos();
+                                    var padding = ImGui.GetStyle().FramePadding;
+
+                                    uint WithAlphaFactor(uint color, float factor) => color & 0xFFFFFF | ((uint)((color >> 24) * factor) << 24);
+
+                                    float deleteButtonWidth = ImGui.GetFrameHeight() * 1.6f;
+
+                                    float columnWidth = ImGui.GetContentRegionAvail().X; 
+
+                                    ImGui.SameLine();
+
+                                    bool clicked = ImGui.InvisibleButton($"##DeleteLink_{i}", new Vector2(deleteButtonWidth, ImGui.GetFrameHeight()));
+                                    string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                                    ImGui.GetWindowDrawList().AddText(cursorSP + new Vector2((deleteButtonWidth - ImGui.CalcTextSize(deleteIcon).X) / 2, padding.Y),
+                                        WithAlphaFactor(ImGui.GetColorU32(ImGuiCol.Text), ImGui.IsItemHovered() ? 1 : 0.5f),
+                                        deleteIcon);
+
+                                    ImGui.SetItemTooltip("Delete Link");
+
+                                    if (clicked)
+                                        course.RemoveGlobalLink(course.GetGlobalLinks().mLinks[i]);
+
+
                                 }
                                 ImGui.TreePop();
                             }
@@ -2242,6 +2350,30 @@ namespace Fushigi.ui.widgets
 
                     var glDestTree = ImGui.TreeNodeEx("Global Destination Links", ImGuiTreeNodeFlags.DefaultOpen);
                     ImGui.SetItemTooltip("Global Links this actor is the destination of");
+                    ImGui.SameLine();
+                    if (ImGui.BeginCombo("##Add Global Link Dst", "Add Global Link", ImGuiComboFlags.WidthFitPreview))
+                    {
+                        for (int i = 0; i < mLinkTypes.Length; i++)
+                        {
+                            var linkType = mLinkTypes[i];
+
+                            if (ImGui.Selectable(linkType))
+                            {
+                                reverseGlobalLink = true;
+                                pickingComplete = false;
+                                globalLinkType = linkType;
+                                globalSource = mSelectedActor;
+                                startingArea = selectedArea.GetName();
+                                if (globalSource != null)
+                                {
+                                    startedPicker = true;
+                                    RunGlobalPicker();
+                                }
+                            }
+                        }
+
+                        ImGui.EndCombo();
+                    }
                     if (glDestTree)
                     {
                         ImGui.Indent();
@@ -2258,14 +2390,41 @@ namespace Fushigi.ui.widgets
 
                                     if (ImGui.Button($"Link {i}", new Vector2(ImGui.GetContentRegionAvail().X - ImGui.GetFrameHeight() * 1.6f, 0)))
                                     {
-                                        var glEditContext = areaScenes[selectedArea].EditContext;
-                                        glEditContext.DeselectAll();
-                                        glEditContext.Select(course.GetGlobalLinks().mLinks[i]);
+                                        showGlobalLinkWindow = true;
+                                        gLink = course.GetGlobalLinks().mLinks[i];
+                                        linkNumb = i;
                                     }
+                                    ImGui.SameLine();
+
+                                    var cursorSP = ImGui.GetCursorScreenPos();
+                                    var padding = ImGui.GetStyle().FramePadding;
+
+                                    uint WithAlphaFactor(uint color, float factor) => color & 0xFFFFFF | ((uint)((color >> 24) * factor) << 24);
+
+                                    float deleteButtonWidth = ImGui.GetFrameHeight() * 1.6f;
+
+                                    float columnWidth = ImGui.GetContentRegionAvail().X;
+
+                                    ImGui.SameLine();
+
+                                    bool clicked = ImGui.InvisibleButton($"##DeleteLink_{i}", new Vector2(deleteButtonWidth, ImGui.GetFrameHeight()));
+                                    string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                                    ImGui.GetWindowDrawList().AddText(cursorSP + new Vector2((deleteButtonWidth - ImGui.CalcTextSize(deleteIcon).X) / 2, padding.Y),
+                                        WithAlphaFactor(ImGui.GetColorU32(ImGuiCol.Text), ImGui.IsItemHovered() ? 1 : 0.5f),
+                                        deleteIcon);
+
+                                    ImGui.SetItemTooltip("Delete Link");
+
+                                    if (clicked)
+                                    {
+                                        course.RemoveGlobalLink(course.GetGlobalLinks().mLinks[i]);
+                                    }
+
                                 }
                                 ImGui.TreePop();
                             }
                         }
+
                         ImGui.Unindent();
                         ImGui.TreePop();
                     }
@@ -3444,6 +3603,16 @@ namespace Fushigi.ui.widgets
         //TODO, optomize recursion
         List<CourseActor> topLinks;
         CourseActor? selected;
+        private CourseActor? storedGlobalActor;
+        public static bool killPicker;
+        private CancellationTokenSource globalPickToken;
+        private bool isPickingSecondArea;
+        private string secondPickArea;
+        private bool startedPicker;
+        public static bool pickingComplete;
+        private LevelViewport oldViewport;
+        private bool reverseGlobalLink;
+
         private void AreaLocalLinksView(CourseArea area)
         {
             var links = area.mLinkHolder;
@@ -4182,6 +4351,54 @@ namespace Fushigi.ui.widgets
                             "Select the destination actor you wish to link to. -- Hold SHIFT to link multiple",
                             x => x is CourseActor && x != source, tokenSource);
             return (picked as CourseActor, modifier);
+        }
+
+        private async Task<(CourseActor?, KeyboardModifier modifiers)> PickGlobalLinkDestInViewportFor(CourseActor source)
+        {
+            Console.WriteLine("IIIII");
+            globalPickToken?.Cancel();
+            globalPickToken = new CancellationTokenSource();
+
+            var (picked, modifier) = await activeViewport.PickObject(
+                            "Select the destination actor you wish to link to. -- Hold SHIFT to link multiple",
+                            x => x is CourseActor && x != source, globalPickToken);
+
+            Console.WriteLine("returning jargon");
+            return (picked as CourseActor, modifier);
+        }
+
+        private async void RunGlobalPicker()
+        {
+            startedPicker = false;
+            isPickingSecondArea = true;
+            secondPickArea = selectedArea.GetName();
+            selectedArea.hasStartedPick = true;
+            oldViewport = activeViewport;
+            Console.WriteLine("running picker again???");
+            var (picked, modifier) = await PickLinkDestInViewportFor(pendingSource);
+            if (picked != null)
+            {
+
+                var link = new CourseLink(globalLinkType)
+                {
+                    mSource = globalSource.mHash,
+                    mDest = picked.mHash
+                };
+
+                if(reverseGlobalLink)
+                {
+                    link.mSource = picked.mHash;
+                    link.mDest = globalSource.mHash;
+                }
+                areaScenes[selectedArea].EditContext.AddGlobalLink(link, course);
+
+                if ((modifier & KeyboardModifier.Shift) != 0)
+                {
+                    return;
+                }
+                pickingComplete = true;
+                selectedArea.hasPickCompleted = true;
+            }
         }
 
         private async Task DeleteObjectsWithWarningPrompt(IReadOnlyList<object> objectsToDelete,

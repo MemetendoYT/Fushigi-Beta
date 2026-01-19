@@ -63,7 +63,34 @@ namespace Fushigi.ui
                     );
             }
         }
+        public void AddGlobalLink(CourseLink link, Course course)
+        {
+            var linkList = course.GetGlobalLinks().mLinks;
+            LogAdding<CourseLink>($": {link.mSource} -{link.mLinkName}-> {link.mDest}");
 
+            if (linkList.Any(x => x.mSource == link.mSource))
+            {
+
+
+                var index = linkList.FindLastIndex(x => x.mSource == link.mSource &&
+                        (!linkList.Any(y => x.mLinkName == link.mLinkName) ||
+                        x.mLinkName == link.mLinkName));
+
+                CommitAction(
+                    course.GetGlobalLinks().mLinks.RevertableInsert(link, index + 1,
+                        $"{IconUtil.ICON_PLUS_CIRCLE} Add {link.mLinkName} Link")
+                );
+                return;
+            }
+            else
+            {
+                //If it's the actor's first link
+                CommitAction(
+                     course.GetGlobalLinks().mLinks.RevertableAdd(link,
+                        $"{IconUtil.ICON_PLUS_CIRCLE} Add {link.mLinkName} Link")
+                );
+            }
+        }
         public void AddLink(CourseLink link)
         {
             var linkList = area.mLinkHolder.mLinks;
