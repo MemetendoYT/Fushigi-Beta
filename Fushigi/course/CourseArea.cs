@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Numerics;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Fushigi.course
@@ -192,7 +193,10 @@ namespace Fushigi.course
                 mUnitHolder = new();
             }
         }
-
+        public CourseActor? GetActorByHash(ulong hash)
+        {
+            return mActorHolder.mActors.FirstOrDefault(a => a.mHash == hash);
+        }
         public void Save(RSTB resource_table)
         {
             //Save using the configured mod romfs path
@@ -218,9 +222,16 @@ namespace Fushigi.course
                 root.AddNode(BymlNodeId.Array, mUnitHolder.SerializeToArray(), "BgUnits");
             }
 
+
             root.AddNode(BymlNodeId.Array, mLinkHolder.SerializeToArray(), "Links");
             root.AddNode(BymlNodeId.Array, mRailHolder.SerializeToArray(), "Rails");
             root.AddNode(BymlNodeId.Array, mGroupsHolder.SerializeToArray(), "SimultaneousGroups");
+            Console.WriteLine("is this even executing?");
+            Console.WriteLine("Catergory " + Course.Catergory);
+            if (Course.Catergory != null)
+            {
+                //root.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>($"Work/Stage/StageParam/{mAreaName}.game__stage__StageParam.gyml"), "StageParam");
+            }
 
             var byml = new Byml.Byml(root);
             var mem = new MemoryStream();
@@ -228,6 +239,7 @@ namespace Fushigi.course
 
             var decomp_size = (uint)mem.Length;
 
+            
             //Compress and save the course area           
             string levelPath = Path.Combine(folder, $"{mAreaName}.bcett.byml.zs");
             if (saveTemplate)
@@ -241,6 +253,11 @@ namespace Fushigi.course
             }
             else
             {
+     
+
+
+                levelPath = Path.Combine(folder, $"{mAreaName}.bcett.byml.zs");
+                
                 File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
 
                 //Update resource table
@@ -249,6 +266,7 @@ namespace Fushigi.course
             }
         }
 
+     
         public string GetName()
         {
             return mAreaName;

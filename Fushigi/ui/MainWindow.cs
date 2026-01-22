@@ -387,7 +387,8 @@ namespace Fushigi.ui
             string areaName = selectedArea.GetName();
             mSelectedCourseScene.DeleteAreaFiles(areaName);
             mSelectedCourseScene.course.GetAreas().Remove(selectedArea);
-            
+            //mSelectedCourseScene.course.renameArea();
+            //Course.updateStageParam = true;
         }
 
         public Task LoadCourseWithProgressBar(string name)

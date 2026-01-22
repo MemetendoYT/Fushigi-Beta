@@ -66,7 +66,7 @@ namespace Fushigi.ui.widgets
             var fontSize = ImGui.GetFontSize();
             var font = ImGui.GetFont();
             font.FontSize = worldNameSize;
-            if(MainWindow.dpiScale > 1)
+            if(MainWindow.dpiScale > 1.75)
             {
                 ImGui.SetWindowFontScale(0.5f);  
             }

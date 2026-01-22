@@ -390,16 +390,16 @@ namespace Fushigi.gl.Bfres
             this.RimColor = rim.Color.ToVector4();
             this.RimParams = new Vector4(rim.Width, rim.Power, 0, 0);
             this.RimIntensty1 = new Vector4(
-                rim.IntensityCloud,
+                rim.IntensityPlayer,
                 rim.IntensityEnemy,
-                rim.IntensityDV,
-                rim.IntensityFieldWall); //cloud, enemy, dv, wall
+                rim.IntensityObject,
+                rim.IntensityFieldWall); //player, enemy, object, wall
 
             this.RimIntensty2 = new Vector4(
                 rim.IntensityFieldBand,
                 rim.IntensityFieldDeco,
-                rim.IntensityObject,
-                rim.IntensityPlayer); //field band, deco, object, player
+                rim.IntensityDV,
+                rim.IntensityCloud); //field band, deco, dv, cloud
 
 
             if (rim.IntensityObject == 0)

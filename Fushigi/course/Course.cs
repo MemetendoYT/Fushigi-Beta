@@ -1,9 +1,11 @@
-﻿using Fushigi.Byml;
+﻿using Fasterflect;
+using Fushigi.Byml;
 using Fushigi.env;
 using Fushigi.gl;
 using Fushigi.Logger;
 using Fushigi.rstb;
 using Fushigi.util;
+using System.Text.RegularExpressions;
 
 namespace Fushigi.course
 {
@@ -35,24 +37,27 @@ namespace Fushigi.course
             var stageParamRoot = (BymlHashTable)stageParam.Root;
             var root = (BymlHashTable)courseInfo.Root;
 
-            IsOneAreaCourse = ((BymlNode<string>)stageParamRoot["Category"]).Data == "Course1Area";
-            try
-            {
-                mStageReferences = (BymlArrayNode)root["RefStages"];
 
-                for (int i = 0; i < mStageReferences.Length; i++)
+            IsOneAreaCourse = ((BymlNode<string>)stageParamRoot["Category"]).Data == "Course1Area";
+            Console.WriteLine("setting isoneareacourse to " + IsOneAreaCourse + " " + courseFilePath + " " + stageParamFilePath);
+   
+                try
                 {
-                    string stageParamPath = ((BymlNode<string>)mStageReferences[i]).Data.Replace("Work/", "").Replace(".gyml", ".bgyml");
-                    string stageName = Path.GetFileName(stageParamPath).Split(".game")[0];
-                    mAreas.Add(new CourseArea(stageName, false));
-  
+                    mStageReferences = (BymlArrayNode)root["RefStages"];
+
+                    for (int i = 0; i < mStageReferences.Length; i++)
+                    {
+                        string stageParamPath = ((BymlNode<string>)mStageReferences[i]).Data.Replace("Work/", "").Replace(".gyml", ".bgyml");
+                        string stageName = Path.GetFileName(stageParamPath).Split(".game")[0];
+                        mAreas.Add(new CourseArea(stageName, false));
+
+                    }
                 }
-            }
-            catch
-            {
-                mAreas.Add(new CourseArea(mCourseName, false));
-     
-            }
+                catch
+                {
+                    mAreas.Add(new CourseArea(mCourseName, false));
+
+                }
 
             if (root.ContainsKey("Links") && !IsOneAreaCourse)
             {
@@ -68,39 +73,86 @@ namespace Fushigi.course
         }
         public void AddArea()
         {
+            Console.WriteLine("Adding Area");
             int areaCount = mAreas.Count;
-            string NewAreaName = mCourseName.Replace("_Course", "");
             var usedNumbers = new HashSet<int>();
-
-            foreach (var area in mAreas)
+            Console.WriteLine(mCourseName);
+            string NewAreaName = "";
+            string areaName = "";
+            NewAreaName = mCourseName.Replace("_Course", "");
+            if (areaCount != 1)
             {
-                string name = area.GetName();
-
-                if (name.StartsWith(NewAreaName + "_Sub"))
+                foreach (var area in mAreas)
                 {
-                    string numStr = name.Substring((NewAreaName + "_Sub").Length);
-                    if (int.TryParse(numStr, out int num))
-                        usedNumbers.Add(num);
+                    string name = area.GetName();
+
+                    if (name.StartsWith(NewAreaName + "_Sub"))
+                    {
+                        string numStr = name.Substring((NewAreaName + "_Sub").Length);
+                        if (int.TryParse(numStr, out int num))
+                            usedNumbers.Add(num);
+                    }
                 }
+
+
+
+                int nextNumber = 1;
+                while (usedNumbers.Contains(nextNumber))
+                    nextNumber++;
+
+                areaName = $"{NewAreaName}_Sub{nextNumber}";
+
             }
-
-            int nextNumber = 1;
-            while (usedNumbers.Contains(nextNumber))
-                nextNumber++;
-
-            string areaName = $"{NewAreaName}_Sub{nextNumber}";
-
-
-            if (areaCount == 0)
+            else if (areaCount == 1)
             {
-                areaName = $"{NewAreaName}_Main";
+                areaName = $"{NewAreaName}_Sub1";
             }
 
-            string testPath = FileUtil.FindContentPath(Path.Combine("BancMapUnit", $"{areaName}.bcett.byml.zs"));
+                string testPath = FileUtil.FindContentPath(Path.Combine("BancMapUnit", $"{areaName}.bcett.byml.zs"));
             bool overrideVanilla = File.Exists(testPath);
             mAreas.Add(new CourseArea(areaName, overrideVanilla));
+            renameArea();
+
         }
 
+        public void renameArea()
+        {
+            Console.WriteLine("removing area");
+            Console.WriteLine(GetAreaCount());
+            Console.WriteLine(IsOneAreaCourse);
+            string oldAreaName = mAreas[0].mAreaName;
+            if (GetAreaCount() > 1 && IsOneAreaCourse)
+            {
+                IsOneAreaCourse = false;
+                Catergory = null;
+                if (oldAreaName.EndsWith("_Course"))
+                {
+                    oldAreaName = mCourseName.Replace("_Course", "");
+                    mAreas[0].mAreaName = oldAreaName + "_Main";
+                    Console.WriteLine("updating area name to " + mAreas[0].mAreaName);
+                }
+
+            }
+            else if (GetAreaCount() == 1 && !IsOneAreaCourse)
+            {
+                IsOneAreaCourse = true;
+                Catergory = "Course1Area";
+
+                if (oldAreaName.EndsWith("Main"))
+                {
+                    mAreas[0].mAreaName = oldAreaName.Replace("Main", "Course");
+                    Console.WriteLine("updating area name to " + mAreas[0].mAreaName);
+                }
+                else
+                {
+                    oldAreaName = Regex.Replace(oldAreaName, "_Sub[0-9]+$", "");
+                    oldAreaName = oldAreaName + "_Course";
+                    Console.WriteLine(oldAreaName);
+                    mAreas[0].mAreaName = oldAreaName;
+                    Console.WriteLine("updating area name to " + mAreas[0].mAreaName);
+                }
+            }
+        }
         public List<CourseArea> GetAreas() => mAreas;
 
         public CourseArea GetArea(int idx) => mAreas.ElementAt(idx);
@@ -165,9 +217,10 @@ namespace Fushigi.course
                 BymlHashTable stageParamRoot = new();
 
                 stageParamRoot.AddNode(BymlNodeId.Array, new BymlArrayNode(), "Actors");
+
+                //stageParamRoot.AddNode(BymlNodeId.Array, mArea.mLinkHolder.SerializeToArray(), "Links");
                 stageParamRoot.AddNode(BymlNodeId.Array, mGlobalLinks.SerializeToArray(), "Links");
-
-
+                
                 BymlArrayNode refArr = new();
 
                 foreach (CourseArea area in mAreas)
@@ -181,8 +234,8 @@ namespace Fushigi.course
 
                 var byml = new Byml.Byml(stageParamRoot);
                 var mem = new MemoryStream();
-                byml.Save(mem);
 
+                byml.Save(mem);
                 string virtualPath = $"BancMapUnit/{mCourseName}.bcett.byml";
                 resource_table.SetResource(virtualPath, (uint)mem.Length);
 
@@ -196,6 +249,17 @@ namespace Fushigi.course
 
                 resource_table.Save();
             }
+        }
+
+        public CourseActor? ResolveActorByHash(ulong hash)
+        {
+            foreach (var area in mAreas)
+            {
+                var actor = area.GetActorByHash(hash);
+                if (actor != null)
+                    return actor;
+            }
+            return null;
         }
 
         //Added for saving the Course file for global links
@@ -237,6 +301,7 @@ namespace Fushigi.course
             }
         }
 
+
         readonly string mCourseName;
         readonly List<CourseArea> mAreas;
         BymlArrayNode mStageReferences;
@@ -244,6 +309,8 @@ namespace Fushigi.course
         public CourseInfo mCourseInfo;
         public MapAnalysisInfo mMapAnalysisInfo;
         public StageLoadInfo mStageLoadInfo;
-        public bool IsOneAreaCourse;
+        public static bool IsOneAreaCourse;
+        public static string Catergory;
+        public static bool updateStageParam;
     }
 }

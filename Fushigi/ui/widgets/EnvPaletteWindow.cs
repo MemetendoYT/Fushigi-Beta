@@ -632,7 +632,9 @@ namespace Fushigi.ui.widgets
                 DrawColor("Rim Color", EnvPalette.Rim, "Color");
                 DrawFloat("Rim Width", EnvPalette.Rim, "Width");
                 DrawFloat("Rim Power", EnvPalette.Rim, "Power");
-                ImGui.Text("Rim Amount:");
+                //ImGui.Text("Rim Amount:");
+                //ImGui.NextColumn();
+                //ImGui.NextColumn();
                 DrawFloatSlider("Object", EnvPalette.Rim, "IntensityObject", 0, 1f);
                 DrawFloatSlider("Player", EnvPalette.Rim, "IntensityPlayer", 0, 1f);
                 DrawFloatSlider("Enemy", EnvPalette.Rim, "IntensityEnemy", 0, 1f);
