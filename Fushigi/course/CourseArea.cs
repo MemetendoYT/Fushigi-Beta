@@ -97,8 +97,6 @@ namespace Fushigi.course
                 if (mAreaParams.EnvPaletteSetting != null &&
                     mAreaParams.EnvPaletteSetting.InitPaletteBaseName != null)
                 {
-                    Console.WriteLine("Loading palette: " +
-                        mAreaParams.EnvPaletteSetting.InitPaletteBaseName);
 
                     mInitEnvPalette = new EnvPalette(
                         mAreaParams.EnvPaletteSetting.InitPaletteBaseName
@@ -222,16 +220,13 @@ namespace Fushigi.course
                 root.AddNode(BymlNodeId.Array, mUnitHolder.SerializeToArray(), "BgUnits");
             }
 
-
             root.AddNode(BymlNodeId.Array, mLinkHolder.SerializeToArray(), "Links");
             root.AddNode(BymlNodeId.Array, mRailHolder.SerializeToArray(), "Rails");
             root.AddNode(BymlNodeId.Array, mGroupsHolder.SerializeToArray(), "SimultaneousGroups");
-            Console.WriteLine("is this even executing?");
-            Console.WriteLine("Catergory " + Course.Catergory);
-            if (Course.Catergory != null)
-            {
+            //if (Course.Catergory != null)
+            //{
                 //root.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>($"Work/Stage/StageParam/{mAreaName}.game__stage__StageParam.gyml"), "StageParam");
-            }
+            //}
 
             var byml = new Byml.Byml(root);
             var mem = new MemoryStream();
@@ -253,11 +248,8 @@ namespace Fushigi.course
             }
             else
             {
-     
-
-
+               
                 levelPath = Path.Combine(folder, $"{mAreaName}.bcett.byml.zs");
-                
                 File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
 
                 //Update resource table

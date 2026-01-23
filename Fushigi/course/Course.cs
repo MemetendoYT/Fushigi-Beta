@@ -39,7 +39,6 @@ namespace Fushigi.course
 
 
             IsOneAreaCourse = ((BymlNode<string>)stageParamRoot["Category"]).Data == "Course1Area";
-            Console.WriteLine("setting isoneareacourse to " + IsOneAreaCourse + " " + courseFilePath + " " + stageParamFilePath);
    
                 try
                 {
@@ -73,10 +72,8 @@ namespace Fushigi.course
         }
         public void AddArea()
         {
-            Console.WriteLine("Adding Area");
             int areaCount = mAreas.Count;
             var usedNumbers = new HashSet<int>();
-            Console.WriteLine(mCourseName);
             string NewAreaName = "";
             string areaName = "";
             NewAreaName = mCourseName.Replace("_Course", "");
@@ -117,9 +114,6 @@ namespace Fushigi.course
 
         public void renameArea()
         {
-            Console.WriteLine("removing area");
-            Console.WriteLine(GetAreaCount());
-            Console.WriteLine(IsOneAreaCourse);
             string oldAreaName = mAreas[0].mAreaName;
             if (GetAreaCount() > 1 && IsOneAreaCourse)
             {
@@ -129,7 +123,6 @@ namespace Fushigi.course
                 {
                     oldAreaName = mCourseName.Replace("_Course", "");
                     mAreas[0].mAreaName = oldAreaName + "_Main";
-                    Console.WriteLine("updating area name to " + mAreas[0].mAreaName);
                 }
 
             }
@@ -141,15 +134,12 @@ namespace Fushigi.course
                 if (oldAreaName.EndsWith("Main"))
                 {
                     mAreas[0].mAreaName = oldAreaName.Replace("Main", "Course");
-                    Console.WriteLine("updating area name to " + mAreas[0].mAreaName);
                 }
                 else
                 {
                     oldAreaName = Regex.Replace(oldAreaName, "_Sub[0-9]+$", "");
                     oldAreaName = oldAreaName + "_Course";
-                    Console.WriteLine(oldAreaName);
                     mAreas[0].mAreaName = oldAreaName;
-                    Console.WriteLine("updating area name to " + mAreas[0].mAreaName);
                 }
             }
         }
@@ -199,7 +189,7 @@ namespace Fushigi.course
             return mGlobalLinks;
         }
 
-        public void Save()
+        public void Save(bool backup)
         {
             var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
 
@@ -218,7 +208,6 @@ namespace Fushigi.course
 
                 stageParamRoot.AddNode(BymlNodeId.Array, new BymlArrayNode(), "Actors");
 
-                //stageParamRoot.AddNode(BymlNodeId.Array, mArea.mLinkHolder.SerializeToArray(), "Links");
                 stageParamRoot.AddNode(BymlNodeId.Array, mGlobalLinks.SerializeToArray(), "Links");
                 
                 BymlArrayNode refArr = new();
@@ -244,8 +233,9 @@ namespace Fushigi.course
                     Directory.CreateDirectory(folder);
 
                 string levelPath = Path.Combine(folder, $"{mCourseName}.bcett.byml.zs");
+
                 File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
-                SaveAreas(resource_table);
+                SaveAreas(resource_table, backup);
 
                 resource_table.Save();
             }
@@ -290,14 +280,17 @@ namespace Fushigi.course
             resource_table.SetResource($"BancMapUnit/{mCourseName}.bcett.byml", decomp_size);
         }
 
-        public void SaveAreas(RSTB resTable)
+        public void SaveAreas(RSTB resTable, bool backup)
         {
             //Save each course area to current romfs folder
-            foreach (var area in GetAreas())
+            if (!backup)
             {
-                Logger.Logger.LogMessage("Course", $"Saving area {area.GetName()}...");
+                foreach (var area in GetAreas())
+                {
+                    Logger.Logger.LogMessage("Course", $"Saving area {area.GetName()}...");
 
-                area.Save(resTable);
+                    area.Save(resTable);
+                }
             }
         }
 

@@ -344,7 +344,8 @@ namespace Fushigi.ui.SceneObjects.bgunit
 
             //TODO does it still need a condition like this?
             //if (viewport.mEditorState == LevelViewport.EditorState.Selecting)
-            OnSelecting(ctx, viewport);
+            if(CourseScene.leftClickStartedInsideViewport)
+                OnSelecting(ctx, viewport);
 
             OnKeyDown(ctx, viewport);
 

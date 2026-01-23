@@ -753,9 +753,9 @@ namespace Fushigi.ui.widgets
                                     setGlobalDst = true;
                                     globalHash = mSelectedActor.mHash;
                                 }
+                                ImGui.Separator();
                             }
 
-                            ImGui.Separator();
 
                             if (ImGui.MenuItem("Copy Src"))
                             {
@@ -1233,8 +1233,6 @@ namespace Fushigi.ui.widgets
                     DoDrag();
                     void DoDrag()
                     {
-
-
                         if (mEditContext.IsAnySelected<CourseActor>() && mMultiSelectEnded)
                             return;
 
@@ -1278,7 +1276,7 @@ namespace Fushigi.ui.widgets
                 }
                 if (!mMultiSelecting && mEditContext.IsAnySelected<CourseActor>())
                 {
-                    var primaryActor = mEditContext.GetSelectedObjects<CourseActor>()
+                    primaryActor = mEditContext.GetSelectedObjects<CourseActor>()
     .FirstOrDefault(actor => actor.mStartingTrans == selectedMedianStartPos.GetValueOrDefault());
 
                     if (primaryActor != null)
@@ -1445,33 +1443,37 @@ namespace Fushigi.ui.widgets
                         IViewportSelectable.DefaultSelect(mEditContext, mHoveredObject);
                     }
                 }
-                var movedActors = mEditContext
+                if (primaryActor != null)
+                {
+                    var movedActors = mEditContext
                     .GetSelectedObjects<CourseActor>()
                     .Where(x => x.mTranslation != x.mStartingTrans)
                     .ToList();
 
-                if (movedActors.Count > 0)
-                {
-                    if (mEditContext.IsSingleObjectSelected(out CourseActor? single))
+                    if (primaryActor.mTranslation != primaryActor.mStartingTrans)
                     {
-                        mEditContext.CommitAction(new PropertyFieldsSetUndo(
-                            single,
-                            [("mTranslation", single.GetFieldValue("mStartingTrans"))],
-                            $"{IconUtil.ICON_ARROWS_ALT} Move {string.Join(", ", single.mPackName)}"));
-                    }
-                    else
-                    {
-                        var batch = mEditContext.BeginBatchAction();
-
-                        foreach (var actor in movedActors)
+                        if (mEditContext.IsSingleObjectSelected(out CourseActor? single))
                         {
                             mEditContext.CommitAction(new PropertyFieldsSetUndo(
-                                actor,
-                                [("mTranslation", actor.GetFieldValue("mStartingTrans"))],
-                                $"{IconUtil.ICON_ARROWS_ALT} Move {actor.mName}"));
+                                single,
+                                [("mTranslation", single.GetFieldValue("mStartingTrans"))],
+                                $"{IconUtil.ICON_ARROWS_ALT} Move {string.Join(", ", single.mPackName)}"));
                         }
+                        else
+                        {
+                            var batch = mEditContext.BeginBatchAction();
 
-                        batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {movedActors.Count} Actors");
+                            foreach (var actor in movedActors)
+                            {
+                                mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                                    actor,
+                                    [("mTranslation", actor.GetFieldValue("mStartingTrans"))],
+                                    $"{IconUtil.ICON_ARROWS_ALT} Move {actor.mName}"));
+                            }
+
+                            batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {movedActors.Count} Actors");
+                        }
+                        primaryActor = null;
                     }
                 }
 
@@ -1585,6 +1587,7 @@ namespace Fushigi.ui.widgets
         public static bool setGlobalSrc;
         public static ulong globalHash;
         public static bool setGlobalDst;
+        private CourseActor? primaryActor;
 
         void DrawAreaContent()
         {

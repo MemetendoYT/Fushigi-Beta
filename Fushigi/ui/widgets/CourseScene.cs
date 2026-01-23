@@ -4,6 +4,7 @@ using Fushigi.course;
 using Fushigi.env;
 using Fushigi.gl;
 using Fushigi.gl.Bfres;
+using Fushigi.gl.Bfres.AreaData;
 using Fushigi.Logger;
 using Fushigi.param;
 using Fushigi.rstb;
@@ -91,6 +92,8 @@ namespace Fushigi.ui.widgets
         // fushigi.
         public static bool HideWalls;
         public static bool reloadUnit = false;
+
+
 
         string mActorSearchText = "";
 
@@ -375,7 +378,6 @@ namespace Fushigi.ui.widgets
             cs.activeViewport = cs.viewports[cs.selectedArea];
 
             await cs.PrepareResourcesLoad(glScheduler, progress);
-
             return cs;
         }
 
@@ -469,6 +471,12 @@ namespace Fushigi.ui.widgets
             currentArea.mRootHash = blank.mRootHash;
             reloadUnit = true;
         }
+
+        public void removeArea()
+        {
+            MainWindow.removeCurrentArea = true;
+            ImGui.CloseCurrentPopup();
+        }
         public void DrawUI(GL gl, double deltaSeconds)
         {
             if(blankLevel)
@@ -534,33 +542,41 @@ namespace Fushigi.ui.widgets
 
             bool status = ImGui.Begin("Viewports", ImGuiWindowFlags.NoNav);
 
-            if (ImGui.BeginTabBar("ViewportTabs"))
-            {
+
+             if (ImGui.BeginTabBar("ViewportTabs"))
+             {   
                 for (int i = 0; i < course.GetAreaCount(); i++)
                 {
                     var area = course.GetArea(i);
 
                     if (!viewports.TryGetValue(area, out var viewport))
-                        continue; 
+                        continue;
+
 
                     if (ImGui.BeginTabItem(area.GetName()))
                     {
-                            if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+
+                        if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
                                 ImGui.OpenPopup($"AreaTabMenu_{i}");
 
-                            if (ImGui.BeginPopup($"AreaTabMenu_{i}"))
+                        if (ImGui.BeginPopup($"AreaTabMenu_{i}"))
                             {
-                                if (ImGui.MenuItem("Remove Area"))
-                                {
-                                MainWindow.removeCurrentArea = true;
-                                ImGui.CloseCurrentPopup();
-                                }
+                            if (ImGui.MenuItem("Remove Area"))
+                                removeArea();
 
                             ImGui.EndPopup();
                             }
 
+                        if((ImGui.GetIO().KeyCtrl) && ImGui.IsKeyPressed(ImGuiKey.W))
+                            removeArea();
 
-                            if (areaToFocus == area)
+                        if ((ImGui.GetIO().KeyCtrl) && ImGui.IsKeyPressed(ImGuiKey.T))
+                        {
+                            MainWindow.addNewArea = true;
+                            saveStatus = false;
+                        }
+
+                        if (areaToFocus == area)
                         {
                             ImGui.SetItemDefaultFocus();
                             activeViewport = viewport;
@@ -795,6 +811,7 @@ namespace Fushigi.ui.widgets
                         ImGui.EndChild();     // End ViewportContent
                         ImGui.EndTabItem();   // End tab
                     }
+             
                 }
 
                 if (ImGui.TabItemButton("+"))
@@ -1098,9 +1115,9 @@ namespace Fushigi.ui.widgets
 
 
                 if (backup)
-                    course.Save();
+                    course.Save(true);
                 else
-                    course.Save();
+                    course.Save(false);
             }
             if (backup == false)
                 Save(backup: true, backupFolder);
@@ -4400,19 +4417,6 @@ namespace Fushigi.ui.widgets
             return (picked as CourseActor, modifier);
         }
 
-        private async Task<(CourseActor?, KeyboardModifier modifiers)> PickGlobalLinkDestInViewportFor(CourseActor source)
-        {
-            Console.WriteLine("IIIII");
-            globalPickToken?.Cancel();
-            globalPickToken = new CancellationTokenSource();
-
-            var (picked, modifier) = await activeViewport.PickObject(
-                            "Select the destination actor you wish to link to. -- Hold SHIFT to link multiple",
-                            x => x is CourseActor && x != source, globalPickToken);
-
-            Console.WriteLine("returning jargon");
-            return (picked as CourseActor, modifier);
-        }
 
         private async void RunGlobalPicker()
         {
@@ -4421,7 +4425,6 @@ namespace Fushigi.ui.widgets
             secondPickArea = selectedArea.GetName();
             selectedArea.hasStartedPick = true;
             oldViewport = activeViewport;
-            Console.WriteLine("running picker again???");
             var (picked, modifier) = await PickLinkDestInViewportFor(pendingSource);
             if (picked != null)
             {

@@ -9,6 +9,7 @@ using Fushigi.ui.modal;
 using Fushigi.util;
 using FuzzySharp.Edits;
 using ImGuiNET;
+using Microsoft.Msagl.Layout.LargeGraphLayout;
 using Newtonsoft.Json.Linq;
 using Silk.NET.OpenGL;
 using Silk.NET.SDL;
@@ -21,9 +22,14 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using static Fushigi.env.EnvPalette;
+using static Fushigi.gl.Bfres.EnvironmentBlockExtended;
+using static Fushigi.gl.Bfres.GsysEnvironment;
+using static Microsoft.Msagl.Layout.Incremental.KDTree;
+using static System.Net.WebRequestMethods;
 
 namespace Fushigi.ui.widgets
 {
@@ -45,43 +51,81 @@ namespace Fushigi.ui.widgets
         private static readonly Dictionary<string, string> LocationType = new Dictionary<string, string>()
         {
             { "None", "None" },
-            { "Hot", "FirePlace"},
-            { "Underwater Fixed Camera", "UnderWaterFixCamera"},
-            { "Forest", "Forest_Sunbeams" },
-            { "Grass", "GrassField" },
-            { "Spore", "Forest_Spore" },
-            {"Desert", "WhiteDesert" },
-            {"Green Spore", "Green_Spore"},
-            {"Underwater", "UnderWater" },
-            {"Cave Dust", "CaveDust"},
-            {"Underwater Area", "UnderWaterArea" },
-            {"EDDemoTimeLineA", "EDDemoTimeLineA" },
-            {"EDDemoTimeLineB", "EDDemoTimeLineB" }
+            { "Desert", "Desert" },
+            { "White Desert", "WhiteDesert" },
+            { "UnderWater", "UnderWater" },
+            { "UnderWaterArea", "UnderWaterArea" },
+            { "UnderWaterFixCamera", "UnderWaterFixCamera" },
+            { "Grassy Field", "GrassField" },
+            { "Forest_Spore", "Forest_Spore" },
+            { "Forest Godrays", "Forest_Sunbeams" },
+            { "Cave", "CaveDust" },
+            { "Leaves", "Pasture" },
+            { "Green_Spore", "Green_Spore" },
+            { "FirePlace", "FirePlace" },
+            { "Lava", "Lava" },
+            { "ScrollFireSpark", "ScrollFireSpark" },
+            { "LensFlareMoon", "LensFlareMoon" },
+            { "GoldWaterFall", "GoldWaterFall" },
+            { "Wetlands", "Wetlands" },
+            { "LastBossCastle", "LastBossCastle" },
+            { "EDDemoTimeLineA", "EDDemoTimeLineA" },
+            { "EDDemoTimeLineB", "EDDemoTimeLineB" },
+            { "Credits", "StaffRollSpotLight" }
         };
 
         private static readonly Dictionary<string, string> WeatherType = new Dictionary<string, string>()
         {
-            { "None", "None"},
+            { "None", "None" },
             { "Rain", "Rain" },
-            { "Lens Flare", "LensFlare" },
+            { "Honey Drip", "HoneyRain" },
+            { "Slime Drip", "GelRain" },
             { "Snow", "Snow" },
-            {"SnowBirdEye", "SnowBirdEye"},
-            {"Blizzard", "Blizzard" }
+            { "SnowBirdEye", "SnowBirdEye" },
+            { "Blizzard (Right to Left)", "BlizzardRtoL" },
+            { "Blizzard", "Blizzard" },
+            { "Lens Flare", "LensFlare" },
+            { "LastKoopaAppear01", "LastKoopaAppear01" },
+            { "LastKoopaAppear02", "LastKoopaAppear02" },
+            { "LastKoopaAppear03", "LastKoopaAppear03" },
+            { "LastKoopaBattle00", "LastKoopaBattle00" },
+            { "LastKoopaBattle01", "LastKoopaBattle01" },
+            { "LastKoopaBattle02", "LastKoopaBattle02" },
+            { "LastKoopaBattle03", "LastKoopaBattle03" }
         };
 
         private static readonly Dictionary<string, string> WonderType = new Dictionary<string, string>()
         {
-            { "None", "None"},
-            { "Wonder Goomba", "WonderKuribo" },
-            { "Wonder Music", "WonderMusic" },
-            { "Wonder Snow", "WonderSnow" },
-            { "Wonder Stripe", "WonderStripe"},
-            { "Wonder Flowerdust", "WonderDefaultFlowerdust" },
-            {"WonderOverlookMove", "WonderOverlookMove"},
-            {"Wonder Bowser", "WonderBowserLast" },
-            {"Default", "Default" },
-            {"WonderDarkFlower", "WonderDarkFlower" },
-            {"WonderWaterball", "WonderWaterball" }
+            { "None", "None" },
+            { "Default", "Default" },
+            { "LastWonderKoppaJr", "LastWonderKoppaJr" },
+            { "OPDemoKoopaCastleWonder", "OPDemoKoopaCastleWonder" },
+            { "OPDemoBeautifulWonder", "OPDemoBeautifulWonder" },
+            { "Wonder Default Flower", "WonderDefaultFlower" },
+            { "Wonder Default Flowerdust", "WonderDefaultFlowerdust" },
+            { "WonderDefaultTwinkle", "WonderDefaultTwinkle" },
+            { "WonderDarkFlower", "WonderDarkFlower" },
+            { "Goomba Wonder", "WonderKuribo" },
+            { "WonderWater", "WonderWater" },
+            { "WonderMusic", "WonderMusic" },
+            { "WonderMusicDeep", "WonderMusicDeep" },
+            { "WonderCaution", "WonderCaution" },
+            { "Wonder Blizzard", "WonderSnow" },
+            { "Wonder Dot", "WonderDot" },
+            { "Wonder Star", "WonderStar" },
+            { "Wonder Stripe", "WonderStripe" },
+            { "Quiz Wonder", "WonderQuiz" },
+            { "WonderQuick", "WonderQuick" },
+            { "WonderSlow", "WonderSlow" },
+            { "WonderSpeed", "WonderSpeed" },
+            { "Wonderflash", "Wonderflash" },
+            { "WonderGradation", "WonderGradation" },
+            { "WonderLotion", "WonderLotion" },
+            { "WonderFlyingItem", "WonderFlyingItem" },
+            { "WonderWaterball", "WonderWaterball" },
+            { "WonderOverlookMove", "WonderOverlookMove" },
+            { "WonderBowser", "WonderBowser" },
+            { "WonderBowserLast", "WonderBowserLast" }
         };
 
         public void Load(GL gl, AreaParam areaParam, EnvPalette envPalette)
@@ -89,6 +133,7 @@ namespace Fushigi.ui.widgets
             _gl = gl;
             AreaParam = areaParam;
             EnvPalette = envPalette;
+            Update();
       
         }
 
@@ -103,31 +148,7 @@ namespace Fushigi.ui.widgets
             ImGui.SetNextWindowSize(new Vector2(900 * MainWindow.dpiScale, 500 * MainWindow.dpiScale), ImGuiCond.Once);
 
             bool open = ImGui.Begin("Palette Window", ImGuiWindowFlags.NoCollapse);
-            if (!hasInitialized)
-            {
-                if (!CurveEditors.TryGetValue("Top", out var top))
-                    CurveEditors["Top"] = top = new AglCurveEditor();
-
-                if (!CurveEditors.TryGetValue("TopRight", out var topRight))
-                    CurveEditors["TopRight"] = topRight = new AglCurveEditor();
-
-                if (!CurveEditors.TryGetValue("TopLeft", out var topLeft))
-                    CurveEditors["TopLeft"] = topLeft = new AglCurveEditor();
-
-                if (!CurveEditors.TryGetValue("Left", out var left))
-                    CurveEditors["Left"] = left = new AglCurveEditor();
-
-                if (EnvPalette.Sky != null) { 
-                top.Load(EnvPalette.Sky.LutTexTop, "Top", EnvPalette);
-                topRight.Load(EnvPalette.Sky.LutTexRightTop, "TopRight", EnvPalette);
-                topLeft.Load(EnvPalette.Sky.LutTexLeftTop, "TopLeft", EnvPalette);
-                left.Load(EnvPalette.Sky.LutTexLeft, "Left", EnvPalette);
-                }
-
-                hasInitialized = true;
-
-
-            }
+           
             if (open)
             {
                 if (ImGui.Button("Close"))
@@ -565,7 +586,6 @@ namespace Fushigi.ui.widgets
                 else
                     value = EnvPalette.Info.LocationType;
 
-                //Console.WriteLine("LocationType " + value);
                 int index = LocationType.Values.ToList().IndexOf(value);
                 ImGui.Text("Location Type");
                 if (ImGui.Combo("##LocationType", ref index, LocationType.Keys.ToArray(), LocationType.Count(), 10))
@@ -580,8 +600,6 @@ namespace Fushigi.ui.widgets
                 else
                     value = EnvPalette.Info.WeatherType;
 
-
-                //Console.WriteLine("WeatherType " + value);
                 index = WeatherType.Values.ToList().IndexOf(value);
                 ImGui.Text("Weather Type");
                 if (ImGui.Combo("##WeatherType", ref index, WeatherType.Keys.ToArray(), WeatherType.Count(), 10))
@@ -596,7 +614,6 @@ namespace Fushigi.ui.widgets
                     value = EnvPalette.Info.WonderType;
 
 
-                //Console.WriteLine("WonderType " + value);
                 index = WonderType.Values.ToList().IndexOf(value);
                 ImGui.Text("Wonder Type");
                 if (ImGui.Combo("##WonderType", ref index, WonderType.Keys.ToArray(), WonderType.Count(), 10))
@@ -1264,8 +1281,23 @@ namespace Fushigi.ui.widgets
         }
         public void SavePalette()
         {
+            if (CurveEditors.Values.Count == 0)
+            {
+                if (EnvPalette == null)
+                {
+                    EnvPalette = new EnvPalette();
+                }
+
+                EnvPalette.Save();
+                return;
+            }
+
             foreach (var editor in CurveEditors.Values)
+            {
                 editor.Save();
+            }
+
+
         }
         private void DrawIntSlider(string label, object obj, string property, int min, int max)
         {

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using static Fushigi.gl.Bfres.EnvironmentBlockExtended;
 
 namespace Fushigi.gl.Bfres.AreaData
 {
@@ -68,6 +69,8 @@ namespace Fushigi.gl.Bfres.AreaData
             Lightmaps.Add("AshibaSpcLightMap", new AglLightmap(gl));
 
             ReloadPalette(gl, envPalette);
+
+
         }
 
         private float ratio = 0;
