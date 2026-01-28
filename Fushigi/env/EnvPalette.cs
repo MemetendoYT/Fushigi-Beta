@@ -126,7 +126,6 @@ namespace Fushigi.env
 
             var byml = new Byml.Byml(new MemoryStream(File.ReadAllBytes(file_path)));
             this.Load((BymlHashTable)byml.Root);
-            Logger.Logger.LogMessage("EnvPalette", name);
             Normalize();
 
         }
@@ -287,12 +286,44 @@ namespace Fushigi.env
             public EnvLightMap Horizon { get; set; }
             public EnvLightMap Sky0 { get; set; }
             public EnvLightMap Sky1 { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                if (Ground0 != null)
+                    table.AddNode(BymlNodeId.Hash, Ground0.Serialize(), "Ground0");
+
+                if (Ground1 != null)
+                    table.AddNode(BymlNodeId.Hash, Ground1.Serialize(), "Ground1");
+
+                if (Horizon != null)
+                    table.AddNode(BymlNodeId.Hash, Horizon.Serialize(), "Horizon");
+
+                if (Sky0 != null)
+                    table.AddNode(BymlNodeId.Hash, Sky0.Serialize(), "Sky0");
+
+                if (Sky1 != null)
+                    table.AddNode(BymlNodeId.Hash, Sky1.Serialize(), "Sky1");
+
+                return table;
+            }
         }
 
         public class EnvLightMap
         {
             public Color Color { get; set; }
             public float Intensity { get; set; }
+
+            public BymlHashTable Serialize()
+            {
+                var table = new BymlHashTable();
+
+                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+
+                return table;
+            }
         }
 
         public class EnvRim
@@ -868,66 +899,101 @@ namespace Fushigi.env
             BymlHashTable root = new BymlHashTable();
 
             if (Bloom != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyBloom), "IsApplyBloom");
                 root.AddNode(BymlNodeId.Hash, Bloom.Serialize(), "Bloom");
-
-            if (Sky != null)
-                root.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
-
-            if (DvLight != null)
-                root.AddNode(BymlNodeId.Hash, DvLight.Serialize(), "DvLight");
+            }
 
             if (CharLight != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCharLight), "IsApplyCharLight");
                 root.AddNode(BymlNodeId.Hash, CharLight.Serialize(), "CharLight");
+            }
 
             if (CloudLight != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCloudLight), "IsApplyCloudLight");
                 root.AddNode(BymlNodeId.Hash, CloudLight.Serialize(), "CloudLight");
-
-            if (FieldLight != null)
-                root.AddNode(BymlNodeId.Hash, FieldLight.Serialize(), "FieldLight");
-
-            if (ObjLight != null)
-                root.AddNode(BymlNodeId.Hash, ObjLight.Serialize(), "ObjLight");
-
-            if (Shadow != null)
-                root.AddNode(BymlNodeId.Hash, Shadow.Serialize(), "Shadow");
-
-            if (EnvColor != null)
-                root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
-
-            if (Emission != null)
-                root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
-
-            if (Info != null)
-                root.AddNode(BymlNodeId.Hash, Info.Serialize(), "Info");
+            }
 
             if (DOF != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDOF), "IsApplyDOF");
                 root.AddNode(BymlNodeId.Hash, DOF.Serialize(), "DOF");
+            }
 
-            if (GI != null)
-                root.AddNode(BymlNodeId.Hash, GI.Serialize(), "GI");
+            if (DvLight != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDvLight), "IsApplyDvLight");
+                root.AddNode(BymlNodeId.Hash, DvLight.Serialize(), "DvLight");
+            }
 
-            if (Rim != null)
-                root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
+            if (Emission != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEmission), "IsApplyEmission");
+                root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
+            }
+
+            if (EnvColor != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvColor), "IsApplyEnvColor");
+                root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
+            }
+
+            if (EnvMap != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvMap), "IsApplyEnvMap");
+                root.AddNode(BymlNodeId.Hash, EnvMap.Serialize(), "EnvMap");
+            }
+
+            if (FieldLight != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFieldLight), "IsApplyFieldLight");
+                root.AddNode(BymlNodeId.Hash, FieldLight.Serialize(), "FieldLight");
+            }
 
             if (Fog != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFog), "IsApplyFog");
                 root.AddNode(BymlNodeId.Hash, Fog.Serialize(), "Fog");
+            }
 
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyBloom), "IsApplyBloom");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCharLight), "IsApplyCharLight");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCloudLight), "IsApplyCloudLight");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDOF), "IsApplyDOF");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDvLight), "IsApplyDvLight");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEmission), "IsApplyEmission");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvColor), "IsApplyEnvColor");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvMap), "IsApplyEnvMap");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFieldLight), "IsApplyFieldLight");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFog), "IsApplyFog");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyGI), "IsApplyGI");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyObjLight), "IsApplyObjLight");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyRim), "IsApplyRim");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyShadow), "IsApplyShadow");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplySky), "IsApplySky");
-            root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyInfo), "IsApplyInfo");
+            if (GI != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyGI), "IsApplyGI");
+                root.AddNode(BymlNodeId.Hash, GI.Serialize(), "GI");
+            }
+
+            if (ObjLight != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyObjLight), "IsApplyObjLight");
+                root.AddNode(BymlNodeId.Hash, ObjLight.Serialize(), "ObjLight");
+            }
+
+            if (Rim != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyRim), "IsApplyRim");
+                root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
+            }
+
+            if (Shadow != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyShadow), "IsApplyShadow");
+                root.AddNode(BymlNodeId.Hash, Shadow.Serialize(), "Shadow");
+            }
+
+            if (Sky != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplySky), "IsApplySky");
+                root.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
+            }
+
+            if (Info != null)
+            {
+                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyInfo), "IsApplyInfo");
+                root.AddNode(BymlNodeId.Hash, Info.Serialize(), "Info");
+            }
+
             var byml = new Byml.Byml(root);
             var mem = new MemoryStream();
             byml.Save(mem);

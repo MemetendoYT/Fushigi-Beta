@@ -130,6 +130,7 @@ namespace Fushigi.ui.widgets
         DistantViewManager DistantViewScrollManager = new DistantViewManager(area);
 
         public bool ScreenshotMode;
+        bool dragActors;
 
         //TODO make this an ISceneObject? as soon as there's a SceneObj class for each course object
         private object? mHoveredObject;
@@ -1019,8 +1020,17 @@ namespace Fushigi.ui.widgets
                 pasteContext = false;
             }
 
+            if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+            {
+                mMultiSelecting = false;
+                mMultiSelectStartPos = null;
+                mMultiSelectCurrentPos = null;
+                mMultiSelectEnded = true;
+            }
+
             if (IsViewportHovered || IsViewportActive)
                 InteractionWithFocus(modifiers);
+
 
             ImGui.PopClipRect();
         }
@@ -1221,56 +1231,75 @@ namespace Fushigi.ui.widgets
             }
 
             // [TODO]: This needs to be rewritten, it's a bit of a mess.
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+            {
+                dragActors =
+                    mHoveredObject is CourseActor a &&
+                    mEditContext.IsSelected(a);
+            }
+
 
             if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !isPanGesture)
             {
-                if (mMultiSelectStartPos != null &&
-                    !ImGui.IsWindowHovered() && mEditorMode == EditorMode.Actors &&
-                    !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>()
-                    || mEditContext.IsAnySelected<CourseUnit>() || mEditContext.IsAnySelected<BGUnitRail>()
-                    || mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
+ 
+                if (dragActors)
                 {
-                    DoDrag();
-                    void DoDrag()
+                    mMultiSelecting = false;
+                }
+                else
+                {
+                    if (mMultiSelectStartPos != null &&
+                        !ImGui.IsWindowHovered() &&
+                        mEditorMode == EditorMode.Actors &&
+                        !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() ||
+                          mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>() ||
+                          mEditContext.IsAnySelected<CourseUnit>() ||
+                          mEditContext.IsAnySelected<BGUnitRail>() ||
+                          mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
                     {
-                        if (mEditContext.IsAnySelected<CourseActor>() && mMultiSelectEnded)
-                            return;
+                        DoDrag();
 
-                        mMultiSelectCurrentPos = ImGui.GetMousePos();
-                        mMultiSelecting = true;
-                        mMultiSelectEnded = false;
-
-                        Vector3 startPosWorldStart = ScreenToWorld(mMultiSelectStartPos.Value);
-                        Vector3 currentPosWorldStart = ScreenToWorld(mMultiSelectCurrentPos.Value);
-
-                        Vector3 startPosWorld = startPosWorldStart;
-                        Vector3 currentPosWorld = currentPosWorldStart;
-
-                        if (currentPosWorldStart.X < startPosWorldStart.X)
+                        void DoDrag()
                         {
-                            currentPosWorld.X = startPosWorldStart.X;
-                            startPosWorld.X = currentPosWorldStart.X;
-                        }
-                        if (currentPosWorldStart.Y < startPosWorldStart.Y)
-                        {
-                            currentPosWorld.Y = startPosWorldStart.Y;
-                            startPosWorld.Y = currentPosWorldStart.Y;
-                        }
+                            if (mEditContext.IsAnySelected<CourseActor>() && mMultiSelectEnded)
+                                return;
 
-                        CourseActor[] actors = [.. mArea.GetActors()];
-                        foreach (var actor in actors)
-                        {
-                            if (mLayersVisibility != null && mLayersVisibility.TryGetValue(actor.mLayer, out bool layerVisible))
-                                if (!layerVisible)
-                                    continue;
+                            mMultiSelectCurrentPos = ImGui.GetMousePos();
+                            mMultiSelecting = true;
+                            mMultiSelectEnded = false;
 
-                            float actorX = actor.mTranslation.X;
-                            float actorY = actor.mTranslation.Y;
+                            Vector3 startPosWorldStart = ScreenToWorld(mMultiSelectStartPos.Value);
+                            Vector3 currentPosWorldStart = ScreenToWorld(mMultiSelectCurrentPos.Value);
 
-                            if (actorX > startPosWorld.X && actorX < currentPosWorld.X && actorY > startPosWorld.Y && actorY < currentPosWorld.Y)
-                                mEditContext.Select(actor);
-                            else
-                                mEditContext.Deselect(actor);
+                            Vector3 startPosWorld = startPosWorldStart;
+                            Vector3 currentPosWorld = currentPosWorldStart;
+
+                            if (currentPosWorldStart.X < startPosWorldStart.X)
+                            {
+                                currentPosWorld.X = startPosWorldStart.X;
+                                startPosWorld.X = currentPosWorldStart.X;
+                            }
+                            if (currentPosWorldStart.Y < startPosWorldStart.Y)
+                            {
+                                currentPosWorld.Y = startPosWorldStart.Y;
+                                startPosWorld.Y = currentPosWorldStart.Y;
+                            }
+
+                            CourseActor[] actors = [.. mArea.GetActors()];
+                            foreach (var actor in actors)
+                            {
+                                if (mLayersVisibility != null && mLayersVisibility.TryGetValue(actor.mLayer, out bool layerVisible))
+                                    if (!layerVisible)
+                                        continue;
+
+                                float actorX = actor.mTranslation.X;
+                                float actorY = actor.mTranslation.Y;
+
+                                if (actorX > startPosWorld.X && actorX < currentPosWorld.X && actorY > startPosWorld.Y && actorY < currentPosWorld.Y)
+                                    mEditContext.Select(actor);
+                                else
+                                    mEditContext.Deselect(actor);
+                            }
                         }
                     }
                 }
@@ -1429,7 +1458,6 @@ namespace Fushigi.ui.widgets
             {
                 mMultiSelecting = false;
                 mMultiSelectEnded = true;
-
                 if (mHoveredObject is CourseActor && !dragRelease)
                 {
                     if (ImGui.IsKeyDown(ImGuiKey.LeftShift) &&
@@ -1449,6 +1477,7 @@ namespace Fushigi.ui.widgets
                     .GetSelectedObjects<CourseActor>()
                     .Where(x => x.mTranslation != x.mStartingTrans)
                     .ToList();
+
 
                     if (primaryActor.mTranslation != primaryActor.mStartingTrans)
                     {
@@ -1508,6 +1537,7 @@ namespace Fushigi.ui.widgets
 
             if (ImGui.IsKeyPressed(ImGuiKey.Escape))
                 mEditContext.DeselectAll();
+
 
         }
 
