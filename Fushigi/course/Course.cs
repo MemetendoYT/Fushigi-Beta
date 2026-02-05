@@ -39,6 +39,10 @@ namespace Fushigi.course
 
 
             IsOneAreaCourse = ((BymlNode<string>)stageParamRoot["Category"]).Data == "Course1Area";
+            if(IsOneAreaCourse == true)
+            {
+                overWriteCourseParam = true;
+            }
    
                 try
                 {
@@ -118,7 +122,7 @@ namespace Fushigi.course
             if (GetAreaCount() > 1 && IsOneAreaCourse)
             {
                 IsOneAreaCourse = false;
-                Catergory = null;
+                Catergory = "Course";
                 if (oldAreaName.EndsWith("_Course"))
                 {
                     oldAreaName = mCourseName.Replace("_Course", "");
@@ -241,6 +245,48 @@ namespace Fushigi.course
             }
         }
 
+        public void UpdateStageParam()
+        {
+            if(!overWriteCourseParam)
+            {
+                return;
+            }
+
+            var stageParamFilePath = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam", $"{mCourseName}.game__stage__StageParam.bgyml"));
+            bool noFileFound = !File.Exists(stageParamFilePath);
+
+            Byml.Byml stageParam = new Byml.Byml(new MemoryStream(File.ReadAllBytes(stageParamFilePath)));
+
+            var oldRoot = (BymlHashTable)stageParam.Root;
+            var newRoot = new BymlHashTable();
+
+
+            foreach (var pair in oldRoot.Pairs)
+            {
+                if (pair.Name == "Category")
+                    continue;
+
+                newRoot.AddNode(pair.Id, pair.Value, pair.Name);
+            }
+
+            newRoot.AddNode(BymlNodeId.String, BymlUtil.CreateNode(Catergory), "Category");
+            stageParam.Root = newRoot;
+            string outPath = Path.Combine(
+                  UserSettings.GetModRomFSPath(),
+                  "Stage/StageParam",
+                  $"{mCourseName}.game__stage__StageParam.bgyml"
+              );
+
+            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+
+            using (var ms = new MemoryStream())
+            {
+                stageParam.Save(ms);
+                File.WriteAllBytes(outPath, ms.ToArray());
+            }
+
+        }
+
         public CourseActor? ResolveActorByHash(ulong hash)
         {
             foreach (var area in mAreas)
@@ -305,5 +351,6 @@ namespace Fushigi.course
         public static bool IsOneAreaCourse;
         public static string Catergory;
         public static bool updateStageParam;
+        private bool overWriteCourseParam;
     }
 }

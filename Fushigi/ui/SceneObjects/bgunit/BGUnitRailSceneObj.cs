@@ -258,7 +258,6 @@ namespace Fushigi.ui.SceneObjects.bgunit
                     ctx.CommitAction(item);
 
                 batchAction.Commit($"{IconUtil.ICON_ARROWS_ALT} Move Rail Points");
-
                 transformStart = false;
             }
         }

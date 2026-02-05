@@ -1499,7 +1499,6 @@ namespace Fushigi.ui.widgets
                                     [("mTranslation", actor.GetFieldValue("mStartingTrans"))],
                                     $"{IconUtil.ICON_ARROWS_ALT} Move {actor.mName}"));
                             }
-
                             batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {movedActors.Count} Actors");
                         }
                         primaryActor = null;

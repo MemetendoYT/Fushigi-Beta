@@ -683,7 +683,6 @@ namespace Fushigi.ui.widgets
                     return;
                 }
 
-
                 ImGui.Columns(2);
                 DrawFloatSlider("Roughness Mul", EnvPalette.EnvColor, "RoughnessMul", 0, 1f);
                 for (int i = 0; i < 8; i++)

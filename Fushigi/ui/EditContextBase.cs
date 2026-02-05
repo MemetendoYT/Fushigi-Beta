@@ -50,7 +50,6 @@ namespace Fushigi.ui
                 mCurrentActionBatch.Add(action);
                 return;
             }
-
             mUndoHandler.AddToUndo(action);
             //Update?.Invoke();
         }
@@ -196,11 +195,16 @@ namespace Fushigi.ui
                 throw new InvalidOperationException($"Nested batch action {action.Name} committed in incorrect order");
 
             if (mNestedBatchActions.Count > 0)
-                //we're still nested
                 return;
 
-            if (mCurrentActionBatch is null || mCurrentActionBatch.Count == 0)
+            if (mCurrentActionBatch is null)
                 return;
+
+            if (mCurrentActionBatch.Count == 0)
+            {
+                mCurrentActionBatch = null;
+                return;
+            }
 
             mUndoHandler.AddToUndo(mCurrentActionBatch, action.Name);
             mCurrentActionBatch = null;

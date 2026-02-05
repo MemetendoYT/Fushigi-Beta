@@ -201,6 +201,96 @@ namespace Fushigi.course
             Save(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit"), false);
         }
 
+        public void SaveStageParam()
+        {
+            string fileName = mAreaName;
+            var stageParamFilePath = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam", $"{fileName}.game__stage__StageParam.bgyml"));
+            bool noFileFound = !File.Exists(stageParamFilePath);
+
+
+            if (noFileFound)
+            {
+                string phiveDir = Path.Combine(
+                  UserSettings.GetModRomFSPath(),
+                  "Phive",
+                  "StaticCompoundBody"
+              );
+
+                string normalDir = Path.Combine(
+                           UserSettings.GetRomFSPath(),
+                           "Phive",
+                           "StaticCompoundBody"
+                       );
+
+                if (!Directory.Exists(phiveDir))
+                    Directory.CreateDirectory(phiveDir);
+
+
+                string phiveFileDir = Path.Combine(
+                    phiveDir,
+                    $"{fileName}.Nin_NX_NVN.bphsc.zs"
+                );
+
+                string phiveNormalDir = Path.Combine(
+                    normalDir,
+                    $"{fileName}.Nin_NX_NVN.bphsc.zs"
+                );
+                bool phiveFound = File.Exists(phiveFileDir) || File.Exists(phiveNormalDir);
+
+                if (!phiveFound)
+                {
+                    File.Copy(
+                        Path.Combine(AppContext.BaseDirectory, "res", "BlankStaticCompoundBody.bphsc.zs"),
+                        phiveFileDir,
+                        overwrite: true
+                    );
+                }
+
+                var templateParamFilePath = "res/template.game__stage__StageParam.bgyml";
+
+                Byml.Byml stageParam = new Byml.Byml(
+                    new MemoryStream(File.ReadAllBytes(templateParamFilePath))
+                );
+
+                BymlHashTable stageParamRoot = new();
+
+                BymlHashTable components = new();
+
+                string AreaParamPath =
+                    $"Work/Stage/AreaParam/{fileName}.game__stage__AreaParam.gyml";
+                string Mumap =
+                    $"Work/MapUnit/Map/{fileName}.mumap";
+                string StaticCompoundBody =
+                    $"Work/Phive/StaticCompoundBody/{fileName}.phive__StaticCompoundBodySourceParam.gyml";
+
+
+                components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(AreaParamPath), "AreaParam");
+                components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(Mumap), "Mumap");
+                components.AddNode(BymlNodeId.String, BymlUtil.CreateNode(StaticCompoundBody), "StaticCompoundBodySourceParam");
+
+
+                stageParamRoot.AddNode(BymlNodeId.Hash, components, "Components");
+                //stageParamRoot.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>(Course.Catergory), "Catergory");
+
+
+                stageParam.Root = stageParamRoot;
+
+                string outPath = Path.Combine(
+                    UserSettings.GetModRomFSPath(),
+                    "Stage/StageParam",
+                    $"{fileName}.game__stage__StageParam.bgyml"
+                );
+
+                Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+
+                using (var ms = new MemoryStream())
+                {
+                    stageParam.Save(ms);
+                    File.WriteAllBytes(outPath, ms.ToArray());
+                }
+
+            }
+        }
         public void Save(RSTB resource_table, string folder, bool saveTemplate)
         {
             if (!saveTemplate)

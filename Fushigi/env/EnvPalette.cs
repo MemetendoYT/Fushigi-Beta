@@ -74,10 +74,10 @@ namespace Fushigi.env
 
         public void Normalize()
         {
-            if (Emission == null)
+            if (EnvColor != null)
             {
-                Emission = null;
-
+                if (EnvColor.RoughnessMul == 0f)
+                    EnvColor.RoughnessMul = 1f;
             }
         }
         private void CleanupMissingBlocks(BymlHashTable table)
@@ -274,7 +274,7 @@ namespace Fushigi.env
                 bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskEnd), "MaskEnd");
                 bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskRatio), "MaskRatio");
                 bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Threshold), "Threshold");
-                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Threshold), "MaskColorPower");
+                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskColorPower), "MaskColorPower");
                 return bloom;
             }
         }
@@ -418,6 +418,11 @@ namespace Fushigi.env
 
         public class EnvColorList
         {
+            public EnvColorList()
+            {
+                RoughnessMul = 1f;
+            }
+
             public float RoughnessMul { get; set; }
             public Color Color0 { get; set; }
             public Color Color1 { get; set; }
@@ -431,8 +436,8 @@ namespace Fushigi.env
             public BymlHashTable Serialize()
             {
                 var table = new BymlHashTable();
-
                 table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RoughnessMul), "RoughnessMul");
+                table.AddNode(BymlNodeId.Hash, Color0.Serialize(), "Color0");
                 table.AddNode(BymlNodeId.Hash, Color1.Serialize(), "Color1");
                 table.AddNode(BymlNodeId.Hash, Color2.Serialize(), "Color2");
                 table.AddNode(BymlNodeId.Hash, Color3.Serialize(), "Color3");
