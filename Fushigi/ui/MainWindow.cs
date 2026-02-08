@@ -214,6 +214,22 @@ namespace Fushigi.ui
             return true;
         }
 
+        public async Task<bool> TrySaveCourse()
+        {
+            if (mSelectedCourseScene is not null)
+            {
+                var result = await RailConfirmationDialog.ShowDialog(this);
+
+                if (result == RailConfirmationDialog.DialogResult.Yes)
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+
+            return true;
+        }
 
         public async Task<bool> ResetCourse()
         {
@@ -542,7 +558,23 @@ namespace Fushigi.ui
                     {
                         //Ensure the romfs path is set for saving
                         if (!string.IsNullOrEmpty(UserSettings.GetModRomFSPath()))
+                        {
+                            if(mSelectedCourseScene.attemptSave())
+                            {
+                                Task.Run(async () =>
+                                {
+                                    if (await TrySaveCourse())
+                                    {
+                                        mSelectedCourseScene.Save();
+                                    }
+                                    else
+                                    {
+                                        return;
+                                    }
+                                }).ConfigureAwait(false); 
+                            }
                             mSelectedCourseScene.Save();
+                        }
                         else //Else configure the mod path
                         {
                             FolderDialog dlg = new FolderDialog();

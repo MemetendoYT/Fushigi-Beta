@@ -718,25 +718,95 @@ namespace Fushigi.ui.widgets
 
             if (ImGui.BeginPopup("ViewportContextMenu"))
             {
-
-                if (ImGui.MenuItem("Copy"))
-                    copyContext = true;
-
+                bool showCopyDelete = mEditContext.GetSelectedObjects<CourseActor>().ToArray().Length >= 1;
+                if (showCopyDelete)
+                {
+                    if (ImGui.MenuItem("Copy"))
+                        copyContext = true;
+                }
                 ImGui.SetItemDefaultFocus();
 
-                if (ImGui.MenuItem("Paste"))
-                    pasteContext = true;
 
-                ImGui.Separator();
+                    if (ImGui.MenuItem("Paste"))
+                        pasteContext = true;
 
-                if (ImGui.MenuItem("Delete"))
-                    deleteContext = true;
 
-                if (mEditContext.GetSelectedObjects<CourseActor>().ToArray().Length != 0)
+                if (showCopyDelete)
                 {
+                    ImGui.Separator();
+                    if (ImGui.MenuItem("Delete"))
+                        deleteContext = true;
+                }
+
+
+                //if (mEditContext.IsSingleObjectSelected(out BGUnitRail? mSelectedUnitRail))
+                //{
+                BGUnitRail[] mUnitRails = null;
+
+                    if (mEditContext.GetSelectedObjects<BGUnitRail>().ToArray().Length >= 1)
+                    {
+                        mUnitRails = mEditContext.GetSelectedObjects<BGUnitRail>().ToArray();
+                    }
+                //if (mEditContext.GetSelectedObjects<BGUnitRail.RailPoint>().ToArray().Length >= 1) { 
+                //mUnitRails = mEditContext.GetSelectedObjects<BGUnitRail.RailPoint>().ToArray();
+                if (mUnitRails != null)
+                {
+
+                    if (mUnitRails.Count() > 0)
+                    {
+                        ImGui.Separator();
+                        if (ImGui.BeginMenu("Tilesets"))
+                        {
+                            if (ImGui.MenuItem("Reverse Rails"))
+                            {
+                                if (mUnitRails != null)
+                                {
+                                    foreach (var mUnitRail in mUnitRails)
+                                    {
+                                        mUnitRail.ReverseRailPoints();
+                                    }
+                                }
+
+                            }
+                            bool deleteWall = false;
+                            var unitToSel = new CourseUnit();
+                            if (ImGui.MenuItem("Delete Wall"))
+                            {
+                                CourseUnitHolder unitHolder = mArea.mUnitHolder;
+                                foreach (var unit in unitHolder.mUnits)
+                                {
+
+                                    mEditContext.WithSuspendUpdateDo(() =>
+                                {
+                                    for (int i = unit.Walls.Count - 1; i >= 0; i--)
+                                    {
+                                        if (mEditContext.IsSelected(unit.Walls[i].ExternalRail))
+                                        {
+                                            mEditContext.DeleteWall(unit, unit.Walls[i]);
+                                            deleteWall = true;
+                                            unitToSel = unit;
+                                        }
+
+                                    }
+                                });
+                                }
+                                if(deleteWall)
+                                {
+                                    mEditContext.DeselectAll();
+                                    mEditContext.Select(unitToSel);
+                                }
+                            }
+
+
+                            ImGui.EndMenu();
+                        }
+                    }
+                }
+                if (mEditContext.GetSelectedObjects<CourseActor>().ToArray().Length != 0 && mEditContext.GetSelectedObjects<BGUnitRail>().ToArray().Length == 0)
+                {
+                    ImGui.Separator();
                     if (ImGui.BeginMenu("Links"))
                     {
-
                         if (mEditContext.IsSingleObjectSelected(out CourseActor? mSelectedActor))
                         {
                             if (CourseScene.showGlobalLinkWindow)
@@ -1016,7 +1086,13 @@ namespace Fushigi.ui.widgets
             if (CopiedObjects.Length != 0 && IsViewportHovered &&
                 ((ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift) || pasteContext))
             {
+                Console.WriteLine("pasting");
                 DoPaste(freshCopy: ctrlAndShift);
+                pasteContext = false;
+            }
+            
+            if(CopiedObjects.Length == 0)
+            {
                 pasteContext = false;
             }
 
@@ -1131,7 +1207,6 @@ namespace Fushigi.ui.widgets
 
                 if (ImGui.IsKeyPressed(ImGuiKey.Escape))
                 {
- 
                     mObjectPickingRequest = null;
                     objectPickingRequest.promise.SetResult((null, KeyboardModifier.None));
                 }
@@ -1182,7 +1257,7 @@ namespace Fushigi.ui.widgets
                     currentlyHoveredObjText);
                 if (ImGui.IsKeyPressed(ImGuiKey.Escape))
                 {
- 
+                    CourseScene.pickingComplete = true;
                     mObjectPickingRequest = null;
                     objectPickingRequest.promise.SetResult((null, modifiers));
                 }

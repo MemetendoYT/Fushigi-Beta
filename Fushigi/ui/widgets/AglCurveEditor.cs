@@ -1,6 +1,7 @@
 ﻿using Fushigi.agl;
 using Fushigi.Byml.Serializer;
 using Fushigi.env;
+using Fushigi.rstb;
 using Fushigi.util;
 using ImGuiNET;
 using Newtonsoft.Json.Linq;
@@ -478,13 +479,13 @@ namespace Fushigi.ui.widgets
             }
         }
 
-        public void Save()
+        public void Save(RSTB resource_table)
         {
             if(EnvPalette == null)
             {
                 EnvPalette = new EnvPalette();
             }
-           EnvPalette.Save();
+           EnvPalette.Save(resource_table);
         }
 
         public class Key

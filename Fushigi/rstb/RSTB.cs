@@ -1,4 +1,5 @@
-﻿using Fushigi.Logger;
+﻿using Fushigi.actor_pack.components;
+using Fushigi.Logger;
 using Fushigi.util;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -51,7 +52,18 @@ namespace Fushigi.rstb
             string ext = Path.GetExtension(filePath);
 
             uint hash = Crc32.Compute(path);
-            uint size = CalculateResourceSize(decompressed_size, ext);
+            uint size = 0;
+
+            if (path.StartsWith("Gyml/Gfx/EnvPaletteParam/") && ext == ".bgyml")
+            {
+                var sizeLong = (decompressed_size + 31) & -32;
+                // Credit to Theia's RSTB tool for size calculation: https://github.com/theia-mly/Wonder-RSTB-Gen
+                size = (UInt32)(9627 * MathF.Exp(1.35E-4f * (float)sizeLong) + 1200);
+            }
+            else
+            {
+                size = CalculateResourceSize(decompressed_size, ext);
+            }
 
             if (HashToResourceSize.ContainsKey(hash))
             {

@@ -4,6 +4,7 @@ using Fushigi.Byml.Serializer;
 using Fushigi.Byml.Writer;
 using Fushigi.gl;
 using Fushigi.Logger;
+using Fushigi.rstb;
 using Fushigi.util;
 using ImGuiNET;
 using Microsoft.Msagl.Drawing;
@@ -897,7 +898,7 @@ namespace Fushigi.env
             }
         }
 
-        public void Save()
+        public void Save(RSTB resource_table)
         {
 
             // Build BYML root
@@ -1003,6 +1004,8 @@ namespace Fushigi.env
             var mem = new MemoryStream();
             byml.Save(mem);
 
+            var decomp_size = (uint)mem.Length;
+
             string modRoot = UserSettings.GetModRomFSPath();
             string outPath = Path.Combine(
                 modRoot,
@@ -1017,6 +1020,7 @@ namespace Fushigi.env
 
             // Write file
             File.WriteAllBytes(outPath, mem.ToArray());
+            resource_table.SetResource($"Gyml/Gfx/EnvPaletteParam/{Name}.game__gfx__EnvPaletteParam.bgyml", decomp_size);
         }
     }
 

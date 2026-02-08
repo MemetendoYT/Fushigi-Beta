@@ -62,6 +62,24 @@ namespace Fushigi.course
 
                 }
 
+            mAreas = mAreas
+                .OrderBy(area =>
+                {
+                  string name = area.GetName();
+
+                  if (name.EndsWith("_Main"))
+                      return 0; 
+
+                  if (name.Contains("_Sub"))
+                  {
+                      string numStr = name.Substring(name.LastIndexOf("_Sub") + 4);
+                      if (int.TryParse(numStr, out int num))
+                          return num; 
+                  }
+                  return int.MaxValue; 
+                })
+                .ToList();
+
             if (root.ContainsKey("Links") && !IsOneAreaCourse)
             {
                 if (root["Links"] is BymlArrayNode linksArr)
@@ -342,7 +360,7 @@ namespace Fushigi.course
 
 
         readonly string mCourseName;
-        readonly List<CourseArea> mAreas;
+        List<CourseArea> mAreas;
         BymlArrayNode mStageReferences;
         CourseLinkHolder? mGlobalLinks;
         public CourseInfo mCourseInfo;

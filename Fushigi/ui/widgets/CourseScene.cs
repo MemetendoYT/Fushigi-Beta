@@ -732,7 +732,7 @@ namespace Fushigi.ui.widgets
                                 showPaletteWindow = true;
                             }
 
-                            ImGui.SetItemTooltip("Palette Editor");
+                            ImGui.SetItemTooltip("Palette Editor [Experimental]");
 
                             ImGui.SameLine();
 
@@ -869,9 +869,25 @@ namespace Fushigi.ui.widgets
         {
           undoWindow.Render(areaScenes[selectedArea].EditContext);
         }
-        
+
+        public bool attemptSave()
+        {
+            foreach (var area in course.GetAreas())
+            {
+                var rails = area.mRailHolder.mRails;
+                foreach (CourseRail rail in rails)
+                {
+                    if (rail.mPoints.Count == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
         public void Save(bool backup = false, string backupFolder = "")
         {
+         
             var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
             if (!Directory.Exists(rstbPath))
                     Directory.CreateDirectory(rstbPath);
@@ -972,7 +988,7 @@ namespace Fushigi.ui.widgets
 
                     //if(EnvPaletteWindow.hasInitialized)
                     if(!backup) 
-                        envPaletteWindow.SavePalette();
+                        envPaletteWindow.SavePalette(resource_table);
 
                     if (backup)
                     {

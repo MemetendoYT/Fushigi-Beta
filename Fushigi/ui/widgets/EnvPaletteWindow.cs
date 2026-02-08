@@ -5,10 +5,12 @@ using Fushigi.Byml;
 using Fushigi.course;
 using Fushigi.env;
 using Fushigi.gl.Bfres.AreaData;
+using Fushigi.rstb;
 using Fushigi.ui.modal;
 using Fushigi.util;
 using FuzzySharp.Edits;
 using ImGuiNET;
+using Microsoft.Msagl.Core.Geometry;
 using Microsoft.Msagl.Layout.LargeGraphLayout;
 using Newtonsoft.Json.Linq;
 using Silk.NET.OpenGL;
@@ -809,14 +811,7 @@ namespace Fushigi.ui.widgets
             ImGui.Columns(1);
         }
 
-        public void RenderLightsHemiUI()
-        {
-            RenderLightsHemiUI("ObjLight", EnvPalette.ObjLight);
-            RenderLightsHemiUI("CharLight", EnvPalette.CharLight);
-            RenderLightsHemiUI("FieldLight", EnvPalette.FieldLight);
-            RenderLightsHemiUI("DvLight", EnvPalette.DvLight);
-            RenderLightsHemiUI("CloudLight", EnvPalette.CloudLight);
-        }
+
 
         public void RenderLightsUI()
         {
@@ -871,7 +866,15 @@ namespace Fushigi.ui.widgets
             {
                 if (ImGui.Button($"Add {label}"))
                 {
-                    list = new EnvPalette.EnvLightList();
+                    list = new EnvLightList();
+                    list.Main = new EnvLightDirectional();
+                    list.SubDiff0 = new EnvLightDirectional();
+                    list.SubDiff1 = new EnvLightDirectional();
+                    list.SubDiff2 = new EnvLightDirectional();
+                    list.SubSpec0 = new EnvLightDirectional();
+                    list.SubSpec1 = new EnvLightDirectional();
+                    list.SubSpec2 = new EnvLightDirectional();
+                    list.PlayerSubDiff0 = new EnvLightDirectional();
                     return list;
                 }
                 return null;
@@ -1278,7 +1281,7 @@ namespace Fushigi.ui.widgets
             }
             ImGui.NextColumn();
         }
-        public void SavePalette()
+        public void SavePalette(RSTB resource_table)
         {
             if (CurveEditors.Values.Count == 0)
             {
@@ -1287,13 +1290,13 @@ namespace Fushigi.ui.widgets
                     EnvPalette = new EnvPalette();
                 }
 
-                EnvPalette.Save();
+                EnvPalette.Save(resource_table);
                 return;
             }
 
             foreach (var editor in CurveEditors.Values)
             {
-                editor.Save();
+                editor.Save(resource_table);
             }
 
 

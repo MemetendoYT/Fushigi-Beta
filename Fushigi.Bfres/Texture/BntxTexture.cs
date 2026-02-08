@@ -191,7 +191,6 @@ namespace Fushigi.Bfres
 
         public Span<byte> DecodeAstc(byte[] deswizzled)
         {
-            
             AstcDecoder.TryDecodeToRgba8(
                 deswizzled,
             (int)this.GetBlockWidth(),

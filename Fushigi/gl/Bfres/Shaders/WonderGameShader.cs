@@ -336,7 +336,8 @@ namespace Fushigi.gl.Bfres
 
         public void SetLights(EnvPalette.EnvLightList lightList)
         {
-            if (lightList == null) return;
+            if (lightList == null || lightList.Main == null)
+                 return;
 
             if (lightList.Hemi != null) { 
                 this.HemiSkyColor = lightList.Hemi.Sky.ToVector4() * lightList.Hemi.Intensity;
