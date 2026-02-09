@@ -1086,7 +1086,6 @@ namespace Fushigi.ui.widgets
             if (CopiedObjects.Length != 0 && IsViewportHovered &&
                 ((ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift) || pasteContext))
             {
-                Console.WriteLine("pasting");
                 DoPaste(freshCopy: ctrlAndShift);
                 pasteContext = false;
             }

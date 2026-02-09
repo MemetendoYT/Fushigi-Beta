@@ -12,6 +12,7 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Fushigi.course
 {
@@ -200,11 +201,14 @@ namespace Fushigi.course
             //Save using the configured mod romfs path
             Save(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit"), false);
         }
-
-        public void SaveStageParam()
+        public void SaveStageParam(RSTB resource_table) { 
+            string path = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam"));
+            SaveStageParam(resource_table, path);
+        }
+        public void SaveStageParam(RSTB resource_table, string folder)
         {
             string fileName = mAreaName;
-            var stageParamFilePath = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam", $"{fileName}.game__stage__StageParam.bgyml"));
+            var stageParamFilePath = Path.Combine(folder, $"{fileName}.game__stage__StageParam.bgyml");
             bool noFileFound = !File.Exists(stageParamFilePath);
 
 
@@ -275,20 +279,17 @@ namespace Fushigi.course
 
                 stageParam.Root = stageParamRoot;
 
-                string outPath = Path.Combine(
-                    UserSettings.GetModRomFSPath(),
-                    "Stage/StageParam",
-                    $"{fileName}.game__stage__StageParam.bgyml"
-                );
+                string outPath = stageParamFilePath;
 
                 Directory.CreateDirectory(Path.GetDirectoryName(outPath));
 
                 using (var ms = new MemoryStream())
                 {
+                    var decomp_size = (uint)ms.Length;
                     stageParam.Save(ms);
                     File.WriteAllBytes(outPath, ms.ToArray());
+                    resource_table.SetResource($"Stage/StageParam/{mAreaName}.game__stage__StageParam.bgyml", decomp_size);
                 }
-
             }
         }
         public void Save(RSTB resource_table, string folder, bool saveTemplate)

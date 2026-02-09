@@ -1281,7 +1281,7 @@ namespace Fushigi.ui.widgets
             }
             ImGui.NextColumn();
         }
-        public void SavePalette(RSTB resource_table)
+        public void SavePalette(RSTB resource_table, string folder)
         {
             if (CurveEditors.Values.Count == 0)
             {
@@ -1290,14 +1290,25 @@ namespace Fushigi.ui.widgets
                     EnvPalette = new EnvPalette();
                 }
 
-                EnvPalette.Save(resource_table);
+                EnvPalette.Save(resource_table, folder);
                 return;
             }
 
             foreach (var editor in CurveEditors.Values)
             {
-                editor.Save(resource_table);
+                editor.Save(resource_table, folder);
             }
+        }
+        public void SavePalette(RSTB resource_table)
+        {
+            string modRoot = UserSettings.GetModRomFSPath();
+            string outPath = Path.Combine(
+                modRoot,
+                "Gyml",
+                "Gfx",
+                "EnvPaletteParam"
+            );
+            SavePalette(resource_table, outPath);
 
 
         }

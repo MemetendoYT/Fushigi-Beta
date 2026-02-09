@@ -987,19 +987,22 @@ namespace Fushigi.ui.widgets
                     var name = area.mAreaParams.EnvPaletteSetting.InitPaletteBaseName;
 
                     //if(EnvPaletteWindow.hasInitialized)
-                    if(!backup) 
+                    if(backup) 
+                        envPaletteWindow.SavePalette(resource_table, Path.Combine(backupFolder, "Gyml", "Gfx", "EnvPaletteParam"));
+                    else
                         envPaletteWindow.SavePalette(resource_table);
 
                     if (backup)
                     {
                         area.Save(resource_table, Path.Combine(backupFolder, "BancMapUnit"), false);
                         area.mAreaParams.Save(resource_table, Path.Combine(backupFolder, "Stage", "AreaParam"), area.mAreaName, false);
+                        area.SaveStageParam(resource_table, Path.Combine(backupFolder, "Stage", "StageParam"));
                     }
                     else
                     {
                         area.Save(resource_table);
                         area.mAreaParams.Save(resource_table, area.mAreaName);
-                        area.SaveStageParam();
+                        area.SaveStageParam(resource_table);
                     }
                 }
 

@@ -898,7 +898,7 @@ namespace Fushigi.env
             }
         }
 
-        public void Save(RSTB resource_table)
+        public void Save(RSTB resource_table, string folder)
         {
 
             // Build BYML root
@@ -1006,20 +1006,14 @@ namespace Fushigi.env
 
             var decomp_size = (uint)mem.Length;
 
-            string modRoot = UserSettings.GetModRomFSPath();
-            string outPath = Path.Combine(
-                modRoot,
-                "Gyml",
-                "Gfx",
-                "EnvPaletteParam",
-                $"{Name}.game__gfx__EnvPaletteParam.bgyml"
-            );
+        
 
             // Ensure directory exists
-            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(folder));
 
             // Write file
-            File.WriteAllBytes(outPath, mem.ToArray());
+            string levelPath = Path.Combine(folder, $"{Name}.game__gfx__EnvPaletteParam.bgyml");
+            File.WriteAllBytes(levelPath, mem.ToArray());
             resource_table.SetResource($"Gyml/Gfx/EnvPaletteParam/{Name}.game__gfx__EnvPaletteParam.bgyml", decomp_size);
         }
     }

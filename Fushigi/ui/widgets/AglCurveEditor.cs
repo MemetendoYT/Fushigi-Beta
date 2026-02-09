@@ -479,13 +479,13 @@ namespace Fushigi.ui.widgets
             }
         }
 
-        public void Save(RSTB resource_table)
+        public void Save(RSTB resource_table, string folder)
         {
             if(EnvPalette == null)
             {
                 EnvPalette = new EnvPalette();
             }
-           EnvPalette.Save(resource_table);
+           EnvPalette.Save(resource_table, folder);
         }
 
         public class Key
