@@ -1006,10 +1006,11 @@ namespace Fushigi.env
 
             var decomp_size = (uint)mem.Length;
 
-        
+
 
             // Ensure directory exists
-            Directory.CreateDirectory(Path.GetDirectoryName(folder));
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
 
             // Write file
             string levelPath = Path.Combine(folder, $"{Name}.game__gfx__EnvPaletteParam.bgyml");
