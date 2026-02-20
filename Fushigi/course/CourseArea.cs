@@ -4,6 +4,7 @@ using Fushigi.rstb;
 using Fushigi.ui.widgets;
 using Fushigi.util;
 using ImGuiNET;
+using Microsoft.Msagl.Core.ProjectionSolver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -192,6 +193,34 @@ namespace Fushigi.course
                 mUnitHolder = new();
             }
         }
+        public BymlArrayNode LoadPresetLinks(string prefabName)
+        {
+            byte[] levelBytes = FileUtil.DecompressFile($"res/prefabs/{prefabName}.bcett.byml.zs");
+            var byml = new Byml.Byml(new MemoryStream(levelBytes));
+
+            BymlHashTable? root = byml.Root as BymlHashTable;
+            BymlArrayNode linksArray = null;
+            if (root.ContainsKey("Links"))
+            {
+                linksArray = (BymlArrayNode)root["Links"];
+            }
+            return linksArray;
+
+        }
+        public BymlArrayNode LoadPreset(string prefabName)
+        {
+            byte[] levelBytes = FileUtil.DecompressFile($"res/prefabs/{prefabName}.bcett.byml.zs");
+            var byml = new Byml.Byml(new MemoryStream(levelBytes));
+
+            BymlHashTable? root = byml.Root as BymlHashTable;
+            BymlArrayNode actorsArray = null;
+            if (root.ContainsKey("Actors"))
+            {
+                actorsArray = (BymlArrayNode)root["Actors"];
+            }
+            return actorsArray;
+
+        }
         public CourseActor? GetActorByHash(ulong hash)
         {
             return mActorHolder.mActors.FirstOrDefault(a => a.mHash == hash);
@@ -292,6 +321,22 @@ namespace Fushigi.course
                 }
             }
         }
+        public void SaveActorsToPreset(List<CourseActor> copiedActors, List<CourseActor> actors)
+        {
+            BymlHashTable root = new();
+            root.AddNode(BymlNodeId.Array, mActorHolder.SerializePreset(copiedActors, mLinkHolder), "Actors");
+            root.AddNode(BymlNodeId.Array, mLinkHolder.SerializePreset(actors), "Links");
+
+            var byml = new Byml.Byml(root);
+            var mem = new MemoryStream();
+            byml.Save(mem);
+
+            var decomp_size = (uint)mem.Length;
+          
+            string presetPath = Path.Combine("res/prefabs/JohnPreset.bcett.byml.zs");
+            File.WriteAllBytes(presetPath, FileUtil.CompressData(mem.ToArray()));
+            
+        }
         public void Save(RSTB resource_table, string folder, bool saveTemplate)
         {
             if (!saveTemplate)
@@ -332,7 +377,6 @@ namespace Fushigi.course
             {
                 string paramPath = "res/template.game__stage__AreaParam.bgyml";
                 levelPath = "res/template.bcett.byml.zs";
-                File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
                 File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
                 Load(true, true, false);
 

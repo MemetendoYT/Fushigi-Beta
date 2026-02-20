@@ -1,5 +1,6 @@
 ﻿using Fushigi.Byml;
 using Fushigi.util;
+using static Fushigi.gl.DDS;
 
 namespace Fushigi.course
 {
@@ -133,6 +134,27 @@ namespace Fushigi.course
                 node.AddNodeToArray(link.BuildNode());
             }
 
+            return node;
+        }
+
+        public BymlArrayNode SerializePreset(List<CourseActor> actors)
+        {
+            BymlArrayNode node = new();
+            HashSet<CourseLink> added = new();
+            foreach (var actor in actors)
+            {
+                foreach (var link in mLinks)
+                {
+                    if (link.mSource == actor.mHash || link.mDest == actor.mHash)
+                    {
+                        if (added.Add(link))
+                        {
+                            node.AddNodeToArray(link.BuildNode());
+                        }
+
+                    }
+                } 
+            }
             return node;
         }
 

@@ -661,7 +661,10 @@ namespace Fushigi.ui
                     if (ImGui.MenuItem("Place Goal Setup"))
                         mSelectedCourseScene?.PlaceGoalSetup();
 
-                  
+                    if (ImGui.MenuItem("Save Preset"))
+                        mSelectedCourseScene?.SavePrefab();
+
+
                     ImGui.Separator();
 
                     if (ImGui.MenuItem("Reset User Interface"))

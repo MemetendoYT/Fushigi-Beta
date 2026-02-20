@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -499,6 +500,8 @@ namespace Fushigi.ui.widgets
             //RailLinksPanel();
 
             LocalLinksPanel();
+
+            PrefabPanel();
 
             SimultaneousGroupPanel();
 
@@ -1226,7 +1229,129 @@ namespace Fushigi.ui.widgets
 
             return new List<CourseActor>() { goalPole, airWall, noRevivalArea, goalPrince, goalSeed, goalPoplin, goalFort };
         }
-            
+
+        public List<CourseActor> CreatePreset(NumVec location, string prefab)
+        {
+            var areaHash = selectedArea.mRootHash;
+            var areaLinks = selectedArea.mLinkHolder;
+
+            NumVec placement;
+
+            placement.X = MathF.Round(location.X * 2, MidpointRounding.AwayFromZero) / 2;
+            placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
+            placement.Z = 0.0f;
+
+            // Create all Actors needed
+            var actorsArray = selectedArea.LoadPreset(prefab);
+            var linksArray = selectedArea.LoadPresetLinks(prefab);
+
+            var presetActors = new CourseActorHolder(actorsArray);
+            var presetLinks = new CourseLinkHolder(linksArray);
+
+            Dictionary<ulong, ulong> hashMap = new();
+            foreach (CourseActor actor in presetActors.mActors)
+            {
+                ulong oldHash = actor.mHash;
+                ulong newHash = RandomUtil.GetRandom();
+
+                hashMap[oldHash] = newHash;
+                Console.WriteLine(oldHash);
+                actor.mHash = newHash;
+                actor.mLayer = mSelectedLayer;
+                actor.mAreaHash = areaHash;
+                actor.mTranslation += placement;
+            }
+
+            // Create links
+            var links = selectedArea.mLinkHolder.mLinks;
+            foreach (CourseLink link in presetLinks.mLinks)
+            {
+                Console.WriteLine(link.mSource);
+                if (hashMap.TryGetValue(link.mSource, out ulong newSrc))
+                {
+                    Console.WriteLine(link.mSource + " " + newSrc);
+                    link.mSource = newSrc;
+    
+                }
+
+                if (hashMap.TryGetValue(link.mDest, out ulong newDst))
+                    link.mDest = newDst;
+
+                links.Add(link);
+            } 
+
+
+            return presetActors.mActors;
+        }
+        public void SavePrefab()
+        {
+            var median = System.Numerics.Vector3.Zero;
+
+            var ctx = areaScenes[selectedArea].EditContext;
+            if (ctx.GetSelectedObjects<CourseActor>().Count() != 1)
+            {
+                List<CourseActor> actors = ctx.GetSelectedObjects<CourseActor>().ToList();
+                List<CourseActor> copiedActors = new List<CourseActor>();
+
+                foreach (var actor in actors)
+                    copiedActors.Add(actor.Clone(selectedArea));
+
+                foreach (CourseActor actor in copiedActors)
+                    median += actor.mTranslation;
+                
+                median /= actors.Count;
+
+                foreach (var actor in copiedActors)
+                    actor.mTranslation -= median;
+
+                selectedArea.SaveActorsToPreset(copiedActors, actors);
+            }
+        }
+
+        public async void LoadPrefab(string prefab)
+        {
+            var viewport = activeViewport;
+            var area = selectedArea;
+            var ctx = areaScenes[selectedArea].EditContext;
+
+            NumVec? pos;
+            KeyboardModifier modifier;
+            mSelectedLayer = mSelectedLayer ?? "PlayArea1";
+
+            if (!mLayersVisibility.ContainsKey(mSelectedLayer))
+            {
+                mSelectedLayer = "PlayArea";
+                AddSelectedLayer();
+                mSelectedLayer = "PlayArea1";
+            }
+
+            using var tokenSource = new CancellationTokenSource();
+            {
+                ImGui.SetWindowFocus(area.mAreaName);
+                (pos, modifier) = await viewport.PickPosition(
+                    $"Placing Preset", mSelectedLayer, tokenSource);
+
+                if (!pos.TryGetValue(out var posVec))
+                {
+                    return;
+                }
+
+                var goalActors = CreatePreset(posVec, prefab);
+
+                foreach (var actor in goalActors)
+                {
+                    var i = 0;
+                    do
+                    {
+                        i++;
+                    } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
+                    actor.mName = $"{actor.mPackName}{i}";
+
+                    ctx.AddActor(actor);
+                }
+            }
+
+        }
         private void SelectActorAndLayerPanel()
          {
             ImGui.Begin("Actors and Layers");
@@ -1539,7 +1664,19 @@ namespace Fushigi.ui.widgets
             }
 
         }
-      
+
+        private void PrefabPanel()
+        {
+            ImGui.Begin("Prefabs");
+
+            ImGui.Separator();
+
+            PrefabsView();
+
+            ImGui.End();
+
+        }
+
         private void LocalLinksPanel()
         {
             ImGui.Begin("Local Links");
@@ -3617,6 +3754,22 @@ namespace Fushigi.ui.widgets
         private LevelViewport oldViewport;
         private bool reverseGlobalLink;
 
+        private void PrefabsView() {
+            string path = "res/prefabs";
+            string[] files = Directory.GetFiles(path);
+            string prefab = "";
+            foreach (string file in files)
+            {
+                prefab = file.Split(".bcett")[0];
+                prefab = prefab.Split("\\")[1];
+                if (ImGui.Selectable(prefab))
+                {
+                    LoadPrefab(prefab);
+                }
+            }
+
+         
+        }
         private void AreaLocalLinksView(CourseArea area)
         {
             var links = area.mLinkHolder;

@@ -388,9 +388,24 @@ namespace Fushigi.course
             return node;
         }
 
+        public BymlArrayNode SerializePreset(List<CourseActor> actors, CourseLinkHolder linkHolder)
+        {
+            BymlArrayNode node = new((uint)actors.Count);
+
+            foreach (CourseActor actor in actors)
+            {
+                node.AddNodeToArray(actor.BuildNode(linkHolder));
+            }
+
+            return node;
+        }
+
+
         public List<CourseActor> mActors = [];
         public List<CourseActor> mSortedActors = [];
     }
+
+    
 
     public class CourseActorRender //This can be overridden per actor for individual behavior
     {
