@@ -258,7 +258,7 @@ namespace Fushigi.course
 
                 File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
                 SaveAreas(resource_table, backup);
-
+                // SaveAreas(resource_table);
                 resource_table.Save();
             }
         }
@@ -343,10 +343,15 @@ namespace Fushigi.course
             // filePath is a key not an actual path so we cannot use Path.Combine
             resource_table.SetResource($"BancMapUnit/{mCourseName}.bcett.byml", decomp_size);
         }
-
+        public void SaveAreas(RSTB resTable)
+        {
+            foreach (var area in GetAreas())
+            {
+                area.Save(resTable);
+            }
+        }
         public void SaveAreas(RSTB resTable, bool backup)
         {
-            //Save each course area to current romfs folder
             if (!backup)
             {
                 foreach (var area in GetAreas())

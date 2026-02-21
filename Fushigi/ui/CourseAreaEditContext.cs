@@ -14,13 +14,47 @@ namespace Fushigi.ui
 {
     class CourseAreaEditContext(CourseArea area) : EditContextBase
     {
+      
+        //public void AddActorsBatch(IEnumerable<CourseActor> actors, Dictionary<string, bool> mLayersVisibility, string[] LayerTypes, widgets.CourseScene courseScene)
+        //{
+        //    var batch = BeginBatchAction();
+
+        //    foreach (var actor in actors)
+        //    {
+        //        string[] Layers = LayerTypes
+        //             .Except(mLayersVisibility.Keys)
+        //             .ToArray();
+
+
+        //        if (Layers.Contains(actor.mLayer))
+        //        {
+        //            CommitAction(new PropertyFieldsSetUndo(
+        //            courseScene,
+        //            [("mLayersVisibility", new Dictionary<string, bool>(mLayersVisibility))],
+        //            $"{IconUtil.ICON_LAYER_GROUP} Added Layer: {area}"
+
+        //         ));
+
+        //            mLayersVisibility[courseScene.mSelectedLayer] = true;
+
+        //            courseScene.mSelectedLayer = null;
+        //        }
+
+        //       CommitAction(area.mActorHolder.mActors.RevertableAdd(
+        //            actor,
+        //            $"{IconUtil.ICON_PLUS_CIRCLE} Add {actor.mPackName}"
+        //        ));
+        //    }
+
+        //    batch.Commit($"{IconUtil.ICON_PLUS_CIRCLE} Added Prefab");
+        //}
+
         public void AddActor(CourseActor actor)
         {
             LogAdding<CourseActor>($"{actor.mPackName}[{actor.mHash}]");
             CommitAction(area.mActorHolder.mActors
                 .RevertableAdd(actor, $"{IconUtil.ICON_PLUS_CIRCLE} Add {actor.mPackName}"));
         }
-
         public void DeleteActor(CourseActor actor)
         {
             LogDeleting<CourseActor>($"{actor.mPackName}[{actor.mHash}]");

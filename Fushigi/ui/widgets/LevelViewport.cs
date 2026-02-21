@@ -107,6 +107,8 @@ namespace Fushigi.ui.widgets
         bool pasteContext = false;
         bool copyContext = false;
         bool deleteContext = false;
+        public static CourseScene _courseScene;
+
 
         Vector2 mSize = Vector2.Zero;
 
@@ -705,6 +707,42 @@ namespace Fushigi.ui.widgets
                 }
             }
         }
+   
+        public async Task PrefabPopup()
+        {
+           var result = await SavePrefabDialog.ShowDialog(MainWindow.mModalHost);
+
+            if (result.Result == SavePrefabDialog.DialogResult.Yes)
+            {
+                SavePrefab(result.PrefabName);
+            }
+
+        }
+        public void SavePrefab(string prefabName)
+        {
+
+            var median = System.Numerics.Vector3.Zero;
+
+            var ctx = mEditContext;
+            if (ctx.GetSelectedObjects<CourseActor>().Count() != 1)
+            {
+                List<CourseActor> actors = ctx.GetSelectedObjects<CourseActor>().ToList();
+                List<CourseActor> copiedActors = new List<CourseActor>();
+
+                foreach (var actor in actors)
+                    copiedActors.Add(actor.ClonePrefab(mArea));
+
+                foreach (CourseActor actor in copiedActors)
+                    median += actor.mTranslation;
+
+                median /= actors.Count;
+
+                foreach (var actor in copiedActors)
+                    actor.mTranslation -= median;
+
+                mArea.SaveActorsToPreset(copiedActors, actors, prefabName);
+            }
+        }
         public void Draw(Vector2 size, double deltaSeconds, IDictionary<string, bool> layersVisibility)
         {
 
@@ -972,11 +1010,16 @@ namespace Fushigi.ui.widgets
                                 }
                                 batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
                             }
-
+                         
                         }
                         ImGui.EndMenu();
                     }
+                    if (ImGui.MenuItem("Save as Prefab"))
+                    {
+                        PrefabPopup();
+                    }
                 }
+ 
                  bool popupHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
 
 
@@ -1115,6 +1158,7 @@ namespace Fushigi.ui.widgets
             if (mHoveredObject is not CourseActor actor) return;
 
             CourseActor newActor;
+            AddLayer(actor.mLayer);
             if (freshCopy)
                 newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
             else
@@ -1157,6 +1201,7 @@ namespace Fushigi.ui.widgets
                 {
                     var actor = actors[i];
                     CourseActor newActor;
+                    AddLayer(actor.mLayer);
                     if (freshCopy)
                         newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
                     else
@@ -1188,6 +1233,28 @@ namespace Fushigi.ui.widgets
                 mEditContext.Select(actors);
             } while (modifier == KeyboardModifier.Shift);
 
+        }
+
+        private void AddLayer(string layer)
+        {
+            string[] Layers = CourseScene.LayerTypes
+                      .Except(mLayersVisibility.Keys)
+                      .ToArray();
+
+            if (!Layers.Contains(layer))
+                return;
+
+            var oldDict = new Dictionary<string, bool>(mLayersVisibility);
+
+
+            mLayersVisibility[layer] = true;
+         
+    
+            mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                _courseScene,
+                [("mLayersVisibility", oldDict)],
+                $"{IconUtil.ICON_LAYER_GROUP} Added Layer: {layer}"
+            ));
         }
         public void InteractionWithFocus_TooltipOnly()
         {

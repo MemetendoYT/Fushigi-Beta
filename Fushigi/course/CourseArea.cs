@@ -321,8 +321,11 @@ namespace Fushigi.course
                 }
             }
         }
-        public void SaveActorsToPreset(List<CourseActor> copiedActors, List<CourseActor> actors)
+        public void SaveActorsToPreset(List<CourseActor> copiedActors, List<CourseActor> actors, string prefabName)
         {
+            if(!Directory.Exists("res/prefabs"))
+                Directory.CreateDirectory("res/prefabs");
+
             BymlHashTable root = new();
             root.AddNode(BymlNodeId.Array, mActorHolder.SerializePreset(copiedActors, mLinkHolder), "Actors");
             root.AddNode(BymlNodeId.Array, mLinkHolder.SerializePreset(actors), "Links");
@@ -332,8 +335,8 @@ namespace Fushigi.course
             byml.Save(mem);
 
             var decomp_size = (uint)mem.Length;
-          
-            string presetPath = Path.Combine("res/prefabs/JohnPreset.bcett.byml.zs");
+
+            string presetPath = $"res/prefabs/{prefabName}.bcett.byml.zs";
             File.WriteAllBytes(presetPath, FileUtil.CompressData(mem.ToArray()));
             
         }

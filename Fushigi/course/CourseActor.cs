@@ -307,6 +307,30 @@ namespace Fushigi.course
             return cloned;
         }
 
+        public CourseActor ClonePrefab(CourseArea areaTo)
+        {
+            CourseActor cloned = new(mPackName, mAreaHash, mLayer)
+            {
+                mPackName = mPackName,
+                mName = mName,
+                mLayer = mLayer,
+                mWonderView = mWonderView,
+                mHash = mHash,
+                wonderVisible = wonderVisible,
+                mStartingTrans = mStartingTrans,
+                mTranslation = mTranslation,
+                mScale = mScale,
+                mRotation = mRotation
+            };
+            cloned.mStartingTrans = mStartingTrans;
+            cloned.mAreaHash = areaTo.mRootHash;
+            cloned.mHash = mHash; 
+            cloned.mActorParameters = mActorParameters.Clone();
+            cloned.mSystemParameters = mSystemParameters.Clone();
+            cloned.mActorPack = mActorPack;
+
+            return cloned;
+        }
         public string mPackName;
         public string mName;
         public string mLayer;

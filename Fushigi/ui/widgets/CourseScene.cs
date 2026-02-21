@@ -63,7 +63,7 @@ namespace Fushigi.ui.widgets
         readonly IPopupModalHost mPopupModalHost;
         public CourseArea selectedArea;
 
-        readonly Dictionary<string, bool> mLayersVisibility = [];
+        public static readonly Dictionary<string, bool> mLayersVisibility = [];
         bool mHasFilledLayers = false;
         bool mAllLayersVisible = true;
         readonly List<IToolWindow> mOpenToolWindows = [];
@@ -236,6 +236,7 @@ namespace Fushigi.ui.widgets
         //     }
         // }
         // readonly LayerSorter layerSort = new();
+
         public async Task RebuildAreaData(GLTaskScheduler scheduler)
         {
             var newArea = course.GetAreas().Last();
@@ -391,6 +392,7 @@ namespace Fushigi.ui.widgets
             undoWindow = new UndoWindow();
             envPaletteWindow = new EnvPaletteWindow();
             activeViewport = null!;
+            LevelViewport._courseScene = this;
             UpdateDRPC();
         }
 
@@ -501,8 +503,6 @@ namespace Fushigi.ui.widgets
 
             LocalLinksPanel();
 
-            PrefabPanel();
-
             SimultaneousGroupPanel();
 
             BGUnitPanel();
@@ -539,6 +539,16 @@ namespace Fushigi.ui.widgets
 
             if (showGlobalLinkWindow)
                 DrawGlobalLinksPanel(ref showGlobalLinkWindow, mPopupModalHost, gLink, linkNumb);
+
+            //if (LevelViewport.mLayers.Length > 0)
+            //{
+            //    foreach (var layer in LevelViewport.mLayers)
+            //    {
+            //        mSelectedLayer = layer;
+            //        AddLayerFromFile();
+            //        LevelViewport.mLayers = [];
+            //    }
+            //}
 
             ulong selectionVersionBefore = areaScenes[selectedArea].EditContext.SelectionVersion;
 
@@ -890,7 +900,7 @@ namespace Fushigi.ui.widgets
         }
         public void Save(bool backup = false, string backupFolder = "")
         {
-         
+            Console.WriteLine(backup + " WHAT THE SHIT???");
             var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
             if (!Directory.Exists(rstbPath))
                     Directory.CreateDirectory(rstbPath);
@@ -908,7 +918,7 @@ namespace Fushigi.ui.widgets
                 {
                     Directory.CreateDirectory(backupFolder);
                     pathsToWriteTo = course.GetAreas().Select(
-                        a=> Path.Combine(backupFolder, "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
+                        a => Path.Combine(backupFolder, "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
                         ).ToList();
 
                     // Add the Course file for global links
@@ -939,7 +949,7 @@ namespace Fushigi.ui.widgets
                 else
                 {
                     pathsToWriteTo = course.GetAreas().Select(
-                        a=> Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
+                        a => Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
                         ).ToList();
 
                     // Add the Course file for global links
@@ -951,15 +961,15 @@ namespace Fushigi.ui.widgets
                     var areaParamSave = course.GetAreas().Select(
                         a => Path.Combine(UserSettings.GetModRomFSPath(), "Stage", "AreaParam", $"{a.GetName()}.game__stage__AreaParam.bgyml")
                         ).ToList();
-                    
-            
+
+
                     foreach (var areaParam in areaParamSave)
                     {
                         pathsToWriteTo.Add(areaParam);
                     }
 
                     // Save CourseInfo
-                   
+
                     pathsToWriteTo.Add(
                         Path.Combine(UserSettings.GetModRomFSPath(), "Stage", "CourseInfo", $"{course.GetName()}.game__stage__CourseInfo.bgyml")
                         );
@@ -978,7 +988,7 @@ namespace Fushigi.ui.widgets
                 }
 
                 //Save each course area to current romfs folder
-             
+
 
                 foreach (var area in course.GetAreas())
                 {
@@ -990,7 +1000,7 @@ namespace Fushigi.ui.widgets
                     var name = area.mAreaParams.EnvPaletteSetting.InitPaletteBaseName;
 
                     //if(EnvPaletteWindow.hasInitialized)
-                    if(backup) 
+                    if (backup)
                         envPaletteWindow.SavePalette(resource_table, Path.Combine(backupFolder, "Gyml", "Gfx", "EnvPaletteParam"));
                     else
                         envPaletteWindow.SavePalette(resource_table);
@@ -1022,7 +1032,7 @@ namespace Fushigi.ui.widgets
 
                 //Save the CourseInfo file
                 Console.WriteLine($"{(backup ? "Backing up" : "Saving")} course info for {course.GetName()}...");
-              
+
                 if (backup)
                     course.mCourseInfo.Save(resource_table, Path.Combine(backupFolder, "Stage", "CourseInfo"), course.GetName());
                 else
@@ -1052,7 +1062,10 @@ namespace Fushigi.ui.widgets
 
 
                 if (backup)
+                {
                     course.Save(true);
+                    Console.WriteLine("?????");
+                }
                 else
                 {
                     course.Save(false);
@@ -1062,8 +1075,8 @@ namespace Fushigi.ui.widgets
                     }
                 }
             }
-            if (backup == false)
-                Save(backup: true, backupFolder);
+            //if (backup == false)
+                //Save(backup: true, backupFolder);
         }
 
         bool EnsureFileIsWritable(string path)
@@ -1115,7 +1128,7 @@ namespace Fushigi.ui.widgets
         }
 
         private string? mSelectedActor;
-        private string? mSelectedLayer;
+        public static string? mSelectedLayer;
         private string mAddActorSearchQuery = "";
         private string mAddLayerSearchQuery = "";
 
@@ -1255,9 +1268,8 @@ namespace Fushigi.ui.widgets
                 ulong newHash = RandomUtil.GetRandom();
 
                 hashMap[oldHash] = newHash;
-                Console.WriteLine(oldHash);
+                Console.WriteLine("hash loading " + oldHash);
                 actor.mHash = newHash;
-                actor.mLayer = mSelectedLayer;
                 actor.mAreaHash = areaHash;
                 actor.mTranslation += placement;
             }
@@ -1266,7 +1278,7 @@ namespace Fushigi.ui.widgets
             var links = selectedArea.mLinkHolder.mLinks;
             foreach (CourseLink link in presetLinks.mLinks)
             {
-                Console.WriteLine(link.mSource);
+                Console.WriteLine("preset links ig " + link.mSource);
                 if (hashMap.TryGetValue(link.mSource, out ulong newSrc))
                 {
                     Console.WriteLine(link.mSource + " " + newSrc);
@@ -1275,7 +1287,10 @@ namespace Fushigi.ui.widgets
                 }
 
                 if (hashMap.TryGetValue(link.mDest, out ulong newDst))
+                {
+                    Console.WriteLine(link.mSource + " " + newDst);
                     link.mDest = newDst;
+                }
 
                 links.Add(link);
             } 
@@ -1283,30 +1298,7 @@ namespace Fushigi.ui.widgets
 
             return presetActors.mActors;
         }
-        public void SavePrefab()
-        {
-            var median = System.Numerics.Vector3.Zero;
-
-            var ctx = areaScenes[selectedArea].EditContext;
-            if (ctx.GetSelectedObjects<CourseActor>().Count() != 1)
-            {
-                List<CourseActor> actors = ctx.GetSelectedObjects<CourseActor>().ToList();
-                List<CourseActor> copiedActors = new List<CourseActor>();
-
-                foreach (var actor in actors)
-                    copiedActors.Add(actor.Clone(selectedArea));
-
-                foreach (CourseActor actor in copiedActors)
-                    median += actor.mTranslation;
-                
-                median /= actors.Count;
-
-                foreach (var actor in copiedActors)
-                    actor.mTranslation -= median;
-
-                selectedArea.SaveActorsToPreset(copiedActors, actors);
-            }
-        }
+       
 
         public async void LoadPrefab(string prefab)
         {
@@ -1336,9 +1328,10 @@ namespace Fushigi.ui.widgets
                     return;
                 }
 
-                var goalActors = CreatePreset(posVec, prefab);
+                var prefabActors = CreatePreset(posVec, prefab);
 
-                foreach (var actor in goalActors)
+                var batch = ctx.BeginBatchAction();
+                foreach (var actor in prefabActors)
                 {
                     var i = 0;
                     do
@@ -1346,9 +1339,11 @@ namespace Fushigi.ui.widgets
                         i++;
                     } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
                     actor.mName = $"{actor.mPackName}{i}";
-
+                    mSelectedLayer = actor.mLayer;
                     ctx.AddActor(actor);
+                    AddLayerFromFile();
                 }
+                batch.Commit($"{IconUtil.ICON_PASTE} Added {prefab} Prefab");
             }
 
         }
@@ -1529,8 +1524,13 @@ namespace Fushigi.ui.widgets
 
                 ImGui.EndTabItem();
             }
-
-            ImGui.EndTabBar();
+            if (ImGui.BeginTabItem("Add Prefab"))
+            {
+                PrefabsView();
+                ImGui.EndTabItem();
+            }
+                ImGui.EndTabItem();
+                ImGui.EndTabBar();
 
             ImGui.End();
         }
@@ -1619,6 +1619,31 @@ namespace Fushigi.ui.widgets
             mSelectedLayer = null;
         }
 
+
+        private void AddLayerFromFile()
+        {
+            string[] Layers = LayerTypes
+                      .Except(mLayersVisibility.Keys)
+                      .ToArray();
+
+
+            if (!Layers.Contains(mSelectedLayer))
+            {
+                Console.WriteLine("LayerExist already returning");
+                return;
+            }
+
+            var ctx = areaScenes[selectedArea].EditContext;
+            ctx.CommitAction(new PropertyFieldsSetUndo(
+                  this,
+                  [("mLayersVisibility", new Dictionary<string, bool>(mLayersVisibility))],
+                  $"{IconUtil.ICON_LAYER_GROUP} Added Layer: {mSelectedLayer}"
+              )
+          );
+            mLayersVisibility[mSelectedLayer] = true;
+
+            mSelectedLayer = null;
+        }
         private void BGUnitPanel()
         {
             ImGui.Begin("Terrain Units");
@@ -1665,17 +1690,6 @@ namespace Fushigi.ui.widgets
 
         }
 
-        private void PrefabPanel()
-        {
-            ImGui.Begin("Prefabs");
-
-            ImGui.Separator();
-
-            PrefabsView();
-
-            ImGui.End();
-
-        }
 
         private void LocalLinksPanel()
         {
@@ -3754,21 +3768,70 @@ namespace Fushigi.ui.widgets
         private LevelViewport oldViewport;
         private bool reverseGlobalLink;
 
-        private void PrefabsView() {
+        private void PrefabsView()
+        {
             string path = "res/prefabs";
-            string[] files = Directory.GetFiles(path);
-            string prefab = "";
+            if (!Directory.Exists(path))
+            {
+                ImGui.Text("No prefabs found in res/prefabs");
+                return;
+            }
+
+            string[] files = Directory.GetFiles(path, "*.bcett*");
+
+            float rowHeight = ImGui.GetFrameHeight();
+            float deleteButtonWidth = rowHeight * 1.6f; // adjust as needed
+
             foreach (string file in files)
             {
-                prefab = file.Split(".bcett")[0];
-                prefab = prefab.Split("\\")[1];
-                if (ImGui.Selectable(prefab))
+                // Extract prefab name safely
+                string prefab = Path.GetFileName(file).Split(".bcett")[0];
+
+                ImGui.PushID(prefab); // ensure unique IDs per row
+
+                // Start row
+                float fullWidth = ImGui.GetContentRegionAvail().X;
+                float nameWidth = fullWidth - deleteButtonWidth - 8;
+
+                // Left side: prefab selectable
+                ImGui.BeginGroup();
+                ImGui.PushItemWidth(nameWidth);
+
+                if (ImGui.Selectable(prefab, false, ImGuiSelectableFlags.None, new Vector2(nameWidth, rowHeight)))
                 {
                     LoadPrefab(prefab);
                 }
-            }
 
-         
+                ImGui.PopItemWidth();
+                ImGui.EndGroup();
+
+                // Right side: delete icon
+                ImGui.SameLine();
+
+                Vector2 deletePos = ImGui.GetCursorScreenPos();
+                bool clicked = ImGui.InvisibleButton("##delete", new Vector2(deleteButtonWidth, rowHeight));
+
+                string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                Vector2 iconSize = ImGui.CalcTextSize(deleteIcon);
+                Vector2 iconPos = deletePos + new Vector2(
+                    (deleteButtonWidth - iconSize.X) * 0.5f,
+                    (rowHeight - iconSize.Y) * 0.5f
+                );
+
+                uint color = ImGui.GetColorU32(ImGuiCol.Text);
+                if (!ImGui.IsItemHovered())
+                    color = (color & 0xFFFFFF) | ((uint)((color >> 24) * 0.5f) << 24);
+
+                ImGui.GetWindowDrawList().AddText(iconPos, color, deleteIcon);
+                ImGui.SetItemTooltip("Delete Prefab");
+
+                if (clicked)
+                {
+                    File.Delete(file);
+                }
+
+                ImGui.PopID();
+            }
         }
         private void AreaLocalLinksView(CourseArea area)
         {

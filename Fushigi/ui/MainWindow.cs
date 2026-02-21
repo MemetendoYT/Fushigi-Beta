@@ -26,7 +26,7 @@ namespace Fushigi.ui
     public partial class MainWindow : IPopupModalHost
     {
         private readonly GLTaskScheduler mGLTaskScheduler = new();
-        private readonly PopupModalHost mModalHost = new();
+        public static readonly PopupModalHost mModalHost = new();
 
         private ImFontPtr mDefaultFont;
         private readonly ImFontPtr mIconFont;
@@ -660,10 +660,6 @@ namespace Fushigi.ui
 
                     if (ImGui.MenuItem("Place Goal Setup"))
                         mSelectedCourseScene?.PlaceGoalSetup();
-
-                    if (ImGui.MenuItem("Save Preset"))
-                        mSelectedCourseScene?.SavePrefab();
-
 
                     ImGui.Separator();
 
