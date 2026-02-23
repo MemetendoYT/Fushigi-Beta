@@ -137,24 +137,29 @@ namespace Fushigi.course
             return node;
         }
 
-        public BymlArrayNode SerializePreset(List<CourseActor> actors)
+        public BymlArrayNode SerializePreset(List<CourseActor> selectedActors)
         {
             BymlArrayNode node = new();
             HashSet<CourseLink> added = new();
-            foreach (var actor in actors)
-            {
-                foreach (var link in mLinks)
-                {
-                    if (link.mSource == actor.mHash || link.mDest == actor.mHash)
-                    {
-                        if (added.Add(link))
-                        {
-                            node.AddNodeToArray(link.BuildNode());
-                        }
 
-                    }
-                } 
+            // All selected actor hashes
+            HashSet<ulong> selectedHashes = selectedActors
+                .Select(a => a.mHash)
+                .ToHashSet();
+
+            foreach (var link in mLinks)
+            {
+                // Keep ONLY links where BOTH endpoints are selected
+                bool sourceSelected = selectedHashes.Contains(link.mSource);
+                bool destSelected = selectedHashes.Contains(link.mDest);
+
+                if (sourceSelected && destSelected)
+                {
+                    if (added.Add(link))
+                        node.AddNodeToArray(link.BuildNode());
+                }
             }
+
             return node;
         }
 

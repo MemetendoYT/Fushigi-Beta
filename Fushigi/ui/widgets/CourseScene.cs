@@ -900,7 +900,6 @@ namespace Fushigi.ui.widgets
         }
         public void Save(bool backup = false, string backupFolder = "")
         {
-            Console.WriteLine(backup + " WHAT THE SHIT???");
             var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
             if (!Directory.Exists(rstbPath))
                     Directory.CreateDirectory(rstbPath);
@@ -913,7 +912,18 @@ namespace Fushigi.ui.widgets
                 List<string> pathsToWriteTo;
                 DateTime now = DateTime.Now;
                 if (backupFolder == "")
-                    backupFolder = Directory.GetCurrentDirectory() + $"/backups/{now.Year}-{now.Month}-{now.Day}_{now.Hour}-{now.Minute}-{now.Second}/";
+                {
+                    backupFolder = Path.Combine(UserSettings.SettingsDir, "backups");
+
+                    if (!Directory.Exists(backupFolder))
+                        Directory.CreateDirectory(backupFolder);
+
+                    backupFolder = Path.Combine(
+                        backupFolder,
+                        $"{now.Year}-{now.Month}-{now.Day}_{now.Hour}-{now.Minute}-{now.Second}"
+                    );
+
+                }
                 if (backup)
                 {
                     Directory.CreateDirectory(backupFolder);
@@ -999,7 +1009,6 @@ namespace Fushigi.ui.widgets
 
                     var name = area.mAreaParams.EnvPaletteSetting.InitPaletteBaseName;
 
-                    //if(EnvPaletteWindow.hasInitialized)
                     if (backup)
                         envPaletteWindow.SavePalette(resource_table, Path.Combine(backupFolder, "Gyml", "Gfx", "EnvPaletteParam"));
                     else
@@ -1064,7 +1073,6 @@ namespace Fushigi.ui.widgets
                 if (backup)
                 {
                     course.Save(true);
-                    Console.WriteLine("?????");
                 }
                 else
                 {
@@ -1254,9 +1262,12 @@ namespace Fushigi.ui.widgets
             placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
             placement.Z = 0.0f;
 
-            // Create all Actors needed
-            var actorsArray = selectedArea.LoadPreset(prefab);
-            var linksArray = selectedArea.LoadPresetLinks(prefab);
+            string prefabFolder = Path.Combine(UserSettings.SettingsDir, "prefabs");
+            string prefabPath = Path.Combine(prefabFolder, $"{prefab}.bcett.byml.zs");
+            byte[] levelBytes = FileUtil.DecompressFile(prefabPath);
+
+            var actorsArray = selectedArea.LoadPrefab(prefab, levelBytes);
+            var linksArray = selectedArea.LoadPrefabLinks(prefab, levelBytes);
 
             var presetActors = new CourseActorHolder(actorsArray);
             var presetLinks = new CourseLinkHolder(linksArray);
@@ -1268,29 +1279,19 @@ namespace Fushigi.ui.widgets
                 ulong newHash = RandomUtil.GetRandom();
 
                 hashMap[oldHash] = newHash;
-                Console.WriteLine("hash loading " + oldHash);
                 actor.mHash = newHash;
                 actor.mAreaHash = areaHash;
                 actor.mTranslation += placement;
             }
 
-            // Create links
             var links = selectedArea.mLinkHolder.mLinks;
             foreach (CourseLink link in presetLinks.mLinks)
             {
-                Console.WriteLine("preset links ig " + link.mSource);
                 if (hashMap.TryGetValue(link.mSource, out ulong newSrc))
-                {
-                    Console.WriteLine(link.mSource + " " + newSrc);
                     link.mSource = newSrc;
-    
-                }
 
                 if (hashMap.TryGetValue(link.mDest, out ulong newDst))
-                {
-                    Console.WriteLine(link.mSource + " " + newDst);
                     link.mDest = newDst;
-                }
 
                 links.Add(link);
             } 
@@ -1628,10 +1629,8 @@ namespace Fushigi.ui.widgets
 
 
             if (!Layers.Contains(mSelectedLayer))
-            {
-                Console.WriteLine("LayerExist already returning");
                 return;
-            }
+            
 
             var ctx = areaScenes[selectedArea].EditContext;
             ctx.CommitAction(new PropertyFieldsSetUndo(
@@ -3770,10 +3769,11 @@ namespace Fushigi.ui.widgets
 
         private void PrefabsView()
         {
-            string path = "res/prefabs";
+            string path = Path.Combine(UserSettings.SettingsDir, "prefabs");
+
             if (!Directory.Exists(path))
             {
-                ImGui.Text("No prefabs found in res/prefabs");
+                ImGui.Text($"No prefabs found");
                 return;
             }
 

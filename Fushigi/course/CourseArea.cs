@@ -193,11 +193,9 @@ namespace Fushigi.course
                 mUnitHolder = new();
             }
         }
-        public BymlArrayNode LoadPresetLinks(string prefabName)
+        public BymlArrayNode LoadPrefabLinks(string prefabName, byte[] levelBytes)
         {
-            byte[] levelBytes = FileUtil.DecompressFile($"res/prefabs/{prefabName}.bcett.byml.zs");
             var byml = new Byml.Byml(new MemoryStream(levelBytes));
-
             BymlHashTable? root = byml.Root as BymlHashTable;
             BymlArrayNode linksArray = null;
             if (root.ContainsKey("Links"))
@@ -207,9 +205,8 @@ namespace Fushigi.course
             return linksArray;
 
         }
-        public BymlArrayNode LoadPreset(string prefabName)
+        public BymlArrayNode LoadPrefab(string prefabName, byte[] levelBytes)
         {
-            byte[] levelBytes = FileUtil.DecompressFile($"res/prefabs/{prefabName}.bcett.byml.zs");
             var byml = new Byml.Byml(new MemoryStream(levelBytes));
 
             BymlHashTable? root = byml.Root as BymlHashTable;
@@ -321,10 +318,12 @@ namespace Fushigi.course
                 }
             }
         }
-        public void SaveActorsToPreset(List<CourseActor> copiedActors, List<CourseActor> actors, string prefabName)
+        public void SaveActorsToPrefab(List<CourseActor> copiedActors, List<CourseActor> actors, string prefabName)
         {
-            if(!Directory.Exists("res/prefabs"))
-                Directory.CreateDirectory("res/prefabs");
+            string prefabFolder = Path.Combine(UserSettings.SettingsDir, "prefabs");
+
+            if (!Directory.Exists(prefabFolder))
+                Directory.CreateDirectory(prefabFolder);
 
             BymlHashTable root = new();
             root.AddNode(BymlNodeId.Array, mActorHolder.SerializePreset(copiedActors, mLinkHolder), "Actors");
@@ -336,8 +335,8 @@ namespace Fushigi.course
 
             var decomp_size = (uint)mem.Length;
 
-            string presetPath = $"res/prefabs/{prefabName}.bcett.byml.zs";
-            File.WriteAllBytes(presetPath, FileUtil.CompressData(mem.ToArray()));
+            string prefabPath = Path.Combine(prefabFolder, $"{prefabName}.bcett.byml.zs");
+            File.WriteAllBytes(prefabPath, FileUtil.CompressData(mem.ToArray()));
             
         }
         public void Save(RSTB resource_table, string folder, bool saveTemplate)

@@ -720,7 +720,6 @@ namespace Fushigi.ui.widgets
         }
         public void SavePrefab(string prefabName)
         {
-
             var median = System.Numerics.Vector3.Zero;
 
             var ctx = mEditContext;
@@ -740,7 +739,7 @@ namespace Fushigi.ui.widgets
                 foreach (var actor in copiedActors)
                     actor.mTranslation -= median;
 
-                mArea.SaveActorsToPreset(copiedActors, actors, prefabName);
+                mArea.SaveActorsToPrefab(copiedActors, actors, prefabName);
             }
         }
         public void Draw(Vector2 size, double deltaSeconds, IDictionary<string, bool> layersVisibility)
