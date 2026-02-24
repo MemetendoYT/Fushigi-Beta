@@ -718,6 +718,7 @@ namespace Fushigi.ui.widgets
             }
 
         }
+  
         public void SavePrefab(string prefabName)
         {
             var median = System.Numerics.Vector3.Zero;
@@ -774,6 +775,11 @@ namespace Fushigi.ui.widgets
                     if (ImGui.MenuItem("Delete"))
                         deleteContext = true;
                 }
+
+                ImGui.Separator();
+
+                if (ImGui.MenuItem("Add Comment"))
+                    AddComment();
 
 
                 //if (mEditContext.IsSingleObjectSelected(out BGUnitRail? mSelectedUnitRail))
@@ -1150,6 +1156,12 @@ namespace Fushigi.ui.widgets
 
 
             ImGui.PopClipRect();
+        }
+
+        private void AddComment()
+        {
+            var comment = new CourseComment();
+            mEditContext.AddComment(comment);
         }
 
         private void DoImmediatePaste(bool freshCopy)
@@ -2028,6 +2040,36 @@ namespace Fushigi.ui.widgets
                     }
                 }
             }
+
+
+            foreach (CourseComment comment in mArea.GetComments())
+            {
+                Vector2 pos = WorldToScreen(comment.mTranslation);
+
+                ImGui.SetCursorScreenPos(pos);
+
+                ImGui.BeginChild(
+                    $"CommentWindow{comment.mCommentNum}",
+                    new Vector2(200, 100),
+                    ImGuiChildFlags.None,
+                    ImGuiWindowFlags.NoDecoration |
+                    ImGuiWindowFlags.NoScrollbar |
+                    ImGuiWindowFlags.NoScrollWithMouse |
+                    ImGuiWindowFlags.AlwaysAutoResize
+                );
+
+                ref string text = ref comment.mText;
+
+                ImGui.InputTextMultiline(
+                    $"##Comment{comment.mCommentNum}",
+                    ref text,
+                    1024,
+                    new Vector2(200, 100)
+                );
+
+                ImGui.EndChild();
+            }
+
 
             foreach (CourseActor actor in mArea.GetActors())
             {

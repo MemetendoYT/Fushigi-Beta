@@ -28,6 +28,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using static Fushigi.course.CourseComment;
 using static System.Net.Mime.MediaTypeNames;
 using NumVec = System.Numerics.Vector3;
 
@@ -493,6 +494,8 @@ namespace Fushigi.ui.widgets
 
             ActorsPanel();
 
+            CommentsPanel();
+
             SelectionParameterPanel();
 
             RailsPanel();
@@ -773,22 +776,31 @@ namespace Fushigi.ui.widgets
                         var drawPos = ImGui.GetCursorScreenPos();
                         ImGui.SetCursorScreenPos(drawPos);
                         viewport.Draw(size, deltaSeconds, mLayersVisibility);
-
+                        ImGui.EndChild();
                         Vector2 vpMin = ImGui.GetItemRectMin();
                         Vector2 vpMax = ImGui.GetItemRectMax();
                         insideViewport = ImGui.IsMouseHoveringRect(vpMin, vpMax);
 
-                        ImGui.SetCursorScreenPos(vpMin + new Vector2(16, 16));
+                        ImGui.SetCursorScreenPos(vpMin + new Vector2(16, 20));
                         float fps = (float)Math.Round(1.0f / ImGui.GetIO().DeltaTime, 0);
+
+                        Vector2 fpsPos = vpMin + new Vector2(16, 40);
+                        uint col = ImGui.GetColorU32(ImGuiCol.Text);
+
+                        var dl = ImGui.GetForegroundDrawList();
 
                         if (insideViewport)
                         {
                             var worldPos = activeViewport.ScreenToWorld(ImGui.GetMousePos());
-                            ImGui.Text($"X: {Math.Round(worldPos.X, 3)}\nY: {Math.Round(worldPos.Y, 3)}\nFPS: {fps}");
+                            dl.AddText(fpsPos, col, $"X: {Math.Round(worldPos.X, 3)}");
+                            dl.AddText(fpsPos + new Vector2(0, ImGui.GetTextLineHeight()), col, $"Y: {Math.Round(worldPos.Y, 3)}");
+                            dl.AddText(fpsPos + new Vector2(0, ImGui.GetTextLineHeight() * 2), col, $"FPS: {fps}");
                         }
                         else
                         {
-                            ImGui.Text($"X:\nY:\nFPS: {fps}");
+                            dl.AddText(fpsPos, col, "X:");
+                            dl.AddText(fpsPos + new Vector2(0, ImGui.GetTextLineHeight()), col, "Y:");
+                            dl.AddText(fpsPos + new Vector2(0, ImGui.GetTextLineHeight() * 2), col, $"FPS: {fps}");
                         }
 
                         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -1135,121 +1147,143 @@ namespace Fushigi.ui.widgets
             ImGui.End();
         }
 
+        private void CommentsPanel()
+        {
+            ImGui.Begin("Com,ments");
+
+            //if (ImGui.Button("Delete Actor"))
+            //{
+            //    var ctx = areaScenes[selectedArea].EditContext;
+            //    var actors = ctx.GetSelectedObjects<CourseActor>().ToList();
+
+            //    if (actors.Count > 0)
+            //        _ = DeleteObjectsWithWarningPrompt(actors,
+            //            ctx, "Delete actors");
+            //}
+
+
+            CourseCommentHolder commentsArray = selectedArea.mCommentHolder;
+
+            CommentsView(commentsArray);
+
+            ImGui.End();
+        }
+
         private string? mSelectedActor;
         public static string? mSelectedLayer;
         private string mAddActorSearchQuery = "";
         private string mAddLayerSearchQuery = "";
 
-        public async void PlaceGoalSetup()
-        {
-            var viewport = activeViewport;
-            var area = selectedArea;
-            var ctx = areaScenes[selectedArea].EditContext;
+        //public async void PlaceGoalSetup()
+        //{
+        //    var viewport = activeViewport;
+        //    var area = selectedArea;
+        //    var ctx = areaScenes[selectedArea].EditContext;
 
-            NumVec? pos;
-            KeyboardModifier modifier;
-            mSelectedLayer = mSelectedLayer ?? "PlayArea1";
+        //    NumVec? pos;
+        //    KeyboardModifier modifier;
+        //    mSelectedLayer = mSelectedLayer ?? "PlayArea1";
 
-            if (!mLayersVisibility.ContainsKey(mSelectedLayer))
-            {
-                mSelectedLayer = "PlayArea";
-                AddSelectedLayer();
-                mSelectedLayer = "PlayArea1";
-            }
+        //    if (!mLayersVisibility.ContainsKey(mSelectedLayer))
+        //    {
+        //        mSelectedLayer = "PlayArea";
+        //        AddSelectedLayer();
+        //        mSelectedLayer = "PlayArea1";
+        //    }
 
-            using var tokenSource = new CancellationTokenSource();
-            {
-                ImGui.SetWindowFocus(area.mAreaName);
-                (pos, modifier) = await viewport.PickPosition(
-                    $"Placing Goal Pole Setup", mSelectedLayer, tokenSource);
+        //    using var tokenSource = new CancellationTokenSource();
+        //    {
+        //        ImGui.SetWindowFocus(area.mAreaName);
+        //        (pos, modifier) = await viewport.PickPosition(
+        //            $"Placing Goal Pole Setup", mSelectedLayer, tokenSource);
 
-                if (!pos.TryGetValue(out var posVec))
-                {
-                    return;
-                }
+        //        if (!pos.TryGetValue(out var posVec))
+        //        {
+        //            return;
+        //        }
 
-                var goalActors = CreateGoalSetup(posVec);
+        //        var goalActors = CreateGoalSetup(posVec);
 
-                foreach (var actor in goalActors)
-                {
-                    var i = 0;
-                    do
-                    {
-                        i++;
-                    } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
-                    actor.mName = $"{actor.mPackName}{i}";
+        //        foreach (var actor in goalActors)
+        //        {
+        //            var i = 0;
+        //            do
+        //            {
+        //                i++;
+        //            } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
+        //            actor.mName = $"{actor.mPackName}{i}";
 
-                    ctx.AddActor(actor);
-                }
-            }
+        //            ctx.AddActor(actor);
+        //        }
+        //    }
 
-        }
+        //}
 
-        public List<CourseActor> CreateGoalSetup(NumVec location)
-        {
-            var areaHash = selectedArea.mRootHash;
-            var areaLinks = selectedArea.mLinkHolder;
+        //public List<CourseActor> CreateGoalSetup(NumVec location)
+        //{
+        //    var areaHash = selectedArea.mRootHash;
+        //    var areaLinks = selectedArea.mLinkHolder;
 
-            NumVec placement;
+        //    NumVec placement;
 
-            placement.X = MathF.Round(location.X * 2, MidpointRounding.AwayFromZero) / 2;
-            placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
-            placement.Z = 0.0f;
+        //    placement.X = MathF.Round(location.X * 2, MidpointRounding.AwayFromZero) / 2;
+        //    placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
+        //    placement.Z = 0.0f;
 
-            // Create all Actors needed
-            CourseActor goalPole = new CourseActor("ObjectGoalPole", areaHash, mSelectedLayer);
-            CourseActor airWall = new CourseActor("AirWallRight", areaHash, mSelectedLayer);
-            CourseActor noRevivalArea = new CourseActor("PlayerRevivalProhibitsArea", areaHash, mSelectedLayer);
-            CourseActor goalPrince = new CourseActor("ObjectGoalDemoNPCPrince", areaHash, mSelectedLayer);
-            CourseActor goalSeed = new CourseActor("EventItemWonderFlowerGoalDemo", areaHash, mSelectedLayer);
-            CourseActor goalPoplin = new CourseActor("ObjectGoalDemoNpc", areaHash, mSelectedLayer);
-            CourseActor goalFort = new CourseActor("ObjectGoalPoleFort", areaHash, mSelectedLayer);
+        //    // Create all Actors needed
+        //    CourseActor goalPole = new CourseActor("ObjectGoalPole", areaHash, mSelectedLayer);
+        //    CourseActor airWall = new CourseActor("AirWallRight", areaHash, mSelectedLayer);
+        //    CourseActor noRevivalArea = new CourseActor("PlayerRevivalProhibitsArea", areaHash, mSelectedLayer);
+        //    CourseActor goalPrince = new CourseActor("ObjectGoalDemoNPCPrince", areaHash, mSelectedLayer);
+        //    CourseActor goalSeed = new CourseActor("EventItemWonderFlowerGoalDemo", areaHash, mSelectedLayer);
+        //    CourseActor goalPoplin = new CourseActor("ObjectGoalDemoNpc", areaHash, mSelectedLayer);
+        //    CourseActor goalFort = new CourseActor("ObjectGoalPoleFort", areaHash, mSelectedLayer);
 
-            // Proper Offsets and scales
-            NumVec airWallOffset = new NumVec(1.0f, 0.0f, 0.0f);
-            NumVec airWallScale = new NumVec(1.0f, 50.0f, 1.0f);
-            NumVec noRevivalAreaOffset = new NumVec(10.75f, 0.0f, 0.0f);
-            NumVec noRevivalAreaScale = new NumVec(21.5f, 50.0f, 1.0f);
-            NumVec goalPrinceOffset = new NumVec(8.0f, 0.0f, 0.0f);
-            NumVec goalSeedOffset = new NumVec(10.5f, 0.0f, 0.0f);
-            NumVec goalPoplinOffset = new NumVec(14.0f, 0.0f, 0.0f);
-            NumVec goalFortOffset = new NumVec(14.5f, 0.0f, 0.0f);
+        //    // Proper Offsets and scales
+        //    NumVec airWallOffset = new NumVec(1.0f, 0.0f, 0.0f);
+        //    NumVec airWallScale = new NumVec(1.0f, 50.0f, 1.0f);
+        //    NumVec noRevivalAreaOffset = new NumVec(10.75f, 0.0f, 0.0f);
+        //    NumVec noRevivalAreaScale = new NumVec(21.5f, 50.0f, 1.0f);
+        //    NumVec goalPrinceOffset = new NumVec(8.0f, 0.0f, 0.0f);
+        //    NumVec goalSeedOffset = new NumVec(10.5f, 0.0f, 0.0f);
+        //    NumVec goalPoplinOffset = new NumVec(14.0f, 0.0f, 0.0f);
+        //    NumVec goalFortOffset = new NumVec(14.5f, 0.0f, 0.0f);
 
-            // Apply
-            goalPole.mActorParameters["ExportedScaleY"] = 10.0f;
-            goalPole.mTranslation = placement;
+        //    // Apply
+        //    goalPole.mActorParameters["ExportedScaleY"] = 10.0f;
+        //    goalPole.mTranslation = placement;
 
-            airWall.mTranslation = placement + airWallOffset;
-            airWall.mScale = airWallScale;
+        //    airWall.mTranslation = placement + airWallOffset;
+        //    airWall.mScale = airWallScale;
 
-            noRevivalArea.mTranslation = placement + noRevivalAreaOffset;
-            noRevivalArea.mScale = noRevivalAreaScale;
+        //    noRevivalArea.mTranslation = placement + noRevivalAreaOffset;
+        //    noRevivalArea.mScale = noRevivalAreaScale;
 
-            goalPrince.mTranslation = placement + goalPrinceOffset;
-            goalSeed.mTranslation = placement + goalSeedOffset;
-            goalPoplin.mTranslation = placement + goalPoplinOffset;
-            goalFort.mTranslation = placement + goalFortOffset;
+        //    goalPrince.mTranslation = placement + goalPrinceOffset;
+        //    goalSeed.mTranslation = placement + goalSeedOffset;
+        //    goalPoplin.mTranslation = placement + goalPoplinOffset;
+        //    goalFort.mTranslation = placement + goalFortOffset;
 
-            // Create links
-            var links = selectedArea.mLinkHolder.mLinks;
+        //    // Create links
+        //    var links = selectedArea.mLinkHolder.mLinks;
 
-            // References from ObjectGoalPole
-            links.Add(new CourseLink("Reference", goalPole.mHash, goalSeed.mHash));
-            links.Add(new CourseLink("Reference", goalPole.mHash, goalPrince.mHash));
-            links.Add(new CourseLink("Reference", goalPole.mHash, goalPoplin.mHash));
+        //    // References from ObjectGoalPole
+        //    links.Add(new CourseLink("Reference", goalPole.mHash, goalSeed.mHash));
+        //    links.Add(new CourseLink("Reference", goalPole.mHash, goalPrince.mHash));
+        //    links.Add(new CourseLink("Reference", goalPole.mHash, goalPoplin.mHash));
 
-            // Delete from ObjectGoalPole
-            links.Add(new CourseLink("Delete", goalPole.mHash, airWall.mHash));
+        //    // Delete from ObjectGoalPole
+        //    links.Add(new CourseLink("Delete", goalPole.mHash, airWall.mHash));
 
-            // References from ObjectGoalPoleNPC
-            links.Add(new CourseLink("Reference", goalPoplin.mHash, goalSeed.mHash));
-            links.Add(new CourseLink("Reference", goalPoplin.mHash, goalFort.mHash));
+        //    // References from ObjectGoalPoleNPC
+        //    links.Add(new CourseLink("Reference", goalPoplin.mHash, goalSeed.mHash));
+        //    links.Add(new CourseLink("Reference", goalPoplin.mHash, goalFort.mHash));
 
-            // References from ObjectGoalPoleFort
-            links.Add(new CourseLink("Reference", goalFort.mHash, goalPole.mHash));
+        //    // References from ObjectGoalPoleFort
+        //    links.Add(new CourseLink("Reference", goalFort.mHash, goalPole.mHash));
 
-            return new List<CourseActor>() { goalPole, airWall, noRevivalArea, goalPrince, goalSeed, goalPoplin, goalFort };
-        }
+        //    return new List<CourseActor>() { goalPole, airWall, noRevivalArea, goalPrince, goalSeed, goalPoplin, goalFort };
+        //}
 
         public List<CourseActor> CreatePreset(NumVec location, string prefab)
         {
@@ -1590,6 +1624,39 @@ namespace Fushigi.ui.widgets
                 ctx.AddActor(actor);
             } while ((modifier & KeyboardModifier.Shift) > 0);
             mSelectedActor = null;
+            mSelectedLayer = null;
+        }
+
+        private async Task AddComment()
+        {
+            var viewport = activeViewport;
+            var area = selectedArea;
+            var ctx = areaScenes[selectedArea].EditContext;
+
+            NumVec? pos;
+            KeyboardModifier modifier;
+            using var tokenSource = new CancellationTokenSource();
+
+            do
+            {
+                ImGui.SetWindowFocus(area.mAreaName);
+                (pos, modifier) = await viewport.PickPosition(
+                    $"Placing comment -- Hold SHIFT to place multiple", mSelectedLayer, tokenSource);
+                if (!pos.TryGetValue(out var posVec))
+                {
+                    break;
+                }
+
+                int commentNumb;
+                var comment = new CourseComment();
+
+                posVec.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
+                posVec.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                posVec.Z = 0.0f;
+
+                //ctx.AddActor(actor);
+            } while ((modifier & KeyboardModifier.Shift) > 0);
+            //mSelectedActor = null;
             mSelectedLayer = null;
         }
 
@@ -3773,27 +3840,31 @@ namespace Fushigi.ui.widgets
 
             if (!Directory.Exists(path))
             {
-                ImGui.Text($"No prefabs found");
+                ImGui.Text("No prefabs found");
                 return;
             }
 
             string[] files = Directory.GetFiles(path, "*.bcett*");
 
+            if (files.Length == 0)
+            {
+                ImGui.Text("No prefabs found");
+                return;
+            }
+
             float rowHeight = ImGui.GetFrameHeight();
-            float deleteButtonWidth = rowHeight * 1.6f; // adjust as needed
+            float deleteButtonWidth = rowHeight * 1.6f; 
 
             foreach (string file in files)
             {
-                // Extract prefab name safely
+
                 string prefab = Path.GetFileName(file).Split(".bcett")[0];
 
-                ImGui.PushID(prefab); // ensure unique IDs per row
+                ImGui.PushID(prefab); 
 
-                // Start row
                 float fullWidth = ImGui.GetContentRegionAvail().X;
                 float nameWidth = fullWidth - deleteButtonWidth - 8;
 
-                // Left side: prefab selectable
                 ImGui.BeginGroup();
                 ImGui.PushItemWidth(nameWidth);
 
@@ -3805,7 +3876,6 @@ namespace Fushigi.ui.widgets
                 ImGui.PopItemWidth();
                 ImGui.EndGroup();
 
-                // Right side: delete icon
                 ImGui.SameLine();
 
                 Vector2 deletePos = ImGui.GetCursorScreenPos();
@@ -3827,11 +3897,21 @@ namespace Fushigi.ui.widgets
 
                 if (clicked)
                 {
-                    File.Delete(file);
+                    DeletePrefabPopup(file);
                 }
 
                 ImGui.PopID();
             }
+        }
+        public async Task DeletePrefabPopup(string file)
+        {
+            var result = await RemoveAreaConfirmationDialog.ShowDialog(MainWindow.mModalHost, "Remove Prefab", "Do you want to remove this prefab?\nThis action cannot be undone!");
+
+            if (result == RemoveAreaConfirmationDialog.DialogResult.Yes)
+            {
+                File.Delete(file);
+            }
+
         }
         private void AreaLocalLinksView(CourseArea area)
         {
@@ -4160,6 +4240,66 @@ namespace Fushigi.ui.widgets
             ImGui.EndChild();
         }
 
+
+        private void CommentsView(CourseCommentHolder commentHolder)
+        {
+
+            if (commentHolder.mComments.Count == 0)
+            {
+                ImGui.Text("No comments found");
+                return;
+            }
+
+            float rowHeight = ImGui.GetFrameHeight();
+            float deleteButtonWidth = rowHeight * 1.6f;
+
+            foreach (CourseComment comment in commentHolder.mComments)
+            {
+                string commentNum = $"Comment {comment.mCommentNum}";
+
+                ImGui.PushID(commentNum);
+
+                float fullWidth = ImGui.GetContentRegionAvail().X;
+                float nameWidth = fullWidth - deleteButtonWidth - 8;
+
+                ImGui.BeginGroup();
+                ImGui.PushItemWidth(nameWidth);
+
+                if (ImGui.Selectable(commentNum, false, ImGuiSelectableFlags.None, new Vector2(nameWidth, rowHeight)))
+                {
+                    Console.WriteLine("you selected comment epic win");
+                }
+
+                ImGui.PopItemWidth();
+                ImGui.EndGroup();
+
+                ImGui.SameLine();
+
+                Vector2 deletePos = ImGui.GetCursorScreenPos();
+                bool clicked = ImGui.InvisibleButton("##delete", new Vector2(deleteButtonWidth, rowHeight));
+
+                string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                Vector2 iconSize = ImGui.CalcTextSize(deleteIcon);
+                Vector2 iconPos = deletePos + new Vector2(
+                    (deleteButtonWidth - iconSize.X) * 0.5f,
+                    (rowHeight - iconSize.Y) * 0.5f
+                );
+
+                uint color = ImGui.GetColorU32(ImGuiCol.Text);
+                if (!ImGui.IsItemHovered())
+                    color = (color & 0xFFFFFF) | ((uint)((color >> 24) * 0.5f) << 24);
+
+                ImGui.GetWindowDrawList().AddText(iconPos, color, deleteIcon);
+                ImGui.SetItemTooltip("Delete Prefab");
+
+                if (clicked)
+                {
+                    //DeletePrefabPopup(file);
+                }
+
+                ImGui.PopID();
+            }
+        }
         private void CourseMiniView()
         {
             var area = selectedArea;

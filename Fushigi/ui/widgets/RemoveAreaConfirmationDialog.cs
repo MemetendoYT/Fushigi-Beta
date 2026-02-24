@@ -13,10 +13,13 @@ namespace Fushigi.ui.widgets
             No
         }
 
-        public static async Task<DialogResult> ShowDialog(IPopupModalHost modalHost)
+        public static string message = "";
+
+        public static async Task<DialogResult> ShowDialog(IPopupModalHost modalHost, string topMessage, string dialogue)
         {
 
-            var result = await modalHost.ShowPopUp(new RemoveAreaConfirmationDialog(), "Remove Area?",
+            message = dialogue;
+            var result = await modalHost.ShowPopUp(new RemoveAreaConfirmationDialog(), topMessage,
                 ImGuiWindowFlags.AlwaysAutoResize);
 
             if (result.wasClosed)
@@ -27,7 +30,7 @@ namespace Fushigi.ui.widgets
 
         public void DrawModalContent(Promise<DialogResult> promise)
         {
-            ImGui.Text("Do you want to remove this area?\nThis action cannot be undone.");
+            ImGui.Text(message);
             ImGui.NewLine();
 
             float centerXButtons = (ImGui.GetWindowWidth() - ImGui.CalcTextSize("Yes No").X) * 0.4f;

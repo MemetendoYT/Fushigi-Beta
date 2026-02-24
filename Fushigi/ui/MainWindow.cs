@@ -252,7 +252,7 @@ namespace Fushigi.ui
         {
             if (mSelectedCourseScene is not null)
             {
-                var result = await RemoveAreaConfirmationDialog.ShowDialog(this);
+                var result = await RemoveAreaConfirmationDialog.ShowDialog(this, "Remove Area", "Do you want to remove this area?\nThis action cannot be undone.");
 
                 if (result == RemoveAreaConfirmationDialog.DialogResult.Yes)
                 {
@@ -264,6 +264,7 @@ namespace Fushigi.ui
 
             return true;
         }
+
 
         bool mSkipCloseTest = false;
         public void Close()
@@ -655,11 +656,6 @@ namespace Fushigi.ui
 
                     if (ImGui.MenuItem("Redo"))
                         mSelectedCourseScene?.Redo();
-
-                    ImGui.Separator();
-
-                    if (ImGui.MenuItem("Place Goal Setup"))
-                        mSelectedCourseScene?.PlaceGoalSetup();
 
                     ImGui.Separator();
 

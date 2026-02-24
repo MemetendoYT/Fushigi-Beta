@@ -14,6 +14,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static Fushigi.course.CourseComment;
 
 namespace Fushigi.course
 {
@@ -141,6 +142,16 @@ namespace Fushigi.course
             else
             {
                 mActorHolder = new();
+            }
+
+            if (root.ContainsKey("Comments"))
+            {
+                BymlArrayNode commentsArray = (BymlArrayNode)root["commentsArray"];
+                mCommentHolder = new CourseCommentHolder(commentsArray);
+            }
+            else
+            {
+                mCommentHolder = new();
             }
 
             if (root.ContainsKey("Rails"))
@@ -406,6 +417,11 @@ namespace Fushigi.course
             return mActorHolder.mActors;
         }
 
+        public IReadOnlyList<CourseComment> GetComments()
+        {
+            return mCommentHolder.mComments;
+        }
+        
         public IReadOnlyList<CourseActor> GetSortedActors()
         {
             if (!mActorHolder.mActors.TrueForAll(mActorHolder.mSortedActors.Contains) || !mActorHolder.mSortedActors.TrueForAll(mActorHolder.mActors.Contains))
@@ -421,6 +437,7 @@ namespace Fushigi.course
         string mStageParams;
         public AreaParam mAreaParams;
         public CourseActorHolder mActorHolder;
+        public CourseCommentHolder mCommentHolder;
         public CourseRailHolder mRailHolder;
         public CourseActorToRailLinksHolder mRailLinksHolder;
         public CourseLinkHolder mLinkHolder;

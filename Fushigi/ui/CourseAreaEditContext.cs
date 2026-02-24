@@ -14,7 +14,7 @@ namespace Fushigi.ui
 {
     class CourseAreaEditContext(CourseArea area) : EditContextBase
     {
-      
+
         //public void AddActorsBatch(IEnumerable<CourseActor> actors, Dictionary<string, bool> mLayersVisibility, string[] LayerTypes, widgets.CourseScene courseScene)
         //{
         //    var batch = BeginBatchAction();
@@ -49,6 +49,13 @@ namespace Fushigi.ui
         //    batch.Commit($"{IconUtil.ICON_PLUS_CIRCLE} Added Prefab");
         //}
 
+        public void AddComment(CourseComment comment)
+        {
+            comment.mCommentNum = area.mCommentHolder.mComments.Count() + 1;
+            LogAdding<CourseComment>($"Comment {comment.mCommentNum}");
+            CommitAction(area.mCommentHolder.mComments
+                .RevertableAdd(comment, $"{IconUtil.ICON_PLUS_CIRCLE} Add Comment"));
+        }
         public void AddActor(CourseActor actor)
         {
             LogAdding<CourseActor>($"{actor.mPackName}[{actor.mHash}]");

@@ -142,14 +142,12 @@ namespace Fushigi.course
             BymlArrayNode node = new();
             HashSet<CourseLink> added = new();
 
-            // All selected actor hashes
             HashSet<ulong> selectedHashes = selectedActors
                 .Select(a => a.mHash)
                 .ToHashSet();
 
             foreach (var link in mLinks)
-            {
-                // Keep ONLY links where BOTH endpoints are selected
+            { 
                 bool sourceSelected = selectedHashes.Contains(link.mSource);
                 bool destSelected = selectedHashes.Contains(link.mDest);
 
