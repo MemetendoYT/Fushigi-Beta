@@ -22,7 +22,7 @@ namespace Fushigi.course
             mCommentNum++;
             mText = "";
             mTranslation = new System.Numerics.Vector3(0.0f);
-        
+            mOpened = false;
         }
 
 
@@ -51,6 +51,7 @@ namespace Fushigi.course
        
         public string mText;
         public string mLayer;
+        public bool mOpened;
         public System.Numerics.Vector3 mStartingTrans;
         public System.Numerics.Vector3 mTranslation;
 

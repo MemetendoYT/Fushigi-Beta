@@ -28,6 +28,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using ZstdSharp.Unsafe;
 using static Fushigi.course.CourseComment;
 using static System.Net.Mime.MediaTypeNames;
 using NumVec = System.Numerics.Vector3;
@@ -558,8 +559,7 @@ namespace Fushigi.ui.widgets
 
             bool status = ImGui.Begin("Viewports", ImGuiWindowFlags.NoNav);
 
-
-             if (ImGui.BeginTabBar("ViewportTabs"))
+            if (ImGui.BeginTabBar("ViewportTabs"))
              {   
                 for (int i = 0; i < course.GetAreaCount(); i++)
                 {
@@ -567,7 +567,6 @@ namespace Fushigi.ui.widgets
 
                     if (!viewports.TryGetValue(area, out var viewport))
                         continue;
-
 
                     if (ImGui.BeginTabItem(area.GetName()))
                     {
@@ -626,8 +625,13 @@ namespace Fushigi.ui.widgets
                         }
 
                         envPaletteWindow.Load(gl, area.mAreaParams, area.mInitEnvPalette);
-            
-                        ImGui.BeginChild("ViewportContent", ImGui.GetContentRegionAvail());
+
+                        ImGui.BeginChild(
+                             "ViewportContent",
+                             ImGui.GetContentRegionAvail(),
+                             ImGuiChildFlags.None,
+                             ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse
+                         );
 
 
                         if (ImGui.BeginChild("viewport_menu_bar", new Vector2(ImGui.GetWindowWidth(), 30 * MainWindow.dpiScale)))
@@ -776,33 +780,10 @@ namespace Fushigi.ui.widgets
                         var drawPos = ImGui.GetCursorScreenPos();
                         ImGui.SetCursorScreenPos(drawPos);
                         viewport.Draw(size, deltaSeconds, mLayersVisibility);
-                        ImGui.EndChild();
-                        Vector2 vpMin = ImGui.GetItemRectMin();
-                        Vector2 vpMax = ImGui.GetItemRectMax();
-                        insideViewport = ImGui.IsMouseHoveringRect(vpMin, vpMax);
-
-                        ImGui.SetCursorScreenPos(vpMin + new Vector2(16, 20));
-                        float fps = (float)Math.Round(1.0f / ImGui.GetIO().DeltaTime, 0);
-
-                        Vector2 fpsPos = vpMin + new Vector2(16, 40);
-                        uint col = ImGui.GetColorU32(ImGuiCol.Text);
-
-                        var dl = ImGui.GetForegroundDrawList();
-
-                        if (insideViewport)
-                        {
-                            var worldPos = activeViewport.ScreenToWorld(ImGui.GetMousePos());
-                            dl.AddText(fpsPos, col, $"X: {Math.Round(worldPos.X, 3)}");
-                            dl.AddText(fpsPos + new Vector2(0, ImGui.GetTextLineHeight()), col, $"Y: {Math.Round(worldPos.Y, 3)}");
-                            dl.AddText(fpsPos + new Vector2(0, ImGui.GetTextLineHeight() * 2), col, $"FPS: {fps}");
-                        }
-                        else
-                        {
-                            dl.AddText(fpsPos, col, "X:");
-                            dl.AddText(fpsPos + new Vector2(0, ImGui.GetTextLineHeight()), col, "Y:");
-                            dl.AddText(fpsPos + new Vector2(0, ImGui.GetTextLineHeight() * 2), col, $"FPS: {fps}");
-                        }
-
+                        viewport.vpMin = ImGui.GetItemRectMin();
+                        viewport.vpMax = ImGui.GetItemRectMax();
+                        viewport.DrawOverlay();
+                        viewport.DrawComments();
                         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                         {
                             leftClickStartedInsideViewport = insideViewport;
@@ -823,7 +804,7 @@ namespace Fushigi.ui.widgets
                         if (OperatingSystem.IsMacOS() ? ImGui.GetIO().KeySuper : ImGui.GetIO().KeyCtrl)
                             modifiers |= KeyboardModifier.CtrlCmd;
 
-        
+
                         bool viewportWindowHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.None);
 
                         if (placingActor || (leftClickStartedInsideViewport && viewportWindowHovered))
@@ -836,7 +817,6 @@ namespace Fushigi.ui.widgets
                         ImGui.EndChild();     // End ViewportContent
                         ImGui.EndTabItem();   // End tab
                     }
-             
                 }
 
                 if (ImGui.TabItemButton("+"))
@@ -1149,7 +1129,7 @@ namespace Fushigi.ui.widgets
 
         private void CommentsPanel()
         {
-            ImGui.Begin("Com,ments");
+            ImGui.Begin("Comments");
 
             //if (ImGui.Button("Delete Actor"))
             //{
@@ -1174,116 +1154,6 @@ namespace Fushigi.ui.widgets
         private string mAddActorSearchQuery = "";
         private string mAddLayerSearchQuery = "";
 
-        //public async void PlaceGoalSetup()
-        //{
-        //    var viewport = activeViewport;
-        //    var area = selectedArea;
-        //    var ctx = areaScenes[selectedArea].EditContext;
-
-        //    NumVec? pos;
-        //    KeyboardModifier modifier;
-        //    mSelectedLayer = mSelectedLayer ?? "PlayArea1";
-
-        //    if (!mLayersVisibility.ContainsKey(mSelectedLayer))
-        //    {
-        //        mSelectedLayer = "PlayArea";
-        //        AddSelectedLayer();
-        //        mSelectedLayer = "PlayArea1";
-        //    }
-
-        //    using var tokenSource = new CancellationTokenSource();
-        //    {
-        //        ImGui.SetWindowFocus(area.mAreaName);
-        //        (pos, modifier) = await viewport.PickPosition(
-        //            $"Placing Goal Pole Setup", mSelectedLayer, tokenSource);
-
-        //        if (!pos.TryGetValue(out var posVec))
-        //        {
-        //            return;
-        //        }
-
-        //        var goalActors = CreateGoalSetup(posVec);
-
-        //        foreach (var actor in goalActors)
-        //        {
-        //            var i = 0;
-        //            do
-        //            {
-        //                i++;
-        //            } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
-        //            actor.mName = $"{actor.mPackName}{i}";
-
-        //            ctx.AddActor(actor);
-        //        }
-        //    }
-
-        //}
-
-        //public List<CourseActor> CreateGoalSetup(NumVec location)
-        //{
-        //    var areaHash = selectedArea.mRootHash;
-        //    var areaLinks = selectedArea.mLinkHolder;
-
-        //    NumVec placement;
-
-        //    placement.X = MathF.Round(location.X * 2, MidpointRounding.AwayFromZero) / 2;
-        //    placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
-        //    placement.Z = 0.0f;
-
-        //    // Create all Actors needed
-        //    CourseActor goalPole = new CourseActor("ObjectGoalPole", areaHash, mSelectedLayer);
-        //    CourseActor airWall = new CourseActor("AirWallRight", areaHash, mSelectedLayer);
-        //    CourseActor noRevivalArea = new CourseActor("PlayerRevivalProhibitsArea", areaHash, mSelectedLayer);
-        //    CourseActor goalPrince = new CourseActor("ObjectGoalDemoNPCPrince", areaHash, mSelectedLayer);
-        //    CourseActor goalSeed = new CourseActor("EventItemWonderFlowerGoalDemo", areaHash, mSelectedLayer);
-        //    CourseActor goalPoplin = new CourseActor("ObjectGoalDemoNpc", areaHash, mSelectedLayer);
-        //    CourseActor goalFort = new CourseActor("ObjectGoalPoleFort", areaHash, mSelectedLayer);
-
-        //    // Proper Offsets and scales
-        //    NumVec airWallOffset = new NumVec(1.0f, 0.0f, 0.0f);
-        //    NumVec airWallScale = new NumVec(1.0f, 50.0f, 1.0f);
-        //    NumVec noRevivalAreaOffset = new NumVec(10.75f, 0.0f, 0.0f);
-        //    NumVec noRevivalAreaScale = new NumVec(21.5f, 50.0f, 1.0f);
-        //    NumVec goalPrinceOffset = new NumVec(8.0f, 0.0f, 0.0f);
-        //    NumVec goalSeedOffset = new NumVec(10.5f, 0.0f, 0.0f);
-        //    NumVec goalPoplinOffset = new NumVec(14.0f, 0.0f, 0.0f);
-        //    NumVec goalFortOffset = new NumVec(14.5f, 0.0f, 0.0f);
-
-        //    // Apply
-        //    goalPole.mActorParameters["ExportedScaleY"] = 10.0f;
-        //    goalPole.mTranslation = placement;
-
-        //    airWall.mTranslation = placement + airWallOffset;
-        //    airWall.mScale = airWallScale;
-
-        //    noRevivalArea.mTranslation = placement + noRevivalAreaOffset;
-        //    noRevivalArea.mScale = noRevivalAreaScale;
-
-        //    goalPrince.mTranslation = placement + goalPrinceOffset;
-        //    goalSeed.mTranslation = placement + goalSeedOffset;
-        //    goalPoplin.mTranslation = placement + goalPoplinOffset;
-        //    goalFort.mTranslation = placement + goalFortOffset;
-
-        //    // Create links
-        //    var links = selectedArea.mLinkHolder.mLinks;
-
-        //    // References from ObjectGoalPole
-        //    links.Add(new CourseLink("Reference", goalPole.mHash, goalSeed.mHash));
-        //    links.Add(new CourseLink("Reference", goalPole.mHash, goalPrince.mHash));
-        //    links.Add(new CourseLink("Reference", goalPole.mHash, goalPoplin.mHash));
-
-        //    // Delete from ObjectGoalPole
-        //    links.Add(new CourseLink("Delete", goalPole.mHash, airWall.mHash));
-
-        //    // References from ObjectGoalPoleNPC
-        //    links.Add(new CourseLink("Reference", goalPoplin.mHash, goalSeed.mHash));
-        //    links.Add(new CourseLink("Reference", goalPoplin.mHash, goalFort.mHash));
-
-        //    // References from ObjectGoalPoleFort
-        //    links.Add(new CourseLink("Reference", goalFort.mHash, goalPole.mHash));
-
-        //    return new List<CourseActor>() { goalPole, airWall, noRevivalArea, goalPrince, goalSeed, goalPoplin, goalFort };
-        //}
 
         public List<CourseActor> CreatePreset(NumVec location, string prefab)
         {
@@ -4267,7 +4137,9 @@ namespace Fushigi.ui.widgets
 
                 if (ImGui.Selectable(commentNum, false, ImGuiSelectableFlags.None, new Vector2(nameWidth, rowHeight)))
                 {
-                    Console.WriteLine("you selected comment epic win");
+                    var ctx = areaScenes[selectedArea].EditContext;
+                    ctx.Select(comment);
+                    activeViewport.FrameSelectedComment(comment);
                 }
 
                 ImGui.PopItemWidth();
@@ -4294,12 +4166,13 @@ namespace Fushigi.ui.widgets
 
                 if (clicked)
                 {
-                    //DeletePrefabPopup(file);
+
                 }
 
                 ImGui.PopID();
             }
         }
+
         private void CourseMiniView()
         {
             var area = selectedArea;
