@@ -782,6 +782,7 @@ namespace Fushigi.ui.widgets
                         viewport.Draw(size, deltaSeconds, mLayersVisibility);
                         viewport.vpMin = ImGui.GetItemRectMin();
                         viewport.vpMax = ImGui.GetItemRectMax();
+                        insideViewport = ImGui.IsMouseHoveringRect(viewport.vpMin, viewport.vpMax);
                         viewport.DrawOverlay();
                         viewport.DrawComments();
                         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
