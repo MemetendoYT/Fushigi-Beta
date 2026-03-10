@@ -238,14 +238,20 @@ namespace Fushigi.course
             //Save using the configured mod romfs path
             Save(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit"), false);
         }
-        public void SaveStageParam(RSTB resource_table) { 
-            string path = FileUtil.FindContentPath(Path.Combine("Stage", "StageParam"));
+        public void SaveStageParam(RSTB resource_table) {
+            string path = Path.Combine(
+                UserSettings.GetModRomFSPath(),
+                "Stage",
+                "StageParam"
+            );
             SaveStageParam(resource_table, path);
         }
         public void SaveStageParam(RSTB resource_table, string folder)
         {
+            Console.WriteLine("inside function");
             string fileName = mAreaName;
             var stageParamFilePath = Path.Combine(folder, $"{fileName}.game__stage__StageParam.bgyml");
+            Console.WriteLine(stageParamFilePath);
             bool noFileFound = !File.Exists(stageParamFilePath);
 
 

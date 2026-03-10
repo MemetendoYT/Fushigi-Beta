@@ -216,6 +216,7 @@ namespace Fushigi.env
                 if (a == null || b == null)
                     return;
 
+
                 LerpHemiLight(dst.Hemi, a.Hemi, b.Hemi);
                 LerpLight(dst.Main, a.Main, b.Main);
                 LerpLight(dst.SubDiff0, a.SubDiff0, b.SubDiff0);
@@ -227,6 +228,11 @@ namespace Fushigi.env
 
             if (prevPalette == null || nextPalette == null)
                 return;
+
+            if(this.CharLight == null)
+            {
+                return;
+            }
 
             LerpLightList(this.CharLight, prevPalette.CharLight, nextPalette.CharLight);
             LerpLightList(this.CloudLight, prevPalette.CloudLight, nextPalette.CloudLight);

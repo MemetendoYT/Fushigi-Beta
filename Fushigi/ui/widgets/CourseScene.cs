@@ -1017,6 +1017,7 @@ namespace Fushigi.ui.widgets
                     {
                         area.Save(resource_table);
                         area.mAreaParams.Save(resource_table, area.mAreaName);
+                        Console.WriteLine("saving stage param");
                         area.SaveStageParam(resource_table);
                     }
                 }

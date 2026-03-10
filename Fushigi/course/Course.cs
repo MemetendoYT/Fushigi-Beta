@@ -114,7 +114,6 @@ namespace Fushigi.course
                 }
 
 
-
                 int nextNumber = 1;
                 while (usedNumbers.Contains(nextNumber))
                     nextNumber++;
@@ -127,7 +126,7 @@ namespace Fushigi.course
                 areaName = $"{NewAreaName}_Sub1";
             }
 
-                string testPath = FileUtil.FindContentPath(Path.Combine("BancMapUnit", $"{areaName}.bcett.byml.zs"));
+            string testPath = FileUtil.FindContentPath(Path.Combine("BancMapUnit", $"{areaName}.bcett.byml.zs"));
             bool overrideVanilla = File.Exists(testPath);
             mAreas.Add(new CourseArea(areaName, overrideVanilla));
             renameArea();
