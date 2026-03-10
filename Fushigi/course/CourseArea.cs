@@ -146,7 +146,7 @@ namespace Fushigi.course
 
             if (root.ContainsKey("Comments"))
             {
-                BymlArrayNode commentsArray = (BymlArrayNode)root["commentsArray"];
+                BymlArrayNode commentsArray = (BymlArrayNode)root["Comments"];
                 mCommentHolder = new CourseCommentHolder(commentsArray);
             }
             else
@@ -363,6 +363,9 @@ namespace Fushigi.course
             root.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>(mStageParams), "StageParam");
             root.AddNode(BymlNodeId.Array, mRailLinksHolder.SerializeToArray(), "ActorToRailLinks");
             root.AddNode(BymlNodeId.Array, mActorHolder.SerializeToArray(mLinkHolder), "Actors");
+
+            if(mCommentHolder != null) 
+                root.AddNode(BymlNodeId.Array, mCommentHolder.SerializeToArray(), "Comments");
 
             if (mUnitHolder != null)
             {

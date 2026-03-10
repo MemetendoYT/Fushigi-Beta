@@ -2156,7 +2156,6 @@ namespace Fushigi.ui.widgets
 
             if (draggingComment)
             {
-                Console.WriteLine("ok starting drag");
                 if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseComment? comment))
                 {
                     if (canEditStart)
@@ -2164,7 +2163,6 @@ namespace Fushigi.ui.widgets
                         comment.mStartingTrans = comment.mTranslation;
                         canEditStart = false;
                     }
-                    Console.WriteLine("are we dragging");
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
                     posVec -= ScreenToWorld(ImGui.GetIO().MouseClickedPos[0]) - comment.mStartingTrans;
                     if (!ImGui.GetIO().KeyShift)

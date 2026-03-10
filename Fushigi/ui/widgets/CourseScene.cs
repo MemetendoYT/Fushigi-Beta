@@ -4114,7 +4114,6 @@ namespace Fushigi.ui.widgets
 
         private void CommentsView(CourseCommentHolder commentHolder)
         {
-
             if (commentHolder.mComments.Count == 0)
             {
                 ImGui.Text("No comments found");

@@ -1,4 +1,5 @@
-﻿using Fushigi.Byml;
+﻿using Fushigi.Bfres;
+using Fushigi.Byml;
 using Fushigi.Byml.Writer;
 using Fushigi.param;
 using Fushigi.util;
@@ -13,8 +14,8 @@ namespace Fushigi.course
         public CourseComment(BymlHashTable commentNode)
         {
             mTranslation = BymlUtil.GetVector3FromArray(commentNode["Translate"] as BymlArrayNode);
-            mText = BymlUtil.GetNodeData<string>(commentNode["Text"]);
-            mCommentNum = 0;
+            mText = BymlUtil.GetNodeData<string>(commentNode["Comment"]);
+            mCommentNum = BymlUtil.GetNodeData<int>(commentNode["Comment Number"]);
         }
 
         public CourseComment()
@@ -25,36 +26,27 @@ namespace Fushigi.course
             mOpened = false;
         }
 
+        public BymlHashTable BuildNode()
+        {
+            BymlHashTable tbl = new();
+            tbl.AddNode(BymlNodeId.UInt64, BymlUtil.CreateNode<int>(mCommentNum), "Comment Number");
+            tbl.AddNode(BymlNodeId.UInt64, BymlUtil.CreateNode<string>(mText), "Comment");
 
-        //public BymlHashTable BuildNode(CourseLinkHolder linkHolder)
-        //{
-        //    BymlHashTable table = new();
-        //    table.AddNode(BymlNodeId.UInt, BymlUtil.CreateNode<uint>(mAreaHash), "AreaHash");
-        //    table.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>(mPackName), "Gyaml");
-        //    table.AddNode(BymlNodeId.UInt64, BymlUtil.CreateNode<ulong>(mHash), "Hash");
-        //    table.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>(mLayer), "Layer");
-        //    table.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>(mName), "Name");
+            BymlArrayNode translateNode = new(3);
+            translateNode.AddNodeToArray(BymlUtil.CreateNode<float>(mTranslation.X));
+            translateNode.AddNodeToArray(BymlUtil.CreateNode<float>(mTranslation.Y));
+            translateNode.AddNodeToArray(BymlUtil.CreateNode<float>(mTranslation.Z));
 
+            tbl.AddNode(BymlNodeId.Array, translateNode, "Translate");
 
-         
+            return tbl;
+        }
 
-        //    BymlArrayNode rotateNode = new(3);
-        //    rotateNode.AddNodeToArray(BymlUtil.CreateNode<float>(mRotation.X));
-        //    rotateNode.AddNodeToArray(BymlUtil.CreateNode<float>(mRotation.Y));
-        //    rotateNode.AddNodeToArray(BymlUtil.CreateNode<float>(mRotation.Z));
-
-
-        //    return table;
-        //}
-
-
-       
         public string mText;
         public string mLayer;
         public bool mOpened;
         public System.Numerics.Vector3 mStartingTrans;
         public System.Numerics.Vector3 mTranslation;
-
         public int mCommentNum;
      
 
@@ -72,22 +64,32 @@ namespace Fushigi.course
         }
 
 
-        //public BymlArrayNode SerializeToArray(CourseLinkHolder linkHolder)
-        //{
-        //    BymlArrayNode node = new((uint)mComments.Count);
+            //public BymlArrayNode SerializeToArray(CourseLinkHolder linkHolder)
+            //{
+            //    BymlArrayNode node = new((uint)mComments.Count);
 
-        //    foreach (CourseActor actor in mActors)
-        //    {
-        //        node.AddNodeToArray(actor.BuildNode(linkHolder));
-        //    }
+            //    foreach (CourseActor actor in mActors)
+            //    {
+            //        node.AddNodeToArray(actor.BuildNode(linkHolder));
+            //    }
 
-        //    return node;
-        //}
+            //    return node;
+            //}
+   
+            public BymlArrayNode SerializeToArray()
+            {
+                BymlArrayNode node = new((uint)mComments.Count);
+
+                foreach (var comment in mComments)
+                {
+                    node.AddNodeToArray(comment.BuildNode());
+                }
+
+                return node;
+            }
 
 
-
-
-        public List<CourseComment> mComments = [];
+            public List<CourseComment> mComments = [];
     }
 
 
