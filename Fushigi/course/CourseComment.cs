@@ -15,12 +15,10 @@ namespace Fushigi.course
         {
             mTranslation = BymlUtil.GetVector3FromArray(commentNode["Translate"] as BymlArrayNode);
             mText = BymlUtil.GetNodeData<string>(commentNode["Comment"]);
-            mCommentNum = BymlUtil.GetNodeData<int>(commentNode["Comment Number"]);
         }
 
         public CourseComment()
         {
-            mCommentNum++;
             mText = "";
             mTranslation = new System.Numerics.Vector3(0.0f);
             mOpened = false;
@@ -29,7 +27,6 @@ namespace Fushigi.course
         public BymlHashTable BuildNode()
         {
             BymlHashTable tbl = new();
-            tbl.AddNode(BymlNodeId.UInt64, BymlUtil.CreateNode<int>(mCommentNum), "Comment Number");
             tbl.AddNode(BymlNodeId.UInt64, BymlUtil.CreateNode<string>(mText), "Comment");
 
             BymlArrayNode translateNode = new(3);
@@ -47,7 +44,6 @@ namespace Fushigi.course
         public bool mOpened;
         public System.Numerics.Vector3 mStartingTrans;
         public System.Numerics.Vector3 mTranslation;
-        public int mCommentNum;
      
 
     public class CourseCommentHolder

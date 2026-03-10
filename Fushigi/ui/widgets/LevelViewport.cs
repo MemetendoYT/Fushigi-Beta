@@ -276,7 +276,7 @@ namespace Fushigi.ui.widgets
 
         public void HandleCameraControls(double deltaSeconds)
         {
-            isPanGesture = ImGui.IsMouseDragging(ImGuiMouseButton.Middle) ||
+            isPanGesture = ImGui.IsMouseDragging(ImGuiMouseButton.Middle) && !ImGui.GetIO().KeyCtrl ||
                 (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && ImGui.GetIO().KeyShift &&
                 mHoveredObject == null && !mEditContext.IsSelected(mHoveredObject) && !dragRelease);
 
@@ -289,10 +289,20 @@ namespace Fushigi.ui.widgets
 
             if (IsViewportHovered && !ImGui.IsPopupOpen("ViewportContextMenu"))
             {
-                Camera.Distance *= MathF.Pow(2, -ImGui.GetIO().MouseWheel / 10);
 
-                // Default camera distance is 10, so speed is constant until 0.5 at 20
-                const float baseCameraSpeed = 0.25f * 60;
+                if (!ImGui.GetIO().KeyCtrl)
+                {
+                    Camera.Distance *= MathF.Pow(2, -ImGui.GetIO().MouseWheel / 10);
+                }
+                else if (ImGui.IsMouseDragging(ImGuiMouseButton.Middle))
+                {
+                    Vector2 delta = ImGui.GetIO().MouseDelta;
+                    Console.WriteLine("running?");
+                    Camera.Distance *= MathF.Pow(2, delta.Y / 200f);
+                }
+
+                    // Default camera distance is 10, so speed is constant until 0.5 at 20
+                    const float baseCameraSpeed = 0.25f * 60;
                 const float scalingRate = 10.0f;
                 var zoomSpeedFactor = Math.Max(Camera.Distance / scalingRate, 1);
                 var zoomedCameraSpeed = MathF.Floor(zoomSpeedFactor) * baseCameraSpeed;
@@ -842,7 +852,7 @@ namespace Fushigi.ui.widgets
                             }
                             bool deleteWall = false;
                             var unitToSel = new CourseUnit();
-                            if (ImGui.MenuItem("Delete Wall"))
+                            if (ImGui.MenuItem("Delete Unit"))
                             {
                                 CourseUnitHolder unitHolder = mArea.mUnitHolder;
                                 foreach (var unit in unitHolder.mUnits)
@@ -860,7 +870,17 @@ namespace Fushigi.ui.widgets
                                         }
 
                                     }
-                                });
+
+                                    for (int i = unit.mBeltRails.Count - 1; i >= 0; i--)
+                                    {
+                                        if (mEditContext.IsSelected(unit.mBeltRails[i]))
+                                        {
+                                            mEditContext.DeleteBeltRail(unit, unit.mBeltRails[i]);
+                                            deleteWall = true;
+                                            unitToSel = unit;
+                                        }
+                                    }
+                                    });
                                 }
                                 if(deleteWall)
                                 {
@@ -1802,16 +1822,17 @@ namespace Fushigi.ui.widgets
 
         public void DrawComments()
         {
+            int i = 0;
             foreach (CourseComment comment in mArea.GetComments())
             {
-
+                i++;
                 Vector2 pos = WorldToScreen(comment.mTranslation);
                 Vector2 iconPos = new Vector2(pos.X - 20, pos.Y - 20);
                 ImGui.SetCursorScreenPos(iconPos);
 
 
                 ImGui.BeginChild(
-                    $"CommentIcon{comment.mCommentNum}",
+                    $"CommentIcon{i}",
                     new Vector2(40, 40),
                     ImGuiChildFlags.None,
                     ImGuiWindowFlags.NoDecoration |
@@ -1847,7 +1868,7 @@ namespace Fushigi.ui.widgets
                     ImGui.SetCursorScreenPos(pos);
 
                     ImGui.BeginChild(
-                        $"CommentWindow{comment.mCommentNum}",
+                        $"CommentWindow{i}",
                         new Vector2(200, 100),
                         ImGuiChildFlags.None,
                         ImGuiWindowFlags.NoDecoration |
@@ -1859,7 +1880,7 @@ namespace Fushigi.ui.widgets
                     ref string text = ref comment.mText;
 
                     ImGui.InputTextMultiline(
-                        $"##Comment{comment.mCommentNum}",
+                        $"##Comment{i}",
                         ref text,
                         1024,
                         new Vector2(200, 100)
@@ -1880,7 +1901,6 @@ namespace Fushigi.ui.widgets
                     }
                     ImGui.EndChild();
                 }
-           
         }
         void DrawAreaContent()
         {

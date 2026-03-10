@@ -4120,12 +4120,15 @@ namespace Fushigi.ui.widgets
                 return;
             }
 
+            CourseComment commentToDelete = null;
             float rowHeight = ImGui.GetFrameHeight();
             float deleteButtonWidth = rowHeight * 1.6f;
 
+            int i = 0;
             foreach (CourseComment comment in commentHolder.mComments)
             {
-                string commentNum = $"Comment {comment.mCommentNum}";
+                i++;
+                string commentNum = $"Comment {i}";
 
                 ImGui.PushID(commentNum);
 
@@ -4162,14 +4165,19 @@ namespace Fushigi.ui.widgets
                     color = (color & 0xFFFFFF) | ((uint)((color >> 24) * 0.5f) << 24);
 
                 ImGui.GetWindowDrawList().AddText(iconPos, color, deleteIcon);
-                ImGui.SetItemTooltip("Delete Prefab");
+                ImGui.SetItemTooltip("Remove Comment");
 
                 if (clicked)
                 {
-
+                    commentToDelete = comment;
                 }
-
                 ImGui.PopID();
+            }
+
+            if(commentToDelete != null)
+            {
+                commentHolder.mComments.Remove(commentToDelete);
+                commentToDelete = null;
             }
         }
 

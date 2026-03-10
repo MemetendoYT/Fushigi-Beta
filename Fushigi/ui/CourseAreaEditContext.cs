@@ -51,8 +51,7 @@ namespace Fushigi.ui
 
         public void AddComment(CourseComment comment)
         {
-            comment.mCommentNum = area.mCommentHolder.mComments.Count() + 1;
-            LogAdding<CourseComment>($"Comment {comment.mCommentNum}");
+            LogAdding<CourseComment>($"Comment {area.mCommentHolder.mComments.Count() + 1}");
             CommitAction(area.mCommentHolder.mComments
                 .RevertableAdd(comment, $"{IconUtil.ICON_PLUS_CIRCLE} Add Comment"));
         }
