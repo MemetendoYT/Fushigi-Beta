@@ -48,7 +48,12 @@ namespace Fushigi.ui
 
         //    batch.Commit($"{IconUtil.ICON_PLUS_CIRCLE} Added Prefab");
         //}
-
+        public void RemoveComment(CourseComment comment, int commentVal)
+        {
+            LogDeleting<CourseComment>($"Comment {commentVal}");
+            CommitAction(area.mCommentHolder.mComments
+                .RevertableRemove(comment, $"{IconUtil.ICON_TRASH} Remove Comment"));
+        }
         public void AddComment(CourseComment comment)
         {
             LogAdding<CourseComment>($"Comment {area.mCommentHolder.mComments.Count() + 1}");

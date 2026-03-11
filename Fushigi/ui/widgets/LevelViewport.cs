@@ -297,7 +297,6 @@ namespace Fushigi.ui.widgets
                 else if (ImGui.IsMouseDragging(ImGuiMouseButton.Middle))
                 {
                     Vector2 delta = ImGui.GetIO().MouseDelta;
-                    Console.WriteLine("running?");
                     Camera.Distance *= MathF.Pow(2, delta.Y / 200f);
                 }
 
@@ -338,7 +337,8 @@ namespace Fushigi.ui.widgets
             if (mIsNoMoreRendering)
                 goto SKIP_RENDERING; //sue me // ok
 
-            mLayersVisibility = layersVisibility;
+            if(layersVisibility != null)
+                mLayersVisibility = layersVisibility;
 
             if (Framebuffer == null)
                 Framebuffer = new GLFramebuffer(gl, FramebufferTarget.Framebuffer, (uint)size.X, (uint)size.Y);
@@ -449,20 +449,22 @@ namespace Fushigi.ui.widgets
 
             // Actors are listed in the order they were pulled from the yaml.
             // So they are ordered by depth for rendering.
-            foreach (var actor in this.mArea.GetSortedActors())
+            if (layersVisibility != null)
             {
-                actor.wonderVisible = WonderViewMode == actor.mWonderView ||
-                                        WonderViewMode == WonderViewType.Normal ||
-                                        actor.mWonderView == WonderViewType.Normal;
+                foreach (var actor in this.mArea.GetSortedActors())
+                {
+                    actor.wonderVisible = WonderViewMode == actor.mWonderView ||
+                                            WonderViewMode == WonderViewType.Normal ||
+                                            actor.mWonderView == WonderViewType.Normal;
 
-                if (actor.mActorPack == null || (mLayersVisibility.ContainsKey(actor.mLayer) && !mLayersVisibility[actor.mLayer]) ||
-                !actor.wonderVisible)
-                    continue;
+                    if (actor.mActorPack == null || (mLayersVisibility.ContainsKey(actor.mLayer) && !mLayersVisibility[actor.mLayer]) ||
+                    !actor.wonderVisible)
+                        continue;
 
-                RenderActor(actor, actor.mActorPack.ModelInfoRef);
-                RenderActor(actor, actor.mActorPack.DrawArrayModelInfoRef);
+                    RenderActor(actor, actor.mActorPack.ModelInfoRef);
+                    RenderActor(actor, actor.mActorPack.DrawArrayModelInfoRef);
+                }
             }
-
             //Reset back to defaults
             gl.ClipControl(ClipControlOrigin.LowerLeft, ClipControlDepth.ZeroToOne);
 
@@ -782,6 +784,127 @@ namespace Fushigi.ui.widgets
 
                 mArea.SaveActorsToPrefab(copiedActors, actors, prefabName);
             }
+        }
+
+        public void DrawSimple(Vector2 size, double deltaSeconds)
+        {
+            var io = ImGui.GetIO();
+
+            if (size.X * size.Y == 0)
+                return;
+
+
+            mTopLeft = ImGui.GetCursorScreenPos();
+
+            ImGui.InvisibleButton("canvas", size,
+                ImGuiButtonFlags.MouseButtonLeft | ImGuiButtonFlags.MouseButtonRight | ImGuiButtonFlags.MouseButtonMiddle);
+
+            IsViewportHovered = ImGui.IsItemHovered();
+            IsViewportActive = ImGui.IsItemActive();
+
+            KeyboardModifier modifiers = KeyboardModifier.None;
+
+            if (ImGui.GetIO().KeyShift)
+                modifiers |= KeyboardModifier.Shift;
+            if (ImGui.GetIO().KeyAlt)
+                modifiers |= KeyboardModifier.Alt;
+            if (OperatingSystem.IsMacOS() ? ImGui.GetIO().KeySuper : ImGui.GetIO().KeyCtrl)
+                modifiers |= KeyboardModifier.CtrlCmd;
+
+            mSize = size;
+            mDrawList = ImGui.GetWindowDrawList();
+
+            ImGui.PushClipRect(mTopLeft, mTopLeft + size, true);
+
+            HandleCameraControls(deltaSeconds);
+
+            if (Camera.Width != mSize.X || Camera.Height != mSize.Y)
+            {
+                Camera.Width = mSize.X;
+                Camera.Height = mSize.Y;
+            }
+
+            if (!Camera.UpdateMatrices())
+                return;
+
+            this.DrawScene3D(size, null);
+
+            if (ShowGrid)
+                DrawGrid();
+            DrawAreaContent();
+
+
+            if (!IsViewportHovered)
+                mHoveredObject = null;
+
+
+            CourseActor? hoveredActor = mHoveredObject as CourseActor;
+            string actorName;
+            if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
+            {
+                actorName = hoveredActor.mPackName;
+                if (UserSettings.GetEnableTranslation())
+                    actorName = Translate.FetchTranslatedName(actorName);
+
+                ImGui.SetTooltip($"{actorName}\n{hoveredActor.mName}");
+            }
+
+            if (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == KeyboardModifier.CtrlCmd)
+            {
+                mEditContext.Undo();
+            }
+            if ((ImGui.IsKeyPressed(ImGuiKey.Y) && modifiers == KeyboardModifier.CtrlCmd) ||
+                (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == (KeyboardModifier.Shift | KeyboardModifier.CtrlCmd)))
+            {
+                mEditContext.Redo();
+            }
+
+            CourseActor[] selectedActors = areaScene.EditContext.GetSelectedObjects<CourseActor>().ToArray();
+
+            if (selectedActors.Length != 0 &&
+                ((ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd) || copyContext))
+            {
+                CopiedMedianPosition = Vector3.Zero;
+                foreach (CourseActor actor in selectedActors)
+                {
+                    CopiedMedianPosition += actor.mTranslation;
+                }
+                CopiedMedianPosition /= selectedActors.Length;
+
+                CopiedObjects = new CourseActor[selectedActors.Length];
+                for (int i = 0; i < CopiedObjects.Length; i++)
+                {
+                    CopiedObjects[i] = selectedActors[i].Clone(mArea);
+                }
+                copyContext = false;
+            }
+            bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
+            bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
+            if (CopiedObjects.Length != 0 && IsViewportHovered &&
+                ((ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift) || pasteContext))
+            {
+                DoPaste(freshCopy: ctrlAndShift);
+                pasteContext = false;
+            }
+
+            if (CopiedObjects.Length == 0)
+            {
+                pasteContext = false;
+            }
+
+            if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+            {
+                mMultiSelecting = false;
+                mMultiSelectStartPos = null;
+                mMultiSelectCurrentPos = null;
+                mMultiSelectEnded = true;
+            }
+
+            if (IsViewportHovered || IsViewportActive)
+                InteractionWithFocus(modifiers);
+
+
+            ImGui.PopClipRect();
         }
         public void Draw(Vector2 size, double deltaSeconds, IDictionary<string, bool> layersVisibility)
         {
@@ -1141,7 +1264,7 @@ namespace Fushigi.ui.widgets
             CourseActor? hoveredActor = mHoveredObject as CourseActor;
             string actorName;
             if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
-            { //prevents tooltip flickering
+            { 
                 actorName = hoveredActor.mPackName;
                 if (UserSettings.GetEnableTranslation())
                     actorName = Translate.FetchTranslatedName(actorName);

@@ -46,6 +46,7 @@ namespace Fushigi.ui.widgets
         public LevelViewport activeViewport;
         readonly UndoWindow undoWindow;
         readonly EnvPaletteWindow envPaletteWindow;
+        readonly EnvCollisionEditor collisionEditorWindow;
         NumVec camSave;
         public static bool saveStatus = true;
         private bool areaSwitched;
@@ -74,6 +75,7 @@ namespace Fushigi.ui.widgets
         bool showTalkingFlower = false;
         bool showCourseSettings = false;
         bool showPaletteWindow = false;
+        bool showCollisionWindow = false;
         public static bool showGlobalLinkWindow = false;
         private int linkNumb;
         CourseLink gLink;
@@ -81,6 +83,7 @@ namespace Fushigi.ui.widgets
         public static uint areaParamSize;
         public static uint oldCourseInfoSize;
         public static uint courseInfoSize;
+        public Vector2 sizeToUse = new Vector2(0, 0);
         static Dictionary<string, List<ulong>> mCopiedLinks = [];
         public string previousWord = "";
         public static bool refreshTranslation = false;
@@ -393,6 +396,7 @@ namespace Fushigi.ui.widgets
             selectedArea = course.GetArea(0);
             undoWindow = new UndoWindow();
             envPaletteWindow = new EnvPaletteWindow();
+            collisionEditorWindow = new EnvCollisionEditor();
             activeViewport = null!;
             LevelViewport._courseScene = this;
             UpdateDRPC();
@@ -484,7 +488,7 @@ namespace Fushigi.ui.widgets
         }
         public void DrawUI(GL gl, double deltaSeconds)
         {
-            if(blankLevel)
+            if (blankLevel)
             {
                 blankLevel = false;
                 currentArea = selectedArea;
@@ -540,6 +544,12 @@ namespace Fushigi.ui.widgets
 
             if (showPaletteWindow)
                 envPaletteWindow.Draw(ref showPaletteWindow, mPopupModalHost);
+
+
+            if (showCollisionWindow) {
+                if(sizeToUse != null)
+                    collisionEditorWindow.Draw(ref showCollisionWindow, mPopupModalHost, sizeToUse, deltaSeconds, activeViewport);
+            }
 
             if (showGlobalLinkWindow)
                 DrawGlobalLinksPanel(ref showGlobalLinkWindow, mPopupModalHost, gLink, linkNumb);
@@ -762,6 +772,13 @@ namespace Fushigi.ui.widgets
 
                             ImGui.SameLine();
 
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_SQUARE, true, icon_size))
+                            {
+                                showCollisionWindow = true;
+                            }
+
+                            ImGui.SetItemTooltip("Collision Editor [Experimental]");
+
                             ImGui.PopStyleColor(1);
                             ImGui.EndChild();
                         }
@@ -776,6 +793,7 @@ namespace Fushigi.ui.widgets
                             io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
 
                         var size = ImGui.GetContentRegionAvail();
+                        sizeToUse = size;
 
                         var drawPos = ImGui.GetCursorScreenPos();
                         ImGui.SetCursorScreenPos(drawPos);
@@ -4125,7 +4143,9 @@ namespace Fushigi.ui.widgets
             float rowHeight = ImGui.GetFrameHeight();
             float deleteButtonWidth = rowHeight * 1.6f;
 
+            int commentVal = 0;
             int i = 0;
+            var ctx = areaScenes[selectedArea].EditContext;
             foreach (CourseComment comment in commentHolder.mComments)
             {
                 i++;
@@ -4141,7 +4161,6 @@ namespace Fushigi.ui.widgets
 
                 if (ImGui.Selectable(commentNum, false, ImGuiSelectableFlags.None, new Vector2(nameWidth, rowHeight)))
                 {
-                    var ctx = areaScenes[selectedArea].EditContext;
                     ctx.Select(comment);
                     activeViewport.FrameSelectedComment(comment);
                 }
@@ -4171,13 +4190,14 @@ namespace Fushigi.ui.widgets
                 if (clicked)
                 {
                     commentToDelete = comment;
+                    commentVal = i;
                 }
                 ImGui.PopID();
             }
 
             if(commentToDelete != null)
             {
-                commentHolder.mComments.Remove(commentToDelete);
+                ctx.RemoveComment(commentToDelete, commentVal);
                 commentToDelete = null;
             }
         }
