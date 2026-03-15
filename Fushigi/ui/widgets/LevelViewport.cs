@@ -108,6 +108,7 @@ namespace Fushigi.ui.widgets
         public bool PlayAnimations = false;
         public bool ShowGrid = true;
         public bool ShowBackground = true;
+        public bool ShowActors = true;
         bool pasteContext = false;
         bool copyContext = false;
         bool deleteContext = false;

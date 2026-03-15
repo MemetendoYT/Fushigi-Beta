@@ -75,6 +75,7 @@ namespace Fushigi.ui.widgets
         bool showTalkingFlower = false;
         bool showCourseSettings = false;
         bool showPaletteWindow = false;
+        public bool hasOpened;
         bool showCollisionWindow = false;
         public static bool showGlobalLinkWindow = false;
         private int linkNumb;
@@ -749,6 +750,17 @@ namespace Fushigi.ui.widgets
 
                             ImGui.SameLine();
 
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_ICONS, viewport.ShowActors, icon_size))
+                            {
+                                viewport.ShowActors = !viewport.ShowActors;
+                                foreach (var layer in mLayersVisibility.Keys)
+                                    if (!BackgroundLayerTypes.Contains(layer))
+                                        mLayersVisibility[layer] = viewport.ShowActors;
+                            }
+                            ImGui.SetItemTooltip("Hide/Show Play Areas");
+
+                            ImGui.SameLine();
+
                             if (ImguiHelper.DrawTextToggle(IconUtil.ICON_SYNC, true, icon_size))
                             {
                                 BfresCache.Clear();
@@ -760,6 +772,7 @@ namespace Fushigi.ui.widgets
                             if (ImguiHelper.DrawTextToggle(IconUtil.ICON_PAINT_BRUSH, true, icon_size))
                             {
                                 showPaletteWindow = true;
+                                hasOpened = true;
                             }
 
                             ImGui.SetItemTooltip("Palette Editor [Experimental]");
@@ -772,12 +785,12 @@ namespace Fushigi.ui.widgets
 
                             ImGui.SameLine();
 
-                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_SQUARE, true, icon_size))
-                            {
-                                showCollisionWindow = true;
-                            }
+                            //if (ImguiHelper.DrawTextToggle(IconUtil.ICON_SQUARE, true, icon_size))
+                            //{
+                            //    showCollisionWindow = true;
+                            //}
 
-                            ImGui.SetItemTooltip("Collision Editor [Experimental]");
+                            //ImGui.SetItemTooltip("Collision Editor [Experimental]");
 
                             ImGui.PopStyleColor(1);
                             ImGui.EndChild();
@@ -1020,10 +1033,13 @@ namespace Fushigi.ui.widgets
 
                     var name = area.mAreaParams.EnvPaletteSetting.InitPaletteBaseName;
 
-                    if (backup)
-                        envPaletteWindow.SavePalette(resource_table, Path.Combine(backupFolder, "Gyml", "Gfx", "EnvPaletteParam"));
-                    else
-                        envPaletteWindow.SavePalette(resource_table);
+                    if (hasOpened)
+                    {
+                        if (backup)
+                            envPaletteWindow.SavePalette(resource_table, Path.Combine(backupFolder, "Gyml", "Gfx", "EnvPaletteParam"));
+                        else
+                            envPaletteWindow.SavePalette(resource_table);
+                    }
 
                     if (backup)
                     {
