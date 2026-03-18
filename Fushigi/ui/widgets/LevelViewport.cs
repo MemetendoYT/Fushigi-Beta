@@ -138,6 +138,7 @@ namespace Fushigi.ui.widgets
 
         public bool ScreenshotMode;
         bool dragActors;
+        bool dragRails;
 
         //TODO make this an ISceneObject? as soon as there's a SceneObj class for each course object
         private object? mHoveredObject;
@@ -840,6 +841,7 @@ namespace Fushigi.ui.widgets
 
 
             CourseActor? hoveredActor = mHoveredObject as CourseActor;
+            CourseRail? hoveredRail = mHoveredObject as CourseRail;
             string actorName;
             if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
             {
@@ -849,6 +851,7 @@ namespace Fushigi.ui.widgets
 
                 ImGui.SetTooltip($"{actorName}\n{hoveredActor.mName}");
             }
+
 
             if (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == KeyboardModifier.CtrlCmd)
             {
@@ -1263,6 +1266,8 @@ namespace Fushigi.ui.widgets
             
 
             CourseActor? hoveredActor = mHoveredObject as CourseActor;
+            CourseRail.CourseRailPoint? hoveredRailPoint = mHoveredObject as CourseRail.CourseRailPoint;
+            Console.WriteLine($"Hovered Object: {mHoveredObject}");
             string actorName;
             if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
             { 
@@ -1271,6 +1276,14 @@ namespace Fushigi.ui.widgets
                     actorName = Translate.FetchTranslatedName(actorName);
 
                 ImGui.SetTooltip($"{actorName}\n{hoveredActor.mName}");
+            }
+
+            if (hoveredRailPoint != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
+            {
+                CourseRailHolder railArray = mArea.mRailHolder;
+                var railIndex = CourseRail.findRailNum(railArray, hoveredRailPoint);
+                var childIndex = CourseRail.findPointNum(railArray, hoveredRailPoint);
+                ImGui.SetTooltip($"Rail Point {childIndex} from Rail {railIndex}");
             }
 
             if (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == KeyboardModifier.CtrlCmd)
@@ -1555,10 +1568,30 @@ namespace Fushigi.ui.widgets
                 return;
             }
 
+            if (mEditContext.GetSelectedObjects<CourseRail.CourseRailPoint>().ToArray().Length > 0)
+            {
+                if (ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.A))
+                {
+                    var selRailPoint = mEditContext.GetSelectedObjects<CourseRail.CourseRailPoint>().ToArray();
+                var railHolder = mArea.mRailHolder;
+                foreach (var selPoint in selRailPoint)
+                {
+                    int index = CourseRail.findRailNum(railHolder, selPoint);
+
+                    CourseRail rail = railHolder.mRails.ToArray()[index];
+
+                        foreach (CourseRail.CourseRailPoint points in rail.mPoints)
+                        {
+                            mEditContext.Select(points);
+                        }
+                    }
+                }
+            }
+
             // [TODO]: This needs to be rewritten, it's a bit of a mess.
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
-                dragActors =
+               dragActors =
                     mHoveredObject is CourseActor a &&
                     mEditContext.IsSelected(a);
             }
@@ -1574,8 +1607,7 @@ namespace Fushigi.ui.widgets
                     if (mMultiSelectStartPos != null &&
                         !ImGui.IsWindowHovered() &&
                         mEditorMode == EditorMode.Actors &&
-                        !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() ||
-                          mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>() ||
+                        !(
                           mEditContext.IsAnySelected<CourseUnit>() ||
                           mEditContext.IsAnySelected<BGUnitRail>() ||
                           mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
@@ -1584,7 +1616,7 @@ namespace Fushigi.ui.widgets
 
                         void DoDrag()
                         {
-                            if (mEditContext.IsAnySelected<CourseActor>() && mMultiSelectEnded)
+                            if ((mEditContext.IsAnySelected<CourseActor>() || mEditContext.IsAnySelected<CourseRail.CourseRailPoint>()) && mMultiSelectEnded)
                                 return;
 
                             mMultiSelectCurrentPos = ImGui.GetMousePos();
@@ -1609,6 +1641,23 @@ namespace Fushigi.ui.widgets
                             }
 
                             CourseActor[] actors = [.. mArea.GetActors()];
+                            CourseRail[] rails = [.. mArea.GetRails()];
+
+                            foreach(var rail in rails)
+                            {
+                                foreach(var railPoint in rail.mPoints)
+                                {
+                                    float pointX = railPoint.mTranslate.X;
+                                    float pointY = railPoint.mTranslate.Y;
+
+                                    if(pointX > startPosWorld.X && pointX < currentPosWorld.X && pointY > startPosWorld.Y && pointY < currentPosWorld.Y)
+                                        mEditContext.Select(railPoint);
+                                    else
+                                        mEditContext.Deselect(railPoint);
+                                }
+
+                            }
+
                             foreach (var actor in actors)
                             {
                                 if (mLayersVisibility != null && mLayersVisibility.TryGetValue(actor.mLayer, out bool layerVisible))
@@ -1828,8 +1877,41 @@ namespace Fushigi.ui.widgets
                         primaryActor = null;
                     }
                 }
+                else if (mEditContext.IsAnySelected<CourseRail.CourseRailPoint>())
+                {
+                    var movedPoints = mEditContext
+                     .GetSelectedObjects <CourseRail.CourseRailPoint>()
+                     .Where(x => x.mTranslate != x.mStartingTrans)
+                     .ToList();
 
-                dragRelease = false;
+
+                    if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? single))
+                    {
+                        if (single.mTranslate != single.mStartingTrans)
+                        {
+
+                            mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                                single,
+                                [("mTranslate", single.GetFieldValue("mStartingTrans"))],
+                                $"{IconUtil.ICON_ARROWS_ALT} Move Rail Point"));
+                        }
+                    }
+                    else
+                    {
+                        var batch = mEditContext.BeginBatchAction();
+
+                        foreach (var railPoint in movedPoints)
+                        {
+                            mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                                railPoint,
+                                [("mTranslate", railPoint.GetFieldValue("mStartingTrans"))],
+                                $"{IconUtil.ICON_ARROWS_ALT} Move Rail"));
+                        }
+                        batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {movedPoints.Count} Rail Points");
+                    }
+                }
+
+                    dragRelease = false;
             }
 
             if (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace)) || deleteContext)

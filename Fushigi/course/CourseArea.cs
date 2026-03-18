@@ -426,6 +426,11 @@ namespace Fushigi.course
             return mActorHolder.mActors;
         }
 
+        public IReadOnlyList<CourseRail> GetRails()
+        {
+            return mRailHolder.mRails;
+        }
+
         public IReadOnlyList<CourseComment> GetComments()
         {
             return mCommentHolder.mComments;

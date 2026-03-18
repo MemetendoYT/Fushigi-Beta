@@ -16,6 +16,7 @@ using Fushigi.ui.undo;
 using Fushigi.ui.widgets;
 using Fushigi.util;
 using ImGuiNET;
+using Microsoft.Msagl.Layout.LargeGraphLayout;
 using Silk.NET.OpenGL;
 using Silk.NET.SDL;
 using System.Collections;
@@ -2913,7 +2914,11 @@ namespace Fushigi.ui.widgets
                 if (editContext.IsSingleObjectSelected(out CourseRail.CourseRailPointControl? cont))
                     mSelectedRailPoint ??= cont.point;
                 ImGui.AlignTextToFramePadding();
-                ImGui.Text($"Selected Rail Point");
+
+                CourseRailHolder railArray = selectedArea.mRailHolder;
+                var railIndex = CourseRail.findRailNum(railArray, mSelectedRailPoint);
+                var childIndex = CourseRail.findPointNum(railArray, mSelectedRailPoint);
+                ImGui.Text($"Rail Point {childIndex} from Rail {railIndex}");
                 ImGui.NewLine();
                 ImGui.Separator();
 

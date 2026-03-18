@@ -98,6 +98,34 @@ namespace Fushigi.course
             }
         }
 
+        public static CourseRail fetchIndex(CourseRailHolder railHolder, CourseRailPoint mSelectedRailPoint)
+        {
+            var parentRail = new CourseRail(0);
+            foreach (CourseRail rail in railHolder.mRails)
+            {
+                if (rail.mPoints.Contains(mSelectedRailPoint))
+                {
+                    parentRail = rail;
+                    parentRail.mPoints.IndexOf(mSelectedRailPoint);
+                    break;
+                }
+            }
+            //return railHolder.mRails.IndexOf(parentRail)
+                  return parentRail;
+        }
+
+        public static int findRailNum(CourseRailHolder railHolder, CourseRailPoint mSelectedRailPoint)
+        {
+            var parentRail = fetchIndex(railHolder, mSelectedRailPoint);
+            return railHolder.mRails.IndexOf(parentRail);
+        }
+
+        public static int findPointNum(CourseRailHolder railHolder, CourseRailPoint mSelectedRailPoint)
+        {
+            var parentRail = fetchIndex(railHolder, mSelectedRailPoint);
+            return parentRail.mPoints.IndexOf(mSelectedRailPoint);
+        }
+
         public BymlHashTable BuildNode()
         {
             BymlHashTable node = new();
