@@ -13,6 +13,7 @@ using Fushigi.ui.modal;
 using Fushigi.ui.undo;
 using Fushigi.util;
 using ImGuiNET;
+using Microsoft.Msagl.Layout.LargeGraphLayout;
 using Silk.NET.OpenGL;
 using System.ComponentModel;
 using System.Data;
@@ -1191,7 +1192,7 @@ namespace Fushigi.ui.widgets
                                 }
                                 batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
                             }
-                         
+
                         }
                         ImGui.EndMenu();
                     }
@@ -1200,8 +1201,24 @@ namespace Fushigi.ui.widgets
                         PrefabPopup();
                     }
                 }
- 
-                 bool popupHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
+
+                ImGui.Separator();
+                if(cursor == null)
+                {
+                    if (ImGui.MenuItem("Place Cursor"))
+                    {
+                        cursor = new FushigiCursor();
+                    }
+                }
+                else
+                {
+                    if (ImGui.MenuItem("Remove Cursor"))
+                    {
+                        cursor = null;
+                    }
+                }
+
+                bool popupHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
 
 
                 if ((ImGui.IsMouseClicked(ImGuiMouseButton.Left) && IsViewportHovered && !popupHovered) || ImGui.IsMouseClicked(ImGuiMouseButton.Middle))
@@ -1213,8 +1230,6 @@ namespace Fushigi.ui.widgets
 
                 ImGui.EndPopup();
             }
-
-
 
 
             if (size.X * size.Y == 0)
@@ -1267,7 +1282,6 @@ namespace Fushigi.ui.widgets
 
             CourseActor? hoveredActor = mHoveredObject as CourseActor;
             CourseRail.CourseRailPoint? hoveredRailPoint = mHoveredObject as CourseRail.CourseRailPoint;
-            Console.WriteLine($"Hovered Object: {mHoveredObject}");
             string actorName;
             if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
             { 
@@ -1570,23 +1584,29 @@ namespace Fushigi.ui.widgets
 
             if (mEditContext.GetSelectedObjects<CourseRail.CourseRailPoint>().ToArray().Length > 0)
             {
-                if (ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.A))
-                {
                     var selRailPoint = mEditContext.GetSelectedObjects<CourseRail.CourseRailPoint>().ToArray();
-                var railHolder = mArea.mRailHolder;
-                foreach (var selPoint in selRailPoint)
-                {
-                    int index = CourseRail.findRailNum(railHolder, selPoint);
-
-                    CourseRail rail = railHolder.mRails.ToArray()[index];
-
-                        foreach (CourseRail.CourseRailPoint points in rail.mPoints)
+                    var railHolder = mArea.mRailHolder;
+                    foreach (var selPoint in selRailPoint)
+                    {
+                        int index = CourseRail.findRailNum(railHolder, selPoint);
+                        if (index != -1)
                         {
-                            mEditContext.Select(points);
-                        }
+                            if (ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.A))
+                            {
+
+                                CourseRail rail = railHolder.mRails.ToArray()[index];
+
+                                foreach (CourseRail.CourseRailPoint points in rail.mPoints)
+                                    mEditContext.Select(points);
+
+                            }
+                        } else
+                        mEditContext.Deselect(selPoint);
                     }
-                }
+                    
             }
+
+
 
             // [TODO]: This needs to be rewritten, it's a bit of a mess.
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -1616,7 +1636,7 @@ namespace Fushigi.ui.widgets
 
                         void DoDrag()
                         {
-                            if ((mEditContext.IsAnySelected<CourseActor>() || mEditContext.IsAnySelected<CourseRail.CourseRailPoint>()) && mMultiSelectEnded)
+                            if ((mEditContext.IsAnySelected<CourseActor>() || mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<FushigiCursor>()) && mMultiSelectEnded)
                                 return;
 
                             mMultiSelectCurrentPos = ImGui.GetMousePos();
@@ -1655,6 +1675,7 @@ namespace Fushigi.ui.widgets
                                     else
                                         mEditContext.Deselect(railPoint);
                                 }
+
 
                             }
 
@@ -1717,6 +1738,7 @@ namespace Fushigi.ui.widgets
                                 p.mControl.mTranslate.Y = p.mTranslate.Y + relativePosCtrl.Y;
                             }
                         }
+                        
                     }
                 }
                 if (!mMultiSelecting && mEditContext.IsAnySelected<CourseRail.CourseRailPoint>())
@@ -1779,8 +1801,42 @@ namespace Fushigi.ui.widgets
                         railCont.mTranslate = posVec;
                     }
                 }
+                if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out FushigiCursor? cursor))
+                {
+
+                    Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
+
+                    if (ImGui.GetIO().KeyShift)
+                    {
+                        cursor.mTranslate = posVec;
+                    }
+                    else
+                    {
+                        posVec.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
+                        posVec.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                        posVec.Z = cursor.mTranslate.Z;
+                        cursor.mTranslate = posVec;
+                    }
+
+                }
             }
 
+            if (ImGui.IsKeyPressed(ImGuiKey.J))
+            {
+                if (mEditContext.GetSelectedObjects<CourseActor>().ToArray().Length >= 1 && mEditContext.GetSelectedObjects<FushigiCursor>().ToArray().Length == 1)
+                {
+                    foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
+                    {
+                        Vector2 delta = ImGui.GetIO().MouseDelta;
+                        float rotationSpeed = 0.05f;
+                        float deltaAngle = ImGui.GetIO().MouseDelta.X * rotationSpeed;
+                        Vector3 cursorTrans = cursor.mTranslate;
+                        actor.mRotation.Z += deltaAngle;
+                        actor.mTranslation = cursorTrans + Vector3.Transform(actor.mTranslation - cursorTrans, Matrix4x4.CreateRotationZ(deltaAngle));
+                        Console.Write("i am translating it so good");
+                    }
+                }
+            }
 
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
@@ -2025,6 +2081,7 @@ namespace Fushigi.ui.widgets
         private CourseActor? primaryActor;
         private bool draggingComment;
         private bool canEditStart;
+        public FushigiCursor cursor;
 
         public void DrawComments()
         {
@@ -2378,6 +2435,27 @@ namespace Fushigi.ui.widgets
                     }
                 }
             }
+            
+           if(cursor != null)
+           {
+                var cursorPos2D = this.WorldToScreen(new(cursor.mTranslate.X, cursor.mTranslate.Y, cursor.mTranslate.Z));
+                Vector2 pnt = new(cursorPos2D.X, cursorPos2D.Y);
+                bool isHovered = (ImGui.GetMousePos() - pnt).Length() < 5.0f;
+                if (isHovered)
+                   newHoveredObject = cursor;
+                
+                uint color = Color.BlueViolet.ToAbgr();
+                bool point_selected = mEditContext.IsSelected(cursor);
+                var rail_point_color = point_selected ? ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) : color;
+                var size = 10.0f;
+
+                var pos2D = WorldToScreen(cursor.mTranslate);
+                mDrawList.AddCircleFilled(pos2D, size, rail_point_color);
+
+                if (newHoveredObject == cursor)
+                    mDrawList.AddCircle(pos2D, 15.0f, rail_point_color, 10, 1.5f);
+            }
+           
 
 
             if (draggingComment)

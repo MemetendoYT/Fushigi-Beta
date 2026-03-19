@@ -248,10 +248,8 @@ namespace Fushigi.course
         }
         public void SaveStageParam(RSTB resource_table, string folder)
         {
-            Console.WriteLine("inside function");
             string fileName = mAreaName;
             var stageParamFilePath = Path.Combine(folder, $"{fileName}.game__stage__StageParam.bgyml");
-            Console.WriteLine(stageParamFilePath);
             bool noFileFound = !File.Exists(stageParamFilePath);
 
 

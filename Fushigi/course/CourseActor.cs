@@ -338,6 +338,7 @@ namespace Fushigi.course
         public CourseActorType mType = CourseActorType.None;
         public bool wonderVisible = true;
         public System.Numerics.Vector3 mStartingTrans;
+        public System.Numerics.Vector3 mStartingRot;
         public System.Numerics.Vector3 mTranslation;
         public System.Numerics.Vector3 mRotation;
         public System.Numerics.Vector3 mScale;

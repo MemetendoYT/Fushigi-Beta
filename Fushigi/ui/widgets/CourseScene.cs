@@ -17,6 +17,7 @@ using Fushigi.ui.widgets;
 using Fushigi.util;
 using ImGuiNET;
 using Microsoft.Msagl.Layout.LargeGraphLayout;
+using Silk.NET.GLFW;
 using Silk.NET.OpenGL;
 using Silk.NET.SDL;
 using System.Collections;
@@ -1052,7 +1053,6 @@ namespace Fushigi.ui.widgets
                     {
                         area.Save(resource_table);
                         area.mAreaParams.Save(resource_table, area.mAreaName);
-                        Console.WriteLine("saving stage param");
                         area.SaveStageParam(resource_table);
                     }
                 }
@@ -1917,7 +1917,80 @@ namespace Fushigi.ui.widgets
             var editContext = areaScenes[selectedArea].EditContext;
 
             bool status = ImGui.Begin("Selection Parameters", ImGuiWindowFlags.AlwaysVerticalScrollbar);
-            if (editContext.IsSingleObjectSelected(out CourseActor? mSelectedActor) || startedPicker)
+            if(!editContext.IsAnySelected<FushigiCursor>() && activeViewport.cursor != null)
+            {
+                var cursor = activeViewport.cursor;
+                cursor.delta = 0;
+            }
+            if(editContext.IsAnySelected<FushigiCursor>())
+            {
+                ImGui.Text("Wing Ding fungus: go my ring");
+                ImGui.Separator();
+                ImGui.Text("How many chicke wing points");
+                float count = 0;
+                ImGui.InputFloat($"##Count", ref count, 10);
+                float offset = 0;
+                ImGui.InputFloat($"##Offset", ref offset, 10);
+                float radius = 0;
+                ImGui.InputFloat($"##Radius", ref radius, 10);
+
+                float ringAngle = 360 / count;
+
+                for (int i = 0; i < count; i++)
+                {
+                     //actor = new CourseActor();
+                    //actor
+                }
+
+                    if (editContext.IsAnySelected<CourseActor>()) {
+                    bool run = false;
+                    var cursor = activeViewport.cursor;
+                    if (cursor == null)
+                        return;
+
+                    string pivotText = "0";
+                    ImGui.Text("Pivot Actors: Enter number in degrees");
+
+                    if (ImGui.InputText("##Pivot", ref pivotText, 32))
+                    {
+                        if (pivotText == "")
+                        {
+                            cursor.delta = 0;
+                        }
+                        else if (float.TryParse(pivotText, out float value))
+                        {
+                            cursor.delta = value;
+                        }
+                        run = true;
+                    }
+
+                    if (previousDelta != cursor.delta && run)
+                    {
+                        foreach (CourseActor actor in editContext.GetSelectedObjects<CourseActor>())
+                        {
+                            if (actor.mStartingRot == null)
+                            {
+                                actor.mStartingRot = actor.mRotation;
+                                actor.mStartingTrans = actor.mTranslation;
+                            }
+                            else
+                            {
+                                actor.mRotation = actor.mStartingRot;
+                                actor.mTranslation = actor.mStartingTrans;
+                            }
+
+                            Vector2 delta = ImGui.GetIO().MouseDelta;
+                            System.Numerics.Vector3 cursorTrans = cursor.mTranslate;
+                            actor.mRotation.Z += cursor.delta * (MathF.PI / 180f);
+                            actor.mTranslation = cursorTrans + System.Numerics.Vector3.Transform(actor.mTranslation - cursorTrans, Matrix4x4.CreateRotationZ(cursor.delta * (MathF.PI / 180f)));
+                            float angle = cursor.delta * (MathF.PI / 180f);
+                        }
+                        previousDelta = cursor.delta;
+                        return;
+                    }
+                }
+            }
+            else if (editContext.IsSingleObjectSelected(out CourseActor? mSelectedActor) || startedPicker)
             {
                 if(mSelectedActor == null && startedPicker)
                 {
@@ -3744,6 +3817,7 @@ namespace Fushigi.ui.widgets
         public static bool pickingComplete;
         private LevelViewport oldViewport;
         private bool reverseGlobalLink;
+        private float previousDelta;
 
         private void PrefabsView()
         {
