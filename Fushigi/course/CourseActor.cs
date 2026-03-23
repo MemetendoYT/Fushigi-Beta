@@ -48,9 +48,12 @@ namespace Fushigi.course
             mHash = BymlUtil.GetNodeData<ulong>(actorNode["Hash"]);
             mName = BymlUtil.GetNodeData<string>(actorNode["Name"]);
             mActorPack = ActorPackCache.Load(mPackName);
-            mActorChildRef = mActorPack.ChildActorParamName;
-            mCalcDistanceParam = mActorPack.CalcDistanceParam;
+            if (mActorPack != null)
+            {
+                mActorChildRef = mActorPack.ChildActorParamName;
 
+                mCalcDistanceParam = mActorPack.CalcDistanceParam;
+            }
             if (actorNode.ContainsKey("Dynamic"))
             {
                 if (ParamDB.HasActorComponents(mPackName))
@@ -298,6 +301,7 @@ namespace Fushigi.course
                 mRotation = mRotation
             };
             cloned.mStartingTrans = mStartingTrans;
+            cloned.mStartingRot = mStartingRot;
             cloned.mAreaHash = areaTo.mRootHash;
             cloned.mHash = (ulong)(new Random().NextDouble() * ulong.MaxValue);
             cloned.mActorParameters = mActorParameters.Clone();
@@ -322,7 +326,8 @@ namespace Fushigi.course
                 mScale = mScale,
                 mRotation = mRotation
             };
-            cloned.mStartingTrans = mStartingTrans;
+            cloned.mStartingTrans = mStartingTrans; 
+            cloned.mStartingRot = mStartingRot;
             cloned.mAreaHash = areaTo.mRootHash;
             cloned.mHash = mHash; 
             cloned.mActorParameters = mActorParameters.Clone();

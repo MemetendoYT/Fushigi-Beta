@@ -6,8 +6,10 @@ using Fushigi.gl;
 using Fushigi.gl.Bfres;
 using Fushigi.gl.Bfres.AreaData;
 using Fushigi.Logger;
+using Fushigi.Msbt;
 using Fushigi.param;
 using Fushigi.rstb;
+using Fushigi.SARC;
 using Fushigi.ui.helpers;
 using Fushigi.ui.modal;
 using Fushigi.ui.SceneObjects;
@@ -34,7 +36,6 @@ using ZstdSharp.Unsafe;
 using static Fushigi.course.CourseComment;
 using static System.Net.Mime.MediaTypeNames;
 using NumVec = System.Numerics.Vector3;
-
 
 
 namespace Fushigi.ui.widgets
@@ -101,7 +102,9 @@ namespace Fushigi.ui.widgets
         // fushigi.
         public static bool HideWalls;
         public static bool reloadUnit = false;
-
+        private int count = 0;
+        private float offset = 0;
+        private float radius = 0;
 
 
         string mActorSearchText = "";
@@ -950,6 +953,10 @@ namespace Fushigi.ui.widgets
                     );
 
                 }
+
+                //RomFS.courseNamesMSBT.Messages = RomFS.courseNames;
+                //RomFS.courseNamesMSBT.Save(Path.Combine(UserSettings.GetModRomFSPath(), "Mals", "GameMsg", "Name_CourseRemoveLineFeed.msbt"));
+
                 if (backup)
                 {
                     Directory.CreateDirectory(backupFolder);
@@ -1924,29 +1931,76 @@ namespace Fushigi.ui.widgets
             }
             if(editContext.IsAnySelected<FushigiCursor>())
             {
-                ImGui.Text("Wing Ding fungus: go my ring");
-                ImGui.Separator();
-                ImGui.Text("How many chicke wing points");
-                float count = 0;
-                ImGui.InputFloat($"##Count", ref count, 10);
-                float offset = 0;
-                ImGui.InputFloat($"##Offset", ref offset, 10);
-                float radius = 0;
-                ImGui.InputFloat($"##Radius", ref radius, 10);
+                var cursor = activeViewport.cursor;
 
-                float ringAngle = 360 / count;
+                if (cursor == null)
+                    return;
 
-                for (int i = 0; i < count; i++)
+                if (editContext.GetSelectedObjects<CourseActor>().ToList().Count == 1)
                 {
-                     //actor = new CourseActor();
-                    //actor
-                }
+                    CourseActor pickActor = editContext.GetSelectedObjects<CourseActor>().ToArray()[0];
+                    //Credits to https://github.com/aurelionshole/aurelionshole.github.io for ActorRing code
+                    ImGui.Text("Wing Ding Ring Generator");
+                    ImGui.Separator();
 
-                    if (editContext.IsAnySelected<CourseActor>()) {
+                    ImGui.Text("Points:");
+                    if(ImGui.InputInt($"##Count", ref count, 1))
+                    {
+                       count = Math.Clamp(count, 1, 360);
+                    }
+
+                    ImGui.Text("Offset:");
+                    ImGui.InputFloat($"##Offset", ref offset, 1);
+
+                    ImGui.Text("Radius:");
+                    ImGui.InputFloat($"##Radius", ref radius, 1);
+
+                    if (count != 0)
+                    {
+                        //CourseActor pickActor = null;
+                        //if (ImGui.Button(IconUtil.ICON_EYE_DROPPER))
+                        //{
+                        //    ImGui.SetWindowFocus(selectedArea.GetName());
+                        //    Task.Run(async () =>
+                        //    {
+                        //        var (pickedActor, _) = await PickActor();
+                        //        if (pickedActor is null)
+                        //            return;
+
+                        //        pickActor = pickedActor;
+                        //        Console.WriteLine(pickActor);
+                        //    });
+                        //}
+                        //ImGui.SetItemTooltip("Replace");
+
+                        float ringAngle = 360 / count;
+                        float angle = offset % ringAngle;
+                        if (ImGui.Button("Create Actors!"))
+                        {
+                            CourseActor newActor = null;
+                            for (int i = 0; i < count; i++)
+                            {
+                                newActor = new CourseActor(pickActor.mPackName, selectedArea.mRootHash, pickActor.mLayer);
+                                newActor.mTranslation.X = (float)(cursor.mTranslate.X - radius * Math.Sin(angle * (Math.PI / 180)));
+                                newActor.mTranslation.Y = (float)(cursor.mTranslate.Y + radius * Math.Cos(angle * (Math.PI / 180)));
+                                newActor.mRotation.Z = angle * (MathF.PI / 180f);
+
+                                var j = 0;
+                                do
+                                {
+                                    j++;
+                                } while (selectedArea.GetActors().Any(x => x.mName == $"{newActor.mPackName}{j}"));
+                                newActor.mName = $"{newActor.mPackName}{j}";
+
+                                editContext.AddActor(newActor);
+                                angle = (angle + ringAngle) % 360f;
+                            }
+                        }
+                    }
+                }
+                if (editContext.GetSelectedObjects<CourseActor>().ToList().Count >= 1)
+                {
                     bool run = false;
-                    var cursor = activeViewport.cursor;
-                    if (cursor == null)
-                        return;
 
                     string pivotText = "0";
                     ImGui.Text("Pivot Actors: Enter number in degrees");
@@ -1966,18 +2020,13 @@ namespace Fushigi.ui.widgets
 
                     if (previousDelta != cursor.delta && run)
                     {
+                        float deltaAngle = cursor.delta - previousDelta;
+
                         foreach (CourseActor actor in editContext.GetSelectedObjects<CourseActor>())
                         {
-                            if (actor.mStartingRot == null)
-                            {
-                                actor.mStartingRot = actor.mRotation;
-                                actor.mStartingTrans = actor.mTranslation;
-                            }
-                            else
-                            {
-                                actor.mRotation = actor.mStartingRot;
-                                actor.mTranslation = actor.mStartingTrans;
-                            }
+
+                            actor.mRotation = actor.mStartingRot;
+                            actor.mTranslation = actor.mStartingTrans;
 
                             Vector2 delta = ImGui.GetIO().MouseDelta;
                             System.Numerics.Vector3 cursorTrans = cursor.mTranslate;
@@ -4707,6 +4756,14 @@ namespace Fushigi.ui.widgets
             var (picked, modifier) = await activeViewport.PickObject(
                             "Select the destination actor you wish to link to. -- Hold SHIFT to link multiple",
                             x => x is CourseActor && x != source, tokenSource);
+            return (picked as CourseActor, modifier);
+        }
+
+        private async Task<(CourseActor?, KeyboardModifier modifiers)> PickActor()
+        {
+            using var tokenSource = new CancellationTokenSource();
+            var (picked, modifier) = await activeViewport.PickObject(
+                            "Select actor to use ring", x => x is CourseActor, tokenSource);
             return (picked as CourseActor, modifier);
         }
 

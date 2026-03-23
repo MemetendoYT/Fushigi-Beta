@@ -3,6 +3,7 @@ using Fushigi.gl;
 using Fushigi.param;
 using Fushigi.ui.modal;
 using Fushigi.util;
+using Fushigi.windowing;
 using ImGuiNET;
 using System;
 using System.Numerics;
@@ -200,6 +201,8 @@ namespace Fushigi.ui.widgets
             var useNewCamera = UserSettings.GetUseNewCamera();
             var privateDRPC = UserSettings.GetPrivateDRPC();
             var toggleRomfsReload = UserSettings.GetAllowRomfsReload();
+            var dpiToggle = UserSettings.GetDPIOverride();
+            var dpiVal = UserSettings.GetDPIVal();
             var ClickDuplicate = UserSettings.GetClickDuplicate();
 
             ImGui.Indent();
@@ -245,10 +248,8 @@ namespace Fushigi.ui.widgets
             if (ImGui.Checkbox("Hide Activity", ref privateDRPC))
                 UserSettings.SetPrivateDRPC(privateDRPC);
 
-            Tooltip.Show("Whether or not to hide information about the course in the Discord RPC.\nReload required to work.");
 
-
-            int shaderSettings = UserSettings.GetShaders();
+                int shaderSettings = UserSettings.GetShaders();
 
             if (ImGui.BeginCombo("Shader Settings [EXPERIMENTAL]", ShaderDescriptions[shaderSettings]))
             {
@@ -276,6 +277,32 @@ namespace Fushigi.ui.widgets
                 ImGui.EndCombo();
             }
             Tooltip.Show("Disable custom shaders on custom actors. NOTE: This only works on new custom actors and not model swaps");
+
+
+            if (ImGui.Checkbox("DPI Override", ref dpiToggle))
+            {
+                UserSettings.ToggleDPIOverride(dpiToggle);
+                ImGui.GetIO().FontGlobalScale = dpiVal;
+            }
+
+            if (dpiToggle)
+            {
+                if (ImGui.SliderFloat("DPI Scale", ref dpiVal, 0.5f, 3f))
+                {
+                    UserSettings.SetDPIValue(dpiVal);
+                    ImGui.GetIO().FontGlobalScale = dpiVal;
+                    //MainWindow.dpiScale = dpiVal;
+                    return;
+                }
+
+            }
+            else
+            {
+                ImGui.GetIO().FontGlobalScale = MainWindow.dpiScale;
+                //MainWindow.dpiScale = MainWindow.backupdpiScale;
+            }
+
+            Tooltip.Show("Override Automatic DPI settings");
         }
     }
 }

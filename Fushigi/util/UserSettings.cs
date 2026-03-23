@@ -34,7 +34,8 @@ namespace Fushigi.util
             public bool romfsReload;
             public bool allowRomfsReload;
             public bool ClickDuplicate;
-            public bool useDPIScale = false;
+            public bool dpiOverride = false;
+            public float dpiVal = 1.0f;
 
             public Settings()
             {
@@ -55,7 +56,8 @@ namespace Fushigi.util
                 romfsReload = false;
                 allowRomfsReload = true;
                 ClickDuplicate = false;
-                useDPIScale = false;
+                dpiOverride = false;
+                dpiVal = 1.0f;
             }
         }
 
@@ -244,6 +246,11 @@ namespace Fushigi.util
             AppSettings.allowRomfsReload = value;
             Save();
         }
+        public static void SetDPIValue(float value)
+        {
+            AppSettings.dpiVal = value;
+            Save();
+        }
 
         public static bool GetClickDuplicate()
         {
@@ -254,14 +261,18 @@ namespace Fushigi.util
             AppSettings.ClickDuplicate = value;
             Save();
         }
-
-        public static bool GetDPI()
+        public static float GetDPIVal()
         {
-            return AppSettings.useDPIScale;
+            return AppSettings.dpiVal;
         }
-        public static void SetDPI(bool value)
+
+        public static bool GetDPIOverride()
         {
-            AppSettings.useDPIScale = value;
+            return AppSettings.dpiOverride;
+        }
+        public static void ToggleDPIOverride(bool value)
+        {
+            AppSettings.dpiOverride = value;
             Save();
         }
 

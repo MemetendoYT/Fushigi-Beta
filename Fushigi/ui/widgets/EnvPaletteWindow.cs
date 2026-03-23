@@ -1283,6 +1283,10 @@ namespace Fushigi.ui.widgets
         }
         public void SavePalette(RSTB resource_table, string folder)
         {
+            if(EnvPalette.Name.StartsWith(".")) {
+                return;
+            }
+
             if (CurveEditors.Values.Count == 0)
             {
                 if (EnvPalette == null)

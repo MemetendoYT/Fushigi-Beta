@@ -37,6 +37,7 @@ namespace Fushigi.ui
         public static bool addNewArea = false;
         public static bool removeCurrentArea = false;
         public static float dpiScale = 0;
+        public static float backupdpiScale = 0;
         private GL _gl;
         public static GLTexture FushigiIcon;
 
@@ -107,6 +108,12 @@ namespace Fushigi.ui
                         IntPtr hwnd = native.Win32!.Value.Hwnd;
 
                         uint dpi = GetDpiForWindow(hwnd);
+                        backupdpiScale = dpi;
+
+                        if(UserSettings.GetDPIOverride()) {
+                            dpi = (uint)(96 * UserSettings.GetDPIVal());
+                        }
+
                         if (dpi == 0)
                             dpi = 96;
 
@@ -423,6 +430,9 @@ namespace Fushigi.ui
                         mSelectedCourseScene?.PreventFurtherRendering();
                         mSelectedCourseScene = await CourseScene.Create(course, mGLTaskScheduler, mModalHost, p);
                         mCurrentCourseName = name;
+                        Console.WriteLine(name.Split("_")[0]);
+                        //mCurrentLevelName = RomFS.courseNames[name.Split("_")[0]];
+                        Console.WriteLine(mCurrentLevelName);
                     });
         }
         public static async Task UpdateEnglishNamesFromGitHub()
@@ -519,6 +529,7 @@ namespace Fushigi.ui
                                 if (await TryCloseCourse())
                                 {
                                     mCurrentCourseName = selectedCourse;
+   
                                     Logger.Logger.LogMessage("MainWindow", $"Selected course {mCurrentCourseName}!");
                                     await LoadCourseWithProgressBar(mCurrentCourseName);
                                     UserSettings.AppendRecentCourse(mCurrentCourseName);
@@ -736,7 +747,7 @@ namespace Fushigi.ui
             //Update viewport from any framebuffers being used
             if (reloadIni)
             {
-                ImGui.LoadIniSettingsFromDisk("imgui.ini");
+                ImGui.LoadIniSettingsFromDisk("res/imgui-default.ini");
                 reloadIni = false;
             }
 
@@ -758,7 +769,8 @@ namespace Fushigi.ui
         public Task WaitTick() => ((IPopupModalHost)mModalHost).WaitTick();
 
         readonly IWindow mWindow;
-        string? mCurrentCourseName;
+        public static string? mCurrentCourseName;
+        public static string mCurrentLevelName = "";
         CourseScene? mSelectedCourseScene;
         bool mIsShowPreferenceWindow = false;
     }

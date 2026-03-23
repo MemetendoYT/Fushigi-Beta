@@ -49,6 +49,7 @@ namespace Fushigi.ui.widgets
             foreach (CourseActor act in ctx.GetSelectedObjects<CourseActor>())
             {
                 act.mStartingTrans = act.mTranslation;
+                act.mStartingRot = act.mRotation;
             }
 
             foreach (CourseRail.CourseRailPoint point in ctx.GetSelectedObjects<CourseRail.CourseRailPoint>())
@@ -1208,10 +1209,16 @@ namespace Fushigi.ui.widgets
                     if (ImGui.MenuItem("Place Cursor"))
                     {
                         cursor = new FushigiCursor();
+                        cursor.mTranslate = ScreenToWorld(ImGui.GetMousePos());
                     }
                 }
                 else
                 {
+                    if (ImGui.MenuItem("Move Cursor"))
+                    {
+                        cursor.mTranslate = ScreenToWorld(ImGui.GetMousePos());
+                    }
+
                     if (ImGui.MenuItem("Remove Cursor"))
                     {
                         cursor = null;
@@ -1377,6 +1384,7 @@ namespace Fushigi.ui.widgets
                 newActor = actor.Clone(mArea);
 
             newActor.mStartingTrans = newActor.mTranslation;
+            newActor.mStartingRot = newActor.mRotation;
 
             mEditContext.AddActor(newActor);
 
@@ -1577,6 +1585,7 @@ namespace Fushigi.ui.widgets
                 DoImmediatePaste(freshCopy: false);
 
                 clone.mStartingTrans = clone.mTranslation;
+                clone.mStartingRot = clone.mRotation;
                 selectedMedianStartPos = clone.mStartingTrans;
 
                 return;
@@ -1636,7 +1645,7 @@ namespace Fushigi.ui.widgets
 
                         void DoDrag()
                         {
-                            if ((mEditContext.IsAnySelected<CourseActor>() || mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<FushigiCursor>()) && mMultiSelectEnded)
+                            if ((mEditContext.IsAnySelected<CourseActor>() || mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<FushigiCursor>() || mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>()) && mMultiSelectEnded)
                                 return;
 
                             mMultiSelectCurrentPos = ImGui.GetMousePos();
@@ -2216,7 +2225,7 @@ namespace Fushigi.ui.widgets
                         var pos2D = this.WorldToScreen(new(point.mTranslate.X, point.mTranslate.Y, point.mTranslate.Z));
                         var contPos2D = this.WorldToScreen(point.mControl.mTranslate);
                         Vector2 pnt = new(pos2D.X, pos2D.Y);
-                        bool isHovered = (ImGui.GetMousePos() - pnt).Length() < 5.0f;
+                        bool isHovered = (ImGui.GetMousePos() - pnt).Length() < 10.0f;
                         if (isHovered)
                             newHoveredObject = point;
 
@@ -2224,7 +2233,7 @@ namespace Fushigi.ui.widgets
                         if (selected)
                         {
                             selectedPoint = point;
-                            if ((ImGui.GetMousePos() - contPos2D).Length() < 5.0f)
+                            if ((ImGui.GetMousePos() - contPos2D).Length() < 10.0f)
                                 newHoveredObject = point.mControl;
                         }
                     }
@@ -2386,13 +2395,13 @@ namespace Fushigi.ui.widgets
                         {
                             bool point_selected = mEditContext.IsSelected(pnt) || mEditContext.IsSelected(pnt.mControl);
                             var rail_point_color = point_selected ? ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) : color;
-                            var size = 5.0f;
+                            var size = 10.0f;
 
                             var pos2D = WorldToScreen(pnt.mTranslate);
                             mDrawList.AddCircleFilled(pos2D, size, rail_point_color);
 
                             if (newHoveredObject == pnt)
-                                mDrawList.AddCircle(pos2D, 9.0f, rail_point_color, 10, 1.5f);
+                                mDrawList.AddCircle(pos2D, 15.0f, rail_point_color, 10, 1.5f);
 
                             pointsList.Add(pos2D);
 
@@ -2440,7 +2449,7 @@ namespace Fushigi.ui.widgets
            {
                 var cursorPos2D = this.WorldToScreen(new(cursor.mTranslate.X, cursor.mTranslate.Y, cursor.mTranslate.Z));
                 Vector2 pnt = new(cursorPos2D.X, cursorPos2D.Y);
-                bool isHovered = (ImGui.GetMousePos() - pnt).Length() < 5.0f;
+                bool isHovered = (ImGui.GetMousePos() - pnt).Length() < 10.0f;
                 if (isHovered)
                    newHoveredObject = cursor;
                 

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Fushigi.ui.widgets
 {
@@ -59,6 +60,7 @@ namespace Fushigi.ui.widgets
         {
             { "", "None" },
             { "ArenaTimer", "Area Type Timer" },
+            { "DefaultCourseTimer", "Default Course Timer" },
         };
 
         private static readonly Dictionary<string, string> DemoCourseKind = new Dictionary<string, string>()
@@ -326,6 +328,26 @@ namespace Fushigi.ui.widgets
             {
                 ImGui.TableNextRow();
                 ImGui.TableSetColumnIndex(0);
+
+
+                // Level Name
+
+                //ImGui.Text("Level Name");
+                ImGui.TableNextColumn();
+
+                //var levelName = MainWindow.mCurrentLevelName;
+
+                //if (ImGui.InputText("##LevelName", ref levelName, 1024))
+                //{
+                //    MainWindow.mCurrentLevelName = levelName;
+                //    RomFS.courseNames[MainWindow.mCurrentCourseName.Split("_")[0]] = levelName;
+                //    Console.WriteLine(RomFS.courseNames[MainWindow.mCurrentCourseName.Split("_")[0]]);
+                //}
+                    
+
+                ImGui.SetItemTooltip("Name of the level displayed ingame.");
+
+                ImGui.TableNextColumn();
 
                 // GlobalCourseId
                 {

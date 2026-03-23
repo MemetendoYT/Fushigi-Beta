@@ -5,6 +5,7 @@ using Fushigi.Msbt;
 using Fushigi.util;
 using Silk.NET.OpenGL;
 using Fushigi.course;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Fushigi
 {
@@ -71,35 +72,47 @@ namespace Fushigi
         {
             Logger.Logger.LogMessage("RomFS", $"GetFileBytes() -- {path}");
             return File.ReadAllBytes(Path.Combine(sRomFSRoot, path));
-        }    
+        }
 
         private static void CacheCourseFiles()
         {
             sCourseEntries.Clear();
 
-            var path = Path.Combine(UserSettings.GetModRomFSPath(), "Mals", "USen.Product.101.sarc.zs");
+            string malsMod = Path.Combine(UserSettings.GetModRomFSPath(), "Mals");
+            string malsRoot = Path.Combine(GetRoot(), "Mals");
 
-            if (!File.Exists(path))
+            string path = null;
+
+            if (Directory.Exists(malsMod))
             {
-                path = Path.Combine(UserSettings.GetModRomFSPath(), "Mals", "USen.Product.100.sarc.zs");
-
-                if (!File.Exists(path))
-                {
-                    path = Path.Combine(GetRoot(), "Mals", "USen.Product.101.sarc.zs");
-                    if (!File.Exists(path))
-                    {
-                        path = Path.Combine(GetRoot(), "Mals", "USen.Product.100.sarc.zs");
-                    }
-                }
+                path = Directory.GetFiles(malsMod, "USen.Product.*.sarc.zs").FirstOrDefault();
             }
-            
-            Dictionary<string, string> courseNames = [];
+
+            if (path == null)
+            {
+                path = Directory.GetFiles(malsRoot, "USen.Product.*.sarc.zs").FirstOrDefault();
+            }
+
+            if(path == null)
+            {
+                return;
+            }
+
+            courseNames = [];
             Dictionary<string, string> worldNames = [];
 
             if (File.Exists(path))
             {
                 var sarc = new SARC.SARC(new(FileUtil.DecompressFile(path)));
-                courseNames = new MsbtFile(new MemoryStream(sarc.OpenFile("GameMsg/Name_CourseRemoveLineFeed.msbt"))).Messages;
+                courseNamesMSBT = new MsbtFile(new MemoryStream(sarc.OpenFile("GameMsg/Name_Course.msbt")));
+                courseNames = courseNamesMSBT.Messages;
+
+                var courseMSBT = new MsbtFile(
+    new MemoryStream(sarc.OpenFile("GameMsg/Name_CourseRemoveLineFeed.msbt"))
+);
+
+                courseNames = courseMSBT.Messages;
+
                 worldNames = new MsbtFile(new MemoryStream(sarc.OpenFile("GameMsg/Name_World.msbt"))).Messages;
             }
 
@@ -209,7 +222,9 @@ namespace Fushigi
         
         
         private static string sRomFSRoot = "";
-        private static readonly Dictionary<string, WorldEntry> sCourseEntries = [];
+        public static MsbtFile courseNamesMSBT;
+        public static Dictionary<string, string> courseNames = [];
+        public static readonly Dictionary<string, WorldEntry> sCourseEntries = [];
         public static readonly Dictionary<int, string> CourseNames = [];
         public static readonly Dictionary<int, int> CourseWorlds = [];
     }

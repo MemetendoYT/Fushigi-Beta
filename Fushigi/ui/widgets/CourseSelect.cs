@@ -63,18 +63,6 @@ namespace Fushigi.ui.widgets
 
         void DrawCourses(Promise<string> promise)
         {
-            var fontSize = ImGui.GetFontSize();
-            var font = ImGui.GetFont();
-            font.FontSize = worldNameSize;
-            if(MainWindow.dpiScale > 1.75)
-            {
-                ImGui.SetWindowFontScale(0.5f);  
-            }
-            ImGui.Text(RomFS.GetCourseEntries()[selectedWorld!].name);
-            ImGui.Dummy(new Vector2(0, ImGui.GetTextLineHeight()));
-            font.FontSize = fontSize;
-            ImGui.SetWindowFontScale(1.0f);
-
             if (!ImGui.BeginListBox(selectedWorld, ImGui.GetContentRegionAvail()))
             {
                 return;
@@ -105,6 +93,8 @@ namespace Fushigi.ui.widgets
                 if (clicked)
                 {
                     promise.SetResult(course.Key);
+                    MainWindow.mCurrentLevelName = course.Value.name;
+                                        
                 }
 
                 var min = ImGui.GetItemRectMin();

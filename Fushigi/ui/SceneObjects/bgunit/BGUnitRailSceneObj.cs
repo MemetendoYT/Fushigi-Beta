@@ -427,6 +427,9 @@ namespace Fushigi.ui.SceneObjects.bgunit
                     var pointB = viewport.WorldToScreen(rail.Points.GetWrapped(index).Position);
                     var pointC = pos2D;
 
+                    var pointAVec = rail.Points.GetWrapped(index - 1).Position;
+                    var pointBVec = rail.Points.GetWrapped(index).Position;
+                    ImGui.SetTooltip((pointAVec.X - addPos.pos.X) + ", " + (pointAVec.Y - addPos.pos.Y));
                     if(!isBelt)
                         dl.AddTriangleFilled(pointA, pointB, pointC, 0x99FFFFFF);
 
@@ -447,7 +450,7 @@ namespace Fushigi.ui.SceneObjects.bgunit
 
                 }
                 
-                dl.AddCircleFilled(pos2D, 3.5f, 0xFFFFFFFF);
+                dl.AddCircleFilled(pos2D, 8.5f, 0xFFFFFFFF);
             }
         }
 
@@ -534,7 +537,7 @@ namespace Fushigi.ui.SceneObjects.bgunit
             {
                 var pos2D = viewport.WorldToScreen(point.Position);
                 Vector2 pnt = new(pos2D.X, pos2D.Y);
-                return (ImGui.GetMousePos() - pnt).Length() < 6.0f;
+                return (ImGui.GetMousePos() - pnt).Length() < 10.0f;
             }
 
             void ISceneObject.Update(ISceneUpdateContext ctx, bool isSelected)
@@ -561,10 +564,10 @@ namespace Fushigi.ui.SceneObjects.bgunit
                 if (ctx.IsSelected(point))
                     color = ImGui.ColorConvertFloat4ToU32(new(0.84f, .437f, .437f, 1));
 
-                dl.AddCircleFilled(pos2D, 5.0f, color);
+                dl.AddCircleFilled(pos2D, 10.0f, color);
 
                 if (viewport.IsHovered(this))
-                    dl.AddCircle(pos2D, 9.0f, color, 10, 1.5f);
+                    dl.AddCircle(pos2D, 15.0f, color, 10, 1.5f);
 
                 if (HitTest(viewport))
                     isNewHoveredObj = true;
