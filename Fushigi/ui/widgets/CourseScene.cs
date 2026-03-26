@@ -818,9 +818,12 @@ namespace Fushigi.ui.widgets
                         viewport.Draw(size, deltaSeconds, mLayersVisibility);
                         viewport.vpMin = ImGui.GetItemRectMin();
                         viewport.vpMax = ImGui.GetItemRectMax();
-                        insideViewport = ImGui.IsMouseHoveringRect(viewport.vpMin, viewport.vpMax);
+                        insideViewport = ImGui.IsMouseHoveringRect(viewport.vpMin, viewport.vpMax);                         
                         viewport.DrawOverlay();
                         viewport.DrawComments();
+
+   
+
                         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                         {
                             leftClickStartedInsideViewport = insideViewport;
@@ -1199,7 +1202,7 @@ namespace Fushigi.ui.widgets
         private string mAddLayerSearchQuery = "";
 
 
-        public List<CourseActor> CreatePreset(NumVec location, string prefab)
+        public List<CourseActor> CreatePrefab(NumVec location, string prefab)
         {
             var areaHash = selectedArea.mRootHash;
             var areaLinks = selectedArea.mLinkHolder;
@@ -1217,11 +1220,11 @@ namespace Fushigi.ui.widgets
             var actorsArray = selectedArea.LoadPrefab(prefab, levelBytes);
             var linksArray = selectedArea.LoadPrefabLinks(prefab, levelBytes);
 
-            var presetActors = new CourseActorHolder(actorsArray);
-            var presetLinks = new CourseLinkHolder(linksArray);
+            var prefabActors = new CourseActorHolder(actorsArray);
+            var prefabLinks = new CourseLinkHolder(linksArray);
 
             Dictionary<ulong, ulong> hashMap = new();
-            foreach (CourseActor actor in presetActors.mActors)
+            foreach (CourseActor actor in prefabActors.mActors)
             {
                 ulong oldHash = actor.mHash;
                 ulong newHash = RandomUtil.GetRandom();
@@ -1233,7 +1236,7 @@ namespace Fushigi.ui.widgets
             }
 
             var links = selectedArea.mLinkHolder.mLinks;
-            foreach (CourseLink link in presetLinks.mLinks)
+            foreach (CourseLink link in prefabLinks.mLinks)
             {
                 if (hashMap.TryGetValue(link.mSource, out ulong newSrc))
                     link.mSource = newSrc;
@@ -1245,7 +1248,7 @@ namespace Fushigi.ui.widgets
             } 
 
 
-            return presetActors.mActors;
+            return prefabActors.mActors;
         }
        
 
@@ -1270,14 +1273,14 @@ namespace Fushigi.ui.widgets
             {
                 ImGui.SetWindowFocus(area.mAreaName);
                 (pos, modifier) = await viewport.PickPosition(
-                    $"Placing Preset", mSelectedLayer, tokenSource);
+                    $"Placing Prefab", mSelectedLayer, tokenSource);
 
                 if (!pos.TryGetValue(out var posVec))
                 {
                     return;
                 }
 
-                var prefabActors = CreatePreset(posVec, prefab);
+                var prefabActors = CreatePrefab(posVec, prefab);
 
                 var batch = ctx.BeginBatchAction();
                 foreach (var actor in prefabActors)

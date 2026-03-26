@@ -6,6 +6,7 @@ using Fushigi.util;
 using Fushigi.windowing;
 using ImGuiNET;
 using System;
+using System.Net.WebSockets;
 using System.Numerics;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -283,6 +284,11 @@ namespace Fushigi.ui.widgets
             {
                 UserSettings.ToggleDPIOverride(dpiToggle);
                 ImGui.GetIO().FontGlobalScale = dpiVal;
+
+                if(!dpiToggle)
+                {
+                    ImGui.GetIO().FontGlobalScale = MainWindow.dpiScale;
+                }
             }
 
             if (dpiToggle)
@@ -296,13 +302,8 @@ namespace Fushigi.ui.widgets
                 }
 
             }
-            else
-            {
-                ImGui.GetIO().FontGlobalScale = MainWindow.dpiScale;
-                //MainWindow.dpiScale = MainWindow.backupdpiScale;
-            }
 
-            Tooltip.Show("Override Automatic DPI settings");
+            Tooltip.Show("Override Automatic DPI settings [Experimental]");
         }
     }
 }

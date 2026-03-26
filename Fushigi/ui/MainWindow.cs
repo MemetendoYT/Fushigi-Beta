@@ -430,9 +430,9 @@ namespace Fushigi.ui
                         mSelectedCourseScene?.PreventFurtherRendering();
                         mSelectedCourseScene = await CourseScene.Create(course, mGLTaskScheduler, mModalHost, p);
                         mCurrentCourseName = name;
-                        Console.WriteLine(name.Split("_")[0]);
+                        //Console.WriteLine(name.Split("_")[0]);
                         //mCurrentLevelName = RomFS.courseNames[name.Split("_")[0]];
-                        Console.WriteLine(mCurrentLevelName);
+                        //Console.WriteLine(mCurrentLevelName);
                     });
         }
         public static async Task UpdateEnglishNamesFromGitHub()

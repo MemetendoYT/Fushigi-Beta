@@ -5,14 +5,13 @@ using Fushigi.Msbt;
 using Fushigi.util;
 using Silk.NET.OpenGL;
 using Fushigi.course;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Fushigi
 {
     public class RomFS
     {
         public static void SetRoot(string root, GL gl)
-        {           
+        {
             if (!IsValidRoot(root))
             {
                 return;
@@ -59,7 +58,8 @@ namespace Fushigi
             return sCourseEntries;
         }
 
-        public static bool DirectoryExists(string path) {
+        public static bool DirectoryExists(string path)
+        {
             return Directory.Exists(Path.Combine(sRomFSRoot, path));
         }
 
@@ -93,26 +93,18 @@ namespace Fushigi
                 path = Directory.GetFiles(malsRoot, "USen.Product.*.sarc.zs").FirstOrDefault();
             }
 
-            if(path == null)
+            if (path == null)
             {
                 return;
             }
 
-            courseNames = [];
+            Dictionary<string, string> courseNames = [];
             Dictionary<string, string> worldNames = [];
 
             if (File.Exists(path))
             {
                 var sarc = new SARC.SARC(new(FileUtil.DecompressFile(path)));
-                courseNamesMSBT = new MsbtFile(new MemoryStream(sarc.OpenFile("GameMsg/Name_Course.msbt")));
-                courseNames = courseNamesMSBT.Messages;
-
-                var courseMSBT = new MsbtFile(
-    new MemoryStream(sarc.OpenFile("GameMsg/Name_CourseRemoveLineFeed.msbt"))
-);
-
-                courseNames = courseMSBT.Messages;
-
+                courseNames = new MsbtFile(new MemoryStream(sarc.OpenFile("GameMsg/Name_CourseRemoveLineFeed.msbt"))).Messages;
                 worldNames = new MsbtFile(new MemoryStream(sarc.OpenFile("GameMsg/Name_World.msbt"))).Messages;
             }
 
@@ -129,7 +121,7 @@ namespace Fushigi
                     name = worldName
                 };
 
-                var worldKey = worldName.Replace("World", "WorldNameOrigin");              
+                var worldKey = worldName.Replace("World", "WorldNameOrigin");
                 if (worldNames.TryGetValue(worldKey, out string? value))
                     worldEntry.name = value;
 
@@ -149,7 +141,7 @@ namespace Fushigi
 
                     WorldEntry.CourseEntry courseEntry = new();
                     var courseInfo = new CourseInfo(courseLocation);
-                    if (courseInfo.CourseNameLabel != null && 
+                    if (courseInfo.CourseNameLabel != null &&
                         courseNames.TryGetValue(courseInfo.CourseNameLabel, out string? courseName))
                     {
                         courseEntry.name = courseName;
@@ -219,12 +211,10 @@ namespace Fushigi
             public Dictionary<string, CourseEntry>? courseEntries;
         }
 
-        
-        
+
+
         private static string sRomFSRoot = "";
-        public static MsbtFile courseNamesMSBT;
-        public static Dictionary<string, string> courseNames = [];
-        public static readonly Dictionary<string, WorldEntry> sCourseEntries = [];
+        private static readonly Dictionary<string, WorldEntry> sCourseEntries = [];
         public static readonly Dictionary<int, string> CourseNames = [];
         public static readonly Dictionary<int, int> CourseWorlds = [];
     }

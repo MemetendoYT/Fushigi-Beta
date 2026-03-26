@@ -137,7 +137,7 @@ namespace Fushigi.course
             return node;
         }
 
-        public BymlArrayNode SerializePreset(List<CourseActor> selectedActors)
+        public BymlArrayNode SerializePrefab(List<CourseActor> selectedActors)
         {
             BymlArrayNode node = new();
             HashSet<CourseLink> added = new();

@@ -18,6 +18,7 @@ using Silk.NET.OpenGL;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Net.Mime;
 using System.Numerics;
 using static Fushigi.course.CourseUnit;
 using Vector3 = System.Numerics.Vector3;
@@ -115,7 +116,7 @@ namespace Fushigi.ui.widgets
         bool copyContext = false;
         bool deleteContext = false;
         public static CourseScene _courseScene;
-
+        public static bool draggingCommentIcon;
 
         Vector2 mSize = Vector2.Zero;
 
@@ -291,7 +292,7 @@ namespace Fushigi.ui.widgets
             }
             var io = ImGui.GetIO();
 
-            if (IsViewportHovered && !ImGui.IsPopupOpen("ViewportContextMenu"))
+            if ((CourseScene.insideViewport) && !ImGui.IsPopupOpen("ViewportContextMenu"))
             {
 
                 if (!ImGui.GetIO().KeyCtrl)
@@ -784,7 +785,10 @@ namespace Fushigi.ui.widgets
                 median /= actors.Count;
 
                 foreach (var actor in copiedActors)
-                    actor.mTranslation -= median;
+                {
+                    actor.mTranslation.X -= median.X;
+                    actor.mTranslation.Y -= median.Y;
+                }
 
                 mArea.SaveActorsToPrefab(copiedActors, actors, prefabName);
             }
@@ -2089,6 +2093,7 @@ namespace Fushigi.ui.widgets
         public static bool setGlobalDst;
         private CourseActor? primaryActor;
         private bool draggingComment;
+        //private bool panOverride = false;   
         private bool canEditStart;
         public FushigiCursor cursor;
 
@@ -2105,7 +2110,7 @@ namespace Fushigi.ui.widgets
 
                 ImGui.BeginChild(
                     $"CommentIcon{i}",
-                    new Vector2(40, 40),
+                    new Vector2(40 * MainWindow.dpiScale, 40 * MainWindow.dpiScale),
                     ImGuiChildFlags.None,
                     ImGuiWindowFlags.NoDecoration |
                     ImGuiWindowFlags.NoScrollbar |
@@ -2116,12 +2121,33 @@ namespace Fushigi.ui.widgets
 
                 ImGui.SetCursorPos(Vector2.Zero);
 
-                if (ImGui.Button(IconUtil.ICON_MAIL_BULK, new Vector2(40, 40)))
+
+             
+
+                if (ImGui.Button(IconUtil.ICON_MAIL_BULK, new Vector2(40 * MainWindow.dpiScale, 40 * MainWindow.dpiScale)))
+                    {
+                        if (!draggingCommentIcon)
+                            comment.mOpened = !comment.mOpened;
+            
+                    }
+
+                if (!comment.mOpened &&
+                  ImGui.IsItemActive() &&
+                  ImGui.IsMouseDragging(ImGuiMouseButton.Left))
                 {
-                    comment.mOpened = !comment.mOpened;
+                    draggingCommentIcon = true;
+                    if (mEditContext.GetSelectedObjects<object>().Count() > 1)
+                    {
+                        mEditContext.DeselectAll();
+                    }
+                    mEditContext.Select(comment);
                 }
 
+
                 bool iconHovered = ImGui.IsItemHovered();
+
+                //if (iconHovered)
+                //    panOverride = true;
 
                 if (iconHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
@@ -2141,7 +2167,7 @@ namespace Fushigi.ui.widgets
 
                     ImGui.BeginChild(
                         $"CommentWindow{i}",
-                        new Vector2(200, 100),
+                        new Vector2(200 * MainWindow.dpiScale, 100 * MainWindow.dpiScale),
                         ImGuiChildFlags.None,
                         ImGuiWindowFlags.NoDecoration |
                         ImGuiWindowFlags.NoScrollbar |
@@ -2155,17 +2181,24 @@ namespace Fushigi.ui.widgets
                         $"##Comment{i}",
                         ref text,
                         1024,
-                        new Vector2(200, 100)
+                        new Vector2(200 * MainWindow.dpiScale, 100 * MainWindow.dpiScale)
                     );
 
 
                     bool textActive = ImGui.IsItemActive();
                     bool textFocused = ImGui.IsItemFocused();
+                    bool textHovered = ImGui.IsItemHovered();
+
+                //if (textHovered)
+                //{
+                //    panOverride = true;
+                //}
+
 
                     if (textActive || textFocused)
                     {
                         draggingComment = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-                        if (mEditContext.GetSelectedObjects<object>().Count() > 1)
+                            if (mEditContext.GetSelectedObjects<object>().Count() > 1)
                         {
                             mEditContext.DeselectAll();
                         }
@@ -2173,6 +2206,12 @@ namespace Fushigi.ui.widgets
                     }
                     ImGui.EndChild();
                 }
+
+            if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                draggingCommentIcon = false;
+
+            //if(!CourseScene.insideViewport)
+            //    panOverride = false;
         }
         void DrawAreaContent()
         {
@@ -2467,7 +2506,7 @@ namespace Fushigi.ui.widgets
            
 
 
-            if (draggingComment)
+            if (draggingComment || draggingCommentIcon)
             {
                 if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseComment? comment))
                 {

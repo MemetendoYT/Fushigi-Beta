@@ -429,7 +429,7 @@ namespace Fushigi.ui.SceneObjects.bgunit
 
                     var pointAVec = rail.Points.GetWrapped(index - 1).Position;
                     var pointBVec = rail.Points.GetWrapped(index).Position;
-                    ImGui.SetTooltip((pointAVec.X - addPos.pos.X) + ", " + (pointAVec.Y - addPos.pos.Y));
+                    ImGui.SetTooltip("X: " + (addPos.pos.X - pointAVec.X) + ", Y: " + (addPos.pos.Y - pointAVec.Y));
                     if(!isBelt)
                         dl.AddTriangleFilled(pointA, pointB, pointC, 0x99FFFFFF);
 

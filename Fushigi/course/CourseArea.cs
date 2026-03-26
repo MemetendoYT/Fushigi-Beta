@@ -346,8 +346,8 @@ namespace Fushigi.course
                 Directory.CreateDirectory(prefabFolder);
 
             BymlHashTable root = new();
-            root.AddNode(BymlNodeId.Array, mActorHolder.SerializePreset(copiedActors, mLinkHolder), "Actors");
-            root.AddNode(BymlNodeId.Array, mLinkHolder.SerializePreset(actors), "Links");
+            root.AddNode(BymlNodeId.Array, mActorHolder.SerializePrefab(copiedActors, mLinkHolder), "Actors");
+            root.AddNode(BymlNodeId.Array, mLinkHolder.SerializePrefab(actors), "Links");
 
             var byml = new Byml.Byml(root);
             var mem = new MemoryStream();
@@ -373,7 +373,7 @@ namespace Fushigi.course
             root.AddNode(BymlNodeId.Array, mRailLinksHolder.SerializeToArray(), "ActorToRailLinks");
             root.AddNode(BymlNodeId.Array, mActorHolder.SerializeToArray(mLinkHolder), "Actors");
 
-            if(mCommentHolder != null) 
+            if(mCommentHolder.mComments.Count != 0) 
                 root.AddNode(BymlNodeId.Array, mCommentHolder.SerializeToArray(), "Comments");
 
             if (mUnitHolder != null)
