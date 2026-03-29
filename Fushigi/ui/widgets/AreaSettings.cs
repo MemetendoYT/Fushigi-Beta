@@ -160,7 +160,6 @@ namespace Fushigi.ui.widgets
                 {
                     continueDisplay = false;
 
-                    /// Remove empty strings from palette lists
                     //  from Transition palettes
                     var transPal = areaParam.EnvPaletteSetting.TransPaletteList;
                     if (transPal != null)

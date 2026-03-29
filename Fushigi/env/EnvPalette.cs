@@ -29,6 +29,9 @@ namespace Fushigi.env
         [BymlIgnore]
         public string Name { get; set; }
 
+        [BymlProperty("$parent")]
+        public string parent { get; set; }
+
         public EnvBloom Bloom { get; set; }
 
         public EnvMapList EnvMap { get; set; }
@@ -64,6 +67,8 @@ namespace Fushigi.env
         public bool IsApplyShadow { get; set; }
         public bool IsApplySky { get; set; }
         public bool IsApplyInfo { get; set; }
+
+        public string ParentPath { get; set; }
 
 
 
@@ -101,6 +106,7 @@ namespace Fushigi.env
 
         public new void Load(BymlHashTable table)
         {
+
             base.Load(table); 
 
             CleanupMissingBlocks(table);
@@ -108,7 +114,6 @@ namespace Fushigi.env
 
         public EnvPalette(string name)
         {
-            Emission = null;
             Load(name);
         }
 
@@ -130,13 +135,35 @@ namespace Fushigi.env
             Normalize();
 
         }
+        bool IsValidPalette(EnvPalette p)
+        {
+            return p != null &&
+                   p.Fog != null &&
+                   p.Fog.Main != null &&
+                   p.Fog.MainWorld != null &&
+                   p.Fog.Cloud != null &&
+                   p.Fog.CloudWorld != null &&
+                   p.CharLight != null &&
+                   p.CloudLight != null &&
+                   p.FieldLight != null &&
+                   p.DvLight != null &&
+                   p.ObjLight != null &&
+                   p.Rim != null &&
+                   p.Emission != null &&
+                   p.Shadow != null &&
+                   p.EnvColor != null &&
+                   p.Sky != null;
+        }
 
         public void Lerp(EnvPalette prevPalette, EnvPalette nextPalette, float ratio)
         {
+            if (!IsValidPalette(prevPalette) || !IsValidPalette(nextPalette))
+            {
+                return;
+            }
+
             void LerpFog(EnvFog fogDst, EnvFog fogA, EnvFog fogB)
             {
-                if (fogA == null || fogB == null)
-                    return;
 
                 fogDst.Start = MathUtil.Lerp(fogA.Start, fogB.Start, ratio);
                 fogDst.End = MathUtil.Lerp(fogA.End, fogB.End, ratio);
@@ -229,39 +256,42 @@ namespace Fushigi.env
             if (prevPalette == null || nextPalette == null)
                 return;
 
-            if(this.CharLight == null)
-            {
-                return;
-            }
 
-            LerpLightList(this.CharLight, prevPalette.CharLight, nextPalette.CharLight);
-            LerpLightList(this.CloudLight, prevPalette.CloudLight, nextPalette.CloudLight);
-            LerpLightList(this.FieldLight, prevPalette.FieldLight, nextPalette.FieldLight);
-            LerpLightList(this.DvLight, prevPalette.DvLight, nextPalette.DvLight);
-            LerpLightList(this.ObjLight, prevPalette.ObjLight, nextPalette.ObjLight);
+            //try
+            //{
+                LerpLightList(this.CharLight, prevPalette.CharLight, nextPalette.CharLight);
+                LerpLightList(this.CloudLight, prevPalette.CloudLight, nextPalette.CloudLight);
+                LerpLightList(this.FieldLight, prevPalette.FieldLight, nextPalette.FieldLight);
+                LerpLightList(this.DvLight, prevPalette.DvLight, nextPalette.DvLight);
+                LerpLightList(this.ObjLight, prevPalette.ObjLight, nextPalette.ObjLight);
 
-            LerpFog(this.Fog.Main, prevPalette.Fog.Main, nextPalette.Fog.Main);
-            LerpFog(this.Fog.MainWorld, prevPalette.Fog.MainWorld, nextPalette.Fog.MainWorld);
-            LerpFog(this.Fog.Cloud, prevPalette.Fog.Cloud, nextPalette.Fog.Cloud);
-            LerpFog(this.Fog.CloudWorld, prevPalette.Fog.CloudWorld, nextPalette.Fog.CloudWorld);
+                LerpFog(this.Fog.Main, prevPalette.Fog.Main, nextPalette.Fog.Main);
+                LerpFog(this.Fog.MainWorld, prevPalette.Fog.MainWorld, nextPalette.Fog.MainWorld);
+                LerpFog(this.Fog.Cloud, prevPalette.Fog.Cloud, nextPalette.Fog.Cloud);
+                LerpFog(this.Fog.CloudWorld, prevPalette.Fog.CloudWorld, nextPalette.Fog.CloudWorld);
 
-            LerpRim(prevPalette.Rim, nextPalette.Rim);
+                LerpRim(prevPalette.Rim, nextPalette.Rim);
+
                 this.Emission.Color = Color.Lerp(prevPalette.Emission.Color, nextPalette.Emission.Color, ratio);
-         
                 this.Shadow.AOColor = Color.Lerp(prevPalette.Shadow.AOColor, nextPalette.Shadow.AOColor, ratio);
                 this.Shadow.Longitude = MathUtil.Lerp(prevPalette.Shadow.Longitude, nextPalette.Shadow.Longitude, ratio);
                 this.Shadow.Latitude = MathUtil.Lerp(prevPalette.Shadow.Latitude, nextPalette.Shadow.Latitude, ratio);
+                this.EnvColor.Color0 = Color.Lerp(prevPalette.EnvColor.Color0, nextPalette.EnvColor.Color0, ratio);
+                this.EnvColor.Color1 = Color.Lerp(prevPalette.EnvColor.Color1, nextPalette.EnvColor.Color1, ratio);
+                this.EnvColor.Color2 = Color.Lerp(prevPalette.EnvColor.Color2, nextPalette.EnvColor.Color2, ratio);
+                this.EnvColor.Color3 = Color.Lerp(prevPalette.EnvColor.Color3, nextPalette.EnvColor.Color3, ratio);
+                this.EnvColor.Color4 = Color.Lerp(prevPalette.EnvColor.Color4, nextPalette.EnvColor.Color4, ratio);
+                this.EnvColor.Color5 = Color.Lerp(prevPalette.EnvColor.Color5, nextPalette.EnvColor.Color5, ratio);
+                this.EnvColor.Color6 = Color.Lerp(prevPalette.EnvColor.Color6, nextPalette.EnvColor.Color6, ratio);
+                this.EnvColor.Color7 = Color.Lerp(prevPalette.EnvColor.Color7, nextPalette.EnvColor.Color7, ratio);
 
-            this.EnvColor.Color0 = Color.Lerp(prevPalette.EnvColor.Color0, nextPalette.EnvColor.Color0, ratio);
-            this.EnvColor.Color1 = Color.Lerp(prevPalette.EnvColor.Color1, nextPalette.EnvColor.Color1, ratio);
-            this.EnvColor.Color2 = Color.Lerp(prevPalette.EnvColor.Color2, nextPalette.EnvColor.Color2, ratio);
-            this.EnvColor.Color3 = Color.Lerp(prevPalette.EnvColor.Color3, nextPalette.EnvColor.Color3, ratio);
-            this.EnvColor.Color4 = Color.Lerp(prevPalette.EnvColor.Color4, nextPalette.EnvColor.Color4, ratio);
-            this.EnvColor.Color5 = Color.Lerp(prevPalette.EnvColor.Color5, nextPalette.EnvColor.Color5, ratio);
-            this.EnvColor.Color6 = Color.Lerp(prevPalette.EnvColor.Color6, nextPalette.EnvColor.Color6, ratio);
-            this.EnvColor.Color7 = Color.Lerp(prevPalette.EnvColor.Color7, nextPalette.EnvColor.Color7, ratio);
+                LerpSky(prevPalette.Sky, nextPalette.Sky);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Debug.WriteLine("Palette transition failed: " + ex);
+            //}
 
-            LerpSky(prevPalette.Sky, nextPalette.Sky);
         }
 
         [Serializable]
@@ -277,11 +307,19 @@ namespace Fushigi.env
             {
                 BymlHashTable bloom = new();
 
-                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
-                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskEnd), "MaskEnd");
-                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskRatio), "MaskRatio");
-                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Threshold), "Threshold");
-                bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskColorPower), "MaskColorPower");
+                if(Intensity != 0f)
+                    bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+
+                if(MaskEnd != 0f)
+                    bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskEnd), "MaskEnd");
+                if(MaskRatio != 0f)
+                    bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskRatio), "MaskRatio");
+
+               if(Threshold != 0f)
+                    bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Threshold), "Threshold");
+
+               if(MaskColorPower != 0f)
+                    bloom.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(MaskColorPower), "MaskColorPower");
                 return bloom;
             }
         }
@@ -326,8 +364,12 @@ namespace Fushigi.env
             {
                 var table = new BymlHashTable();
 
-                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+
+                if (!Color.IsDefault())
+                    table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+
+                if(Intensity != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
 
                 return table;
             }
@@ -353,7 +395,9 @@ namespace Fushigi.env
             {
                 var table = new BymlHashTable();
 
-                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+
+                if (!Color.IsDefault())
+                    table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
                 table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityCloud), "IntensityCloud");
                 table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityDV), "IntensityDV");
                 table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(IntensityEnemy), "IntensityEnemy");
@@ -380,10 +424,16 @@ namespace Fushigi.env
             {
                 var table = new BymlHashTable();
 
-                table.AddNode(BymlNodeId.Hash, AOColor.Serialize(), "AOColor");
+
+                if (!AOColor.IsDefault())
+                    table.AddNode(BymlNodeId.Hash, AOColor.Serialize(), "AOColor");
                 table.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(EnableDynamicDepthShadow), "EnableDynamicDepthShadow");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Latitude), "Latitude");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Longitude), "Longitude");
+
+                if(Latitude != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Latitude), "Latitude");
+
+                if(Longitude != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Longitude), "Longitude");
                 return table;
             }
         }
@@ -417,7 +467,9 @@ namespace Fushigi.env
             {
                 var table = new BymlHashTable();
 
-                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+                if (!Color.IsDefault())
+                    table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+
                 return table;
             }
 
@@ -469,7 +521,8 @@ namespace Fushigi.env
                 var table = new BymlHashTable();
 
                 table.AddNode(BymlNodeId.Int, BymlUtil.CreateNode(BlurLevel), "BlurLevel");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+                if(Intensity != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
                 table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Ratio), "Ratio");
                 table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RimIntensity), "RimIntensity");
                 table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(RimPow), "RimPow");
@@ -487,13 +540,13 @@ namespace Fushigi.env
             public BymlHashTable Serialize()
             {
                 var table = new BymlHashTable();
-                if (Cloud != null)
+                if (Cloud != null && !Cloud.IsDefault())
                     table.AddNode(BymlNodeId.Hash, Cloud.Serialize(), "Cloud");
-                if (CloudWorld != null)
+                if (CloudWorld != null && !CloudWorld.IsDefault())
                     table.AddNode(BymlNodeId.Hash, CloudWorld.Serialize(), "CloudWorld");
-                if (Main != null)
+                if (Main != null && !Main.IsDefault())
                     table.AddNode(BymlNodeId.Hash, Main.Serialize(), "Main");
-                if (MainWorld != null)
+                if (MainWorld != null && !MainWorld.IsDefault())
                     table.AddNode(BymlNodeId.Hash, MainWorld.Serialize(), "MainWorld");
                 if (Option != null)
                     table.AddNode(BymlNodeId.Hash, Option.Serialize(), "Option");
@@ -508,14 +561,25 @@ namespace Fushigi.env
             public float End { get; set; }
             public float Start { get; set; }
 
+            public bool IsDefault()
+            {
+                return Damp == 0f && Start == 0f && End == 0f;
+            }
+
             public BymlHashTable Serialize()
             {
                 var table = new BymlHashTable();
 
-                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+
+                if (!Color.IsDefault())
+                    table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+
+                if(Damp != 0f)
                 table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Damp), "Damp");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(End), "End");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Start), "Start");
+                if(End != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(End), "End");
+                if(Start != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Start), "Start");
                 return table;
             }
         }
@@ -636,10 +700,17 @@ namespace Fushigi.env
             {
                 var table = new BymlHashTable();
 
-                table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Latitude), "Latitude");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Longitude), "Longitude");
+                if(!Color.IsDefault())
+                    table.AddNode(BymlNodeId.Hash, Color.Serialize(), "Color");
+
+                if(Intensity != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+
+                if(Latitude != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Latitude), "Latitude");
+
+                if(Longitude != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Longitude), "Longitude");
 
                 return table;
             }
@@ -656,7 +727,8 @@ namespace Fushigi.env
                 var table = new BymlHashTable();
 
                 table.AddNode(BymlNodeId.Hash, Ground.Serialize(), "Ground");
-                table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+                if(Intensity != 0f)
+                    table.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
                 table.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
 
                 return table;
@@ -713,7 +785,8 @@ namespace Fushigi.env
                 lut.AddNode(BymlNodeId.Hash, ColorEnd.Serialize(), "ColorEnd");
                 lut.AddNode(BymlNodeId.Hash, ColorMiddle.Serialize(), "ColorMiddle");
 
-                lut.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
+                if(Intensity != 0f)
+                    lut.AddNode(BymlNodeId.Float, BymlUtil.CreateNode(Intensity), "Intensity");
                 lut.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(UseMiddleColor), "UseMiddleColor");
 
                 if(Curve != null)
@@ -854,6 +927,12 @@ namespace Fushigi.env
 
                 return color;
             }
+
+            public bool IsDefault()
+            {
+                return R == 0f && G == 0f && B == 0f && A == 0f;
+            }
+
             public override string ToString()
             {
                 return $"R {R} G {G} B {B} A {A}";
@@ -910,99 +989,118 @@ namespace Fushigi.env
             // Build BYML root
             BymlHashTable root = new BymlHashTable();
 
+            if(parent != null)
+                root.AddNode(BymlNodeId.String, BymlUtil.CreateNode(parent), "$parent");
+
             if (Bloom != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyBloom), "IsApplyBloom");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyBloom), "IsApplyBloom");
                 root.AddNode(BymlNodeId.Hash, Bloom.Serialize(), "Bloom");
             }
 
             if (CharLight != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCharLight), "IsApplyCharLight");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCharLight), "IsApplyCharLight");
                 root.AddNode(BymlNodeId.Hash, CharLight.Serialize(), "CharLight");
             }
 
             if (CloudLight != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCloudLight), "IsApplyCloudLight");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyCloudLight), "IsApplyCloudLight");
                 root.AddNode(BymlNodeId.Hash, CloudLight.Serialize(), "CloudLight");
             }
 
             if (DOF != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDOF), "IsApplyDOF");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDOF), "IsApplyDOF");
                 root.AddNode(BymlNodeId.Hash, DOF.Serialize(), "DOF");
             }
 
             if (DvLight != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDvLight), "IsApplyDvLight");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyDvLight), "IsApplyDvLight");
                 root.AddNode(BymlNodeId.Hash, DvLight.Serialize(), "DvLight");
             }
 
             if (Emission != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEmission), "IsApplyEmission");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEmission), "IsApplyEmission");
                 root.AddNode(BymlNodeId.Hash, Emission.Serialize(), "Emission");
             }
 
             if (EnvColor != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvColor), "IsApplyEnvColor");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvColor), "IsApplyEnvColor");
                 root.AddNode(BymlNodeId.Hash, EnvColor.Serialize(), "EnvColor");
             }
 
             if (EnvMap != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvMap), "IsApplyEnvMap");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyEnvMap), "IsApplyEnvMap");
                 root.AddNode(BymlNodeId.Hash, EnvMap.Serialize(), "EnvMap");
             }
 
             if (FieldLight != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFieldLight), "IsApplyFieldLight");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFieldLight), "IsApplyFieldLight");
                 root.AddNode(BymlNodeId.Hash, FieldLight.Serialize(), "FieldLight");
             }
 
             if (Fog != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFog), "IsApplyFog");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyFog), "IsApplyFog");
                 root.AddNode(BymlNodeId.Hash, Fog.Serialize(), "Fog");
             }
 
             if (GI != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyGI), "IsApplyGI");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyGI), "IsApplyGI");
                 root.AddNode(BymlNodeId.Hash, GI.Serialize(), "GI");
             }
 
             if (ObjLight != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyObjLight), "IsApplyObjLight");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyObjLight), "IsApplyObjLight");
                 root.AddNode(BymlNodeId.Hash, ObjLight.Serialize(), "ObjLight");
             }
 
             if (Rim != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyRim), "IsApplyRim");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyRim), "IsApplyRim");
                 root.AddNode(BymlNodeId.Hash, Rim.Serialize(), "Rim");
             }
 
             if (Shadow != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyShadow), "IsApplyShadow");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyShadow), "IsApplyShadow");
                 root.AddNode(BymlNodeId.Hash, Shadow.Serialize(), "Shadow");
             }
 
             if (Sky != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplySky), "IsApplySky");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplySky), "IsApplySky");
                 root.AddNode(BymlNodeId.Hash, Sky.Serialize(), "Sky");
             }
 
             if (Info != null)
             {
-                root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyInfo), "IsApplyInfo");
+                if (parent == null)
+                    root.AddNode(BymlNodeId.Bool, BymlUtil.CreateNode(IsApplyInfo), "IsApplyInfo");
                 root.AddNode(BymlNodeId.Hash, Info.Serialize(), "Info");
             }
 

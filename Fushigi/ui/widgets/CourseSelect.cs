@@ -63,6 +63,11 @@ namespace Fushigi.ui.widgets
 
         void DrawCourses(Promise<string> promise)
         {
+            ImGui.GetFont().Scale = 1.2f;
+            ImGui.PushFont(ImGui.GetFont());
+            ImGui.Text(RomFS.GetCourseEntries()[selectedWorld!].name);
+            ImGui.GetFont().Scale = 1;
+            ImGui.PopFont();
             if (!ImGui.BeginListBox(selectedWorld, ImGui.GetContentRegionAvail()))
             {
                 return;

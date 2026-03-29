@@ -98,6 +98,7 @@ namespace Fushigi.gl.Bfres.AreaData
 
         public void UpdatePalette(GL gl)
         {
+            
             if (isEnvPaletteTransition)
             {
                 if (ratio >= 1.0f)

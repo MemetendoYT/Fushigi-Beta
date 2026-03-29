@@ -1052,6 +1052,11 @@ namespace Fushigi.ui.widgets
                         else
                             envPaletteWindow.SavePalette(resource_table);
                     }
+                    var paletteSetting = area.mAreaParams.EnvPaletteSetting;
+                    paletteSetting.verifyPalette(paletteSetting.InitPaletteBaseName);
+                    paletteSetting.verifyPalette(paletteSetting.WonderPaletteList);
+                    paletteSetting.verifyPalette(paletteSetting.EventPaletteList);
+                    paletteSetting.verifyPalette(paletteSetting.TransPaletteList);
 
                     if (backup)
                     {

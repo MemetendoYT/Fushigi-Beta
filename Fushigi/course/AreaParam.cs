@@ -3,6 +3,7 @@ using Fushigi.Byml;
 using Fushigi.Byml.Serializer;
 using Fushigi.env;
 using Fushigi.rstb;
+using Fushigi.ui.widgets;
 using Fushigi.util;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Fushigi.ui.widgets;
+using System.Xml.Linq;
 
 
 namespace Fushigi.course
@@ -63,6 +64,7 @@ namespace Fushigi.course
             using var mem = new MemoryStream();
             byml.Save(mem);
             return (uint)mem.Length;
+
         }
 
         public void Save(RSTB resource_table, string folder, string areaName, bool saveTemplate)
@@ -72,6 +74,7 @@ namespace Fushigi.course
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
             }
+            
             BymlHashTable root = this.Serialize();
 
             var byml = new Byml.Byml(root);
@@ -138,6 +141,39 @@ namespace Fushigi.course
             public List<string> TransPaletteList { get; set; }
             public List<string> EventPaletteList { get; set; }
 
+
+            public void verifyPalette(List<string> paletteList)
+            {
+                if(paletteList == null)
+                    return;
+                
+                for (int i = 0; i < paletteList.Count; i++)
+                {
+                    string palette = paletteList[i];
+
+                    Console.Write(palette);
+                    string local_path = palette;
+
+                    string file_path = FileUtil.FindContentPath(local_path);
+
+                    if (!File.Exists(file_path))
+                    {
+                        paletteList[i] = "AA_Hajimari_Sougen_Hare";
+                    }
+                }
+            }
+
+            public void verifyPalette(string palette)
+            {
+                string local_path = Path.Combine("Gyml", "Gfx", "EnvPaletteParam", $"{palette}.game__gfx__EnvPaletteParam.bgyml");
+
+                string file_path = FileUtil.FindContentPath(local_path);
+
+                if (!File.Exists(file_path))
+                {
+                    InitPaletteBaseName = "AA_Hajimari_Sougen_Hare";
+                }
+            }
             public BymlHashTable Serialize()
             {
                 BymlHashTable evnPaletteSettings = new();

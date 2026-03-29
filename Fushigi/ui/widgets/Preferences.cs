@@ -283,11 +283,22 @@ namespace Fushigi.ui.widgets
             if (ImGui.Checkbox("DPI Override", ref dpiToggle))
             {
                 UserSettings.ToggleDPIOverride(dpiToggle);
-                ImGui.GetIO().FontGlobalScale = dpiVal;
+                ImGui.GetIO().FontGlobalScale = dpiVal / (MainWindow.backupSize / 16f);
+                MainWindow.dpiScale = dpiVal;
 
-                if(!dpiToggle)
+                if (!dpiToggle)
                 {
-                    ImGui.GetIO().FontGlobalScale = MainWindow.dpiScale;
+
+                    if ((MainWindow.backupSize / 16f) == (MainWindow.backupdpiScale / 96f))
+                    {
+                        ImGui.GetIO().FontGlobalScale = MainWindow.backupdpiScale / 96f;
+                        MainWindow.dpiScale = MainWindow.backupdpiScale / 96f;
+                    }
+                    else
+                    {
+                        ImGui.GetIO().FontGlobalScale = (MainWindow.backupdpiScale / 96f) / (MainWindow.backupSize / 16f);
+                        MainWindow.dpiScale = MainWindow.backupdpiScale / 96f;
+                    }
                 }
             }
 
@@ -296,14 +307,14 @@ namespace Fushigi.ui.widgets
                 if (ImGui.SliderFloat("DPI Scale", ref dpiVal, 0.5f, 3f))
                 {
                     UserSettings.SetDPIValue(dpiVal);
-                    ImGui.GetIO().FontGlobalScale = dpiVal;
-                    //MainWindow.dpiScale = dpiVal;
+                    MainWindow.dpiScale = dpiVal;
+                    ImGui.GetIO().FontGlobalScale = dpiVal / (MainWindow.backupSize / 16f);
                     return;
                 }
 
             }
 
-            Tooltip.Show("Override Automatic DPI settings [Experimental]");
+            Tooltip.Show("Override Automatic DPI settings. Pretty janky, full reboot required for Fushigi to adjust properly to new DPI [Experimental]");
         }
     }
 }

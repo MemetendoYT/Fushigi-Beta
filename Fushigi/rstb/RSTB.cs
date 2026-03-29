@@ -54,16 +54,7 @@ namespace Fushigi.rstb
             uint hash = Crc32.Compute(path);
             uint size = 0;
 
-            if (path.StartsWith("Gyml/Gfx/EnvPaletteParam/") && ext == ".bgyml")
-            {
-                var sizeLong = (decompressed_size + 31) & -32;
-                // Credit to Theia's RSTB tool for size calculation: https://github.com/theia-mly/Wonder-RSTB-Gen
-                size = (UInt32)(9627 * MathF.Exp(1.35E-4f * (float)sizeLong) + 1200);
-            }
-            else
-            {
-                size = CalculateResourceSize(decompressed_size, ext);
-            }
+            size = CalculateResourceSize(decompressed_size, ext);
 
             if (HashToResourceSize.ContainsKey(hash))
             {
@@ -184,7 +175,7 @@ namespace Fushigi.rstb
             //Round to nearest 32
             var size = (decompressed_size + 31) & -32;
 
-            //Formats which are verified to be the correct size
+            //Formats which are verified to be the correct size <- So this is a lie
             switch (ext)
             {
                 case ".byml": //For bcett.byml, the total added after rounding is always 0x100 bytes
@@ -196,7 +187,7 @@ namespace Fushigi.rstb
                 case ".genvb": //Tested from Env folder
                     return (uint)size + 0x2000;
                 case ".bgyml":
-                    return (uint)size + 0x3000;
+                    return (UInt32)(9627 * MathF.Exp(1.35E-4f * (float)size) + 1200); // Credits to Theia's RSTB Gen tool for size calculation https://github.com/theia-mly/Wonder-RSTB-Gen
             }
 
             //Default

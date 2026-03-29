@@ -123,6 +123,7 @@ namespace Fushigi.ui
                         ImGui.GetStyle().ScaleAllSizes(dpiScale);
 
                         float size = 16f * dpiScale;
+                        backupSize = size;
                         CourseSelect.thumbnailSize *= dpiScale;
                         mDefaultFont = io.Fonts.AddFontFromFileTTF(
                             Path.Combine("res", "Font.ttf"),
@@ -773,5 +774,6 @@ namespace Fushigi.ui
         public static string mCurrentLevelName = "";
         CourseScene? mSelectedCourseScene;
         bool mIsShowPreferenceWindow = false;
+        public static float backupSize;
     }
 }

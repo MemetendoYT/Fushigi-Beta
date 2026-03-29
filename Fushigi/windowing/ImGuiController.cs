@@ -665,7 +665,7 @@ public class ImGuiController : IDisposable
     /// <summary>
     /// Creates the texture used to render text.
     /// </summary>
-    private unsafe void RecreateFontDeviceTexture()
+    public unsafe void RecreateFontDeviceTexture()
     {
         // Build texture atlas
         var io = ImGuiNET.ImGui.GetIO();
