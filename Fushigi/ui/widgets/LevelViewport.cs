@@ -2280,25 +2280,24 @@ namespace Fushigi.ui.widgets
                                 newHoveredObject = point;
 
                         //bool selected = mEditContext.IsSelected(point) || mEditContext.IsSelected(point.mControl);
+
                         bool selected = false;
                         if (closestSelected != null)
                             {
-                                if(point == closestSelected)
-                                {
+                                if (point == closestSelected)
                                     selected = true;
-                                }
-                            }
+                             }
                         else
-                        {
-                            selected = mEditContext.IsSelected(point) || mEditContext.IsSelected(point.mControl);
-                        }
+                            {
+                                selected = mEditContext.IsSelected(point) || mEditContext.IsSelected(point.mControl);
+                            }
 
-                        if (selected)
-                        {
-                            selectedPoint = point;
-                            if ((ImGui.GetMousePos() - contPos2D).Length() < 10.0f)
+                            if (selected)
+                            {
+                                selectedPoint = point;
+                                if ((ImGui.GetMousePos() - contPos2D).Length() < 10.0f)
                                 newHoveredObject = point.mControl;
-                        }
+                            }
                         }
 
                     //Delete selected
@@ -2515,6 +2514,17 @@ namespace Fushigi.ui.widgets
                                 mDrawList.AddLine(pos2D, preview2D, rail_point_color, 2.5f);
                                 mDrawList.AddCircleFilled(preview2D, size, rail_point_color);
                             }
+
+                            if (point_selected && pnt.mIsCurve)
+                            {
+                                var contPos2D = WorldToScreen(pnt.mControl.mTranslate);
+                                mDrawList.AddLine(pos2D, contPos2D, rail_point_color, thickness);
+                                mDrawList.AddCircleFilled(contPos2D, size, rail_point_color);
+
+                                if (newHoveredObject == pnt.mControl)
+                                    mDrawList.AddCircle(contPos2D, 15.0f, rail_point_color, 10, 1.5f);
+                            }
+
                         }
 
                     }

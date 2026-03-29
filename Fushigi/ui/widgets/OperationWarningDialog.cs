@@ -91,7 +91,7 @@ namespace Fushigi.ui.widgets
 
             ImGui.Spacing();
 
-            if (ImGui.Button("Continue anyway"))
+            if (ImGui.Button("Continue anyway") || ImGui.IsKeyPressed(ImGuiKey.Enter) || ImGui.IsKeyPressed(ImGuiKey.KeypadEnter))
                 promise.SetResult(DialogResult.OK);
 
             ImGui.SameLine();
