@@ -5,6 +5,7 @@ using Fushigi.gl;
 using Fushigi.Logger;
 using Fushigi.rstb;
 using Fushigi.util;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.RegularExpressions;
 
 namespace Fushigi.course
@@ -39,44 +40,44 @@ namespace Fushigi.course
 
 
             IsOneAreaCourse = ((BymlNode<string>)stageParamRoot["Category"]).Data == "Course1Area";
-            if(IsOneAreaCourse == true)
+            if (IsOneAreaCourse == true)
             {
                 overWriteCourseParam = true;
             }
-   
-                try
-                {
-                    mStageReferences = (BymlArrayNode)root["RefStages"];
 
-                    for (int i = 0; i < mStageReferences.Length; i++)
-                    {
-                        string stageParamPath = ((BymlNode<string>)mStageReferences[i]).Data.Replace("Work/", "").Replace(".gyml", ".bgyml");
-                        string stageName = Path.GetFileName(stageParamPath).Split(".game")[0];
-                        mAreas.Add(new CourseArea(stageName, false));
+            try
+            {
+                mStageReferences = (BymlArrayNode)root["RefStages"];
 
-                    }
-                }
-                catch
+                for (int i = 0; i < mStageReferences.Length; i++)
                 {
-                    mAreas.Add(new CourseArea(mCourseName, false));
+                    string stageParamPath = ((BymlNode<string>)mStageReferences[i]).Data.Replace("Work/", "").Replace(".gyml", ".bgyml");
+                    string stageName = Path.GetFileName(stageParamPath).Split(".game")[0];
+                    mAreas.Add(new CourseArea(stageName, false));
 
                 }
+            }
+            catch
+            {
+                mAreas.Add(new CourseArea(mCourseName, false));
+
+            }
 
             mAreas = mAreas
                 .OrderBy(area =>
                 {
-                  string name = area.GetName();
+                    string name = area.GetName();
 
-                  if (name.EndsWith("_Main"))
-                      return 0; 
+                    if (name.EndsWith("_Main"))
+                        return 0;
 
-                  if (name.Contains("_Sub"))
-                  {
-                      string numStr = name.Substring(name.LastIndexOf("_Sub") + 4);
-                      if (int.TryParse(numStr, out int num))
-                          return num; 
-                  }
-                  return int.MaxValue; 
+                    if (name.Contains("_Sub"))
+                    {
+                        string numStr = name.Substring(name.LastIndexOf("_Sub") + 4);
+                        if (int.TryParse(numStr, out int num))
+                            return num;
+                    }
+                    return int.MaxValue;
                 })
                 .ToList();
 
@@ -90,7 +91,7 @@ namespace Fushigi.course
             }
 
             mGlobalLinks = new(new BymlArrayNode());
-       
+
         }
         public void AddArea()
         {
@@ -210,7 +211,7 @@ namespace Fushigi.course
             return mGlobalLinks;
         }
 
-        public void Save(bool backup)
+        public void Save(string backupDir)
         {
             var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
 
@@ -224,13 +225,13 @@ namespace Fushigi.course
                 RSTB resource_table = new RSTB();
                 resource_table.Load(Path.GetFileName(path));
 
- 
+
                 BymlHashTable stageParamRoot = new();
 
                 stageParamRoot.AddNode(BymlNodeId.Array, new BymlArrayNode(), "Actors");
 
                 stageParamRoot.AddNode(BymlNodeId.Array, mGlobalLinks.SerializeToArray(), "Links");
-                
+
                 BymlArrayNode refArr = new();
 
                 foreach (CourseArea area in mAreas)
@@ -239,7 +240,7 @@ namespace Fushigi.course
                     refArr.AddNodeToArray(BymlUtil.CreateNode(refPath));
                 }
 
-          
+
                 stageParamRoot.AddNode(BymlNodeId.Array, refArr, "RefStages");
 
                 var byml = new Byml.Byml(stageParamRoot);
@@ -250,13 +251,18 @@ namespace Fushigi.course
                 resource_table.SetResource(virtualPath, (uint)mem.Length);
 
                 string folder = Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit");
+                bool backup = (backupDir != "");
+                if (backup)
+                    folder = backupDir;
+
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
 
                 string levelPath = Path.Combine(folder, $"{mCourseName}.bcett.byml.zs");
 
                 File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
-                SaveAreas(resource_table, backup);
+
+                SaveAreas(resource_table, backup, backupDir);
                 // SaveAreas(resource_table);
                 resource_table.Save();
             }
@@ -264,7 +270,7 @@ namespace Fushigi.course
 
         public void UpdateStageParam()
         {
-            if(!overWriteCourseParam)
+            if (!overWriteCourseParam)
             {
                 return;
             }
@@ -322,11 +328,11 @@ namespace Fushigi.course
                 Directory.CreateDirectory(folder);
 
             BymlHashTable root = new();
-            
+
             root.AddNode(BymlNodeId.Array, mGlobalLinks.SerializeToArray(), "Links");
 
-            if(mStageReferences != null)
-            root.AddNode(BymlNodeId.Array, mStageReferences, "RefStages");
+            if (mStageReferences != null)
+                root.AddNode(BymlNodeId.Array, mStageReferences, "RefStages");
 
             var byml = new Byml.Byml(root);
             var mem = new MemoryStream();
@@ -349,17 +355,17 @@ namespace Fushigi.course
                 area.Save(resTable);
             }
         }
-        public void SaveAreas(RSTB resTable, bool backup)
+        public void SaveAreas(RSTB resTable, bool backup, String backupFolder)
         {
-            if (!backup)
+            foreach (var area in GetAreas())
             {
-                foreach (var area in GetAreas())
-                {
-                    Logger.Logger.LogMessage("Course", $"Saving area {area.GetName()}...");
-
+                Logger.Logger.LogMessage("Course", $"Saving area {area.GetName()}...");
+                if (backup)
+                    area.SaveBackup(resTable, backupFolder);
+                else
                     area.Save(resTable);
-                }
             }
+
         }
 
 
@@ -376,3 +382,6 @@ namespace Fushigi.course
         private bool overWriteCourseParam;
     }
 }
+
+
+

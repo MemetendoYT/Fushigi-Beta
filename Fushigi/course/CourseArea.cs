@@ -21,22 +21,23 @@ namespace Fushigi.course
     public class CourseArea
     {
 
-        public CourseArea(string areaName, bool overrideVanilla) {
+        public CourseArea(string areaName, bool overrideVanilla)
+        {
             mAreaName = areaName;
-            if(areaName == "BlankStage")
+            if (areaName == "BlankStage")
                 Load(true, false, false);
             else
                 Load(false, false, overrideVanilla);
         }
-        
-        
+
+
         public void Load(bool loadTemplate, bool disableBGUnit, bool overrideVanilla)
         {
             string areaParamPath = "";
 
-            if(overrideVanilla)
+            if (overrideVanilla)
             {
-              loadTemplate = true;
+                loadTemplate = true;
 
                 string phiveDir = Path.Combine(
                            UserSettings.GetModRomFSPath(),
@@ -44,7 +45,7 @@ namespace Fushigi.course
                            "StaticCompoundBody"
                        );
 
-                string normalDir  = Path.Combine(
+                string normalDir = Path.Combine(
                            UserSettings.GetRomFSPath(),
                            "Phive",
                            "StaticCompoundBody"
@@ -86,13 +87,13 @@ namespace Fushigi.course
                 areaParamPath = "res/template.game__stage__AreaParam.bgyml";
             }
 
-            if(!File.Exists(areaParamPath))
+            if (!File.Exists(areaParamPath))
             {
                 areaParamPath = "res/template.game__stage__AreaParam.bgyml";
                 loadTemplate = true;
             }
 
-                mAreaParams = new AreaParam(new Byml.Byml(new MemoryStream(File.ReadAllBytes(areaParamPath))));
+            mAreaParams = new AreaParam(new Byml.Byml(new MemoryStream(File.ReadAllBytes(areaParamPath))));
 
             //Load env settings
             try
@@ -115,7 +116,7 @@ namespace Fushigi.course
                 Console.WriteLine(ex);
                 throw;
             }
-          
+
             string levelPath = "";
             if (!loadTemplate)
             {
@@ -123,7 +124,8 @@ namespace Fushigi.course
                     Path.Combine("BancMapUnit", $"{mAreaName}.bcett.byml.zs")
                     );
             }
-            else {                 
+            else
+            {
                 levelPath = "res/template.bcett.byml.zs";
             }
             byte[] levelBytes = FileUtil.DecompressFile(levelPath);
@@ -159,7 +161,7 @@ namespace Fushigi.course
                 BymlArrayNode railsArray = (BymlArrayNode)root["Rails"];
                 mRailHolder = new(railsArray);
             }
-            else 
+            else
             {
                 mRailHolder = new();
             }
@@ -180,7 +182,7 @@ namespace Fushigi.course
                 mLinkHolder = new(linksArray);
             }
             else
-            { 
+            {
                 mLinkHolder = new();
             }
 
@@ -233,12 +235,16 @@ namespace Fushigi.course
         {
             return mActorHolder.mActors.FirstOrDefault(a => a.mHash == hash);
         }
+        public void SaveBackup(RSTB resource_table, String backupFolder)
+        {
+            Save(resource_table, Path.Combine(backupFolder, "BancMapUnit"), false);
+        }
         public void Save(RSTB resource_table)
         {
-            //Save using the configured mod romfs path
             Save(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit"), false);
         }
-        public void SaveStageParam(RSTB resource_table) {
+        public void SaveStageParam(RSTB resource_table)
+        {
             string path = Path.Combine(
                 UserSettings.GetModRomFSPath(),
                 "Stage",
@@ -248,7 +254,7 @@ namespace Fushigi.course
         }
         public void SaveStageParam(RSTB resource_table, string folder)
         {
-            if(Course.IsOneAreaCourse)
+            if (Course.IsOneAreaCourse)
             {
                 return;
             }
@@ -357,7 +363,7 @@ namespace Fushigi.course
 
             string prefabPath = Path.Combine(prefabFolder, $"{prefabName}.bcett.byml.zs");
             File.WriteAllBytes(prefabPath, FileUtil.CompressData(mem.ToArray()));
-            
+
         }
         public void Save(RSTB resource_table, string folder, bool saveTemplate)
         {
@@ -373,7 +379,7 @@ namespace Fushigi.course
             root.AddNode(BymlNodeId.Array, mRailLinksHolder.SerializeToArray(), "ActorToRailLinks");
             root.AddNode(BymlNodeId.Array, mActorHolder.SerializeToArray(mLinkHolder), "Actors");
 
-            if(mCommentHolder.mComments.Count != 0) 
+            if (mCommentHolder.mComments.Count != 0)
                 root.AddNode(BymlNodeId.Array, mCommentHolder.SerializeToArray(), "Comments");
 
             if (mUnitHolder != null)
@@ -386,7 +392,7 @@ namespace Fushigi.course
             root.AddNode(BymlNodeId.Array, mGroupsHolder.SerializeToArray(), "SimultaneousGroups");
             //if (Course.Catergory != null)
             //{
-                //root.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>($"Work/Stage/StageParam/{mAreaName}.game__stage__StageParam.gyml"), "StageParam");
+            //root.AddNode(BymlNodeId.String, BymlUtil.CreateNode<string>($"Work/Stage/StageParam/{mAreaName}.game__stage__StageParam.gyml"), "StageParam");
             //}
 
             var byml = new Byml.Byml(root);
@@ -395,7 +401,7 @@ namespace Fushigi.course
 
             var decomp_size = (uint)mem.Length;
 
-            
+
             //Compress and save the course area           
             string levelPath = Path.Combine(folder, $"{mAreaName}.bcett.byml.zs");
             if (saveTemplate)
@@ -408,7 +414,7 @@ namespace Fushigi.course
             }
             else
             {
-               
+
                 levelPath = Path.Combine(folder, $"{mAreaName}.bcett.byml.zs");
                 File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
 
@@ -418,7 +424,7 @@ namespace Fushigi.course
             }
         }
 
-     
+
         public string GetName()
         {
             return mAreaName;
@@ -438,14 +444,14 @@ namespace Fushigi.course
         {
             return mCommentHolder.mComments;
         }
-        
+
         public IReadOnlyList<CourseActor> GetSortedActors()
         {
             if (!mActorHolder.mActors.TrueForAll(mActorHolder.mSortedActors.Contains) || !mActorHolder.mSortedActors.TrueForAll(mActorHolder.mActors.Contains))
             {
                 mActorHolder.mSortedActors = new List<CourseActor>(mActorHolder.mActors);
                 mActorHolder.mSortedActors.Sort((x, y) => x.mTranslation.Z.CompareTo(y.mTranslation.Z));
-            }   
+            }
             return mActorHolder.mSortedActors;
         }
 

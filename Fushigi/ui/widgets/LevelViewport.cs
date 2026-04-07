@@ -1165,7 +1165,6 @@ namespace Fushigi.ui.widgets
                                 batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "" : "s")}");
                             }
 
-
                             if (ImGui.MenuItem("Paste Dst"))
                             {
                                 var total = 0;

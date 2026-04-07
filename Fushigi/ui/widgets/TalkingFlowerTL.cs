@@ -77,7 +77,9 @@ namespace Fushigi.ui.widgets
                             new Vector2(0, textSize.Y));
 
                         if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                        {
                             ImGui.SetClipboardText(TL.Key);
+                        }
 
                         ImGui.TableNextColumn();
                         ImGui.BeginDisabled();
