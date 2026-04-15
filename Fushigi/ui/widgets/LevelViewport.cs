@@ -114,6 +114,7 @@ namespace Fushigi.ui.widgets
         public bool ShowGrid = true;
         public bool ShowBackground = true;
         public bool ShowActors = true;
+        public bool ShowRails = true;
         bool pasteContext = false;
         bool copyContext = false;
         bool deleteContext = false;
@@ -135,7 +136,6 @@ namespace Fushigi.ui.widgets
         public AreaResourceManager EnvironmentData = new AreaResourceManager(gl, area.mInitEnvPalette);
         public static bool updateSkinA = false;
         public static bool updateSkinB = false;
-        Dictionary<string, List<ulong>> mCopiedLinks = [];
 
         private readonly HashSet<CourseUnit> mRegisteredUnits = [];
 
@@ -782,6 +782,18 @@ namespace Fushigi.ui.widgets
             {
                 List<CourseActor> actors = ctx.GetSelectedObjects<CourseActor>().ToList();
                 List<CourseActor> copiedActors = new List<CourseActor>();
+                
+               // List<CourseRail.CourseRailPoint> courseRailPoints = ctx.GetSelectedObjects<CourseRail.CourseRailPoint>().ToList();
+               // List<CourseRail> courseRails = new List<CourseRail>();
+                    
+               //foreach(var point in courseRailPoints)
+               // {
+               //     if(courseRails.Contains(point.mParent))
+               //     courseRails.Add(point.mParent);
+               // }
+    
+
+                //Console.WriteLine(courseRails.Count());
 
                 foreach (var actor in actors)
                     copiedActors.Add(actor.ClonePrefab(mArea));
@@ -796,6 +808,16 @@ namespace Fushigi.ui.widgets
                     actor.mTranslation.X -= median.X;
                     actor.mTranslation.Y -= median.Y;
                 }
+
+                //foreach (var rail in courseRails)
+                //{
+                //    foreach (var point in rail.mPoints)
+                //    {
+      
+                //        point.mTranslate.X -= median.X;
+                //        point.mTranslate.Y -= median.Y;
+                //    }
+                //}
 
                 mArea.SaveActorsToPrefab(copiedActors, actors, prefabName);
             }
@@ -1062,7 +1084,7 @@ namespace Fushigi.ui.widgets
 
                             if (ImGui.MenuItem("Copy Src"))
                             {
-                                mCopiedLinks = mArea.mLinkHolder.GetDestHashesFromSrc(mSelectedActor.mHash);
+                                CourseScene.mCopiedLinks = mArea.mLinkHolder.GetDestHashesFromSrc(mSelectedActor.mHash);
                             }
 
 
@@ -1070,7 +1092,7 @@ namespace Fushigi.ui.widgets
                             {
                                 var total = 0;
                                 var batch = mEditContext.BeginBatchAction();
-                                foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                                foreach ((string linkName, List<ulong> hashArray) in CourseScene.mCopiedLinks)
                                 {
                                     for (int i = 0; i < hashArray.Count; i++)
                                     {
@@ -1093,7 +1115,7 @@ namespace Fushigi.ui.widgets
                             ImGui.Separator();
                             if (ImGui.MenuItem("Copy Dst"))
                             {
-                                mCopiedLinks = mArea.mLinkHolder.GetSrcHashesFromDest(mSelectedActor.mHash);
+                                CourseScene.mCopiedLinks = mArea.mLinkHolder.GetSrcHashesFromDest(mSelectedActor.mHash);
                             }
 
 
@@ -1101,7 +1123,7 @@ namespace Fushigi.ui.widgets
                             {
                                 var total = 0;
                                 var batch = mEditContext.BeginBatchAction();
-                                foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                                foreach ((string linkName, List<ulong> hashArray) in CourseScene.mCopiedLinks)
                                 {
                                     for (int i = 0; i < hashArray.Count; i++)
                                     {
@@ -1130,7 +1152,7 @@ namespace Fushigi.ui.widgets
                             {
                                 var total = 0;
                                 var batch = mEditContext.BeginBatchAction();
-                                foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                                foreach ((string linkName, List<ulong> hashArray) in CourseScene.mCopiedLinks)
                                 {
                                     for (int i = 0; i < hashArray.Count; i++)
                                     {
@@ -1169,7 +1191,7 @@ namespace Fushigi.ui.widgets
                             {
                                 var total = 0;
                                 var batch = mEditContext.BeginBatchAction();
-                                foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                                foreach ((string linkName, List<ulong> hashArray) in CourseScene.mCopiedLinks)
                                 {
                                     for (int i = 0; i < hashArray.Count; i++)
                                     {
@@ -1272,7 +1294,6 @@ namespace Fushigi.ui.widgets
 
             mSize = size;
             mDrawList = ImGui.GetWindowDrawList();
-
             ImGui.PushClipRect(mTopLeft, mTopLeft + size, true);
 
             HandleCameraControls(deltaSeconds);
@@ -1840,23 +1861,65 @@ namespace Fushigi.ui.widgets
                 }
             }
 
-            if (ImGui.IsKeyPressed(ImGuiKey.J))
+            if (ImGui.IsKeyPressed(ImGuiKey.R))
             {
                 if (mEditContext.GetSelectedObjects<CourseActor>().ToArray().Length >= 1 && mEditContext.GetSelectedObjects<FushigiCursor>().ToArray().Length == 1)
                 {
-                    foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
-                    {
+                    pivotedActors = mEditContext.GetSelectedObjects<CourseActor>().ToArray();
+                    foreach (CourseActor actor in pivotedActors)
+                    {   
                         Vector2 delta = ImGui.GetIO().MouseDelta;
                         float rotationSpeed = 0.05f;
                         float deltaAngle = ImGui.GetIO().MouseDelta.X * rotationSpeed;
                         Vector3 cursorTrans = cursor.mTranslate;
                         actor.mRotation.Z += deltaAngle;
                         actor.mTranslation = cursorTrans + Vector3.Transform(actor.mTranslation - cursorTrans, Matrix4x4.CreateRotationZ(deltaAngle));
+
                     }
+                    if (pivotedActors[0].mRotation != pivotedActors[0].mStartingRot)
+                        applyRotation = true;
                 }
             }
 
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+            if (applyRotation && !ImGui.IsKeyDown(ImGuiKey.R))
+            {
+                applyRotation = false;
+                
+                if (pivotedActors.Length == 1)
+                {
+                    var batch = mEditContext.BeginBatchAction();
+                    mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                        pivotedActors[0],
+                        [("mRotation", pivotedActors[0].GetFieldValue("mStartingRot"))],
+                        $"{IconUtil.ICON_ARROWS_ALT} Pivot {string.Join(", ", pivotedActors[0].mPackName)}"));
+
+                    mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                        pivotedActors[0],
+                        [("mTranslation", pivotedActors[0].GetFieldValue("mStartingTrans"))],
+                        $"{IconUtil.ICON_ARROWS_ALT} Pivot {string.Join(", ", pivotedActors[0].mPackName)}"));
+                    batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Pivot {string.Join(", ", pivotedActors[0].mPackName)}");
+                }
+                else
+                {
+                    var batch = mEditContext.BeginBatchAction();
+
+                    foreach (var actor in pivotedActors)
+                    {
+                        mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                         actor,
+                         [("mRotation", actor.GetFieldValue("mStartingRot"))],
+                         $"{IconUtil.ICON_ARROWS_ALT} Pivot {string.Join(", ", actor.mPackName)}"));
+
+                        mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                            actor,
+                            [("mTranslation", actor.GetFieldValue("mStartingTrans"))],
+                            $"{IconUtil.ICON_ARROWS_ALT} Pivot {string.Join(", ", actor.mPackName)}"));
+                    }
+                    batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Pivoted {pivotedActors.Count()} Actors");
+                }
+
+            }
+                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
                 if (mHoveredObject == null)
                 {
@@ -2106,6 +2169,10 @@ namespace Fushigi.ui.widgets
         public FushigiCursor cursor;
         private CourseRail.CourseRailPoint? primaryPoint;
         private CourseRail.CourseRailPoint closestSelected;
+        private List<(CourseRail rail, CourseRail.CourseRailPoint point)> deleteList;
+        private bool multiRailDelete;
+        public bool applyRotation;
+        public CourseActor[] pivotedActors;
 
         public void DrawComments()
         {
@@ -2228,6 +2295,7 @@ namespace Fushigi.ui.widgets
             const float pointSize = 3.0f;
             Vector3? newHoveredPoint = null;
             object? newHoveredObject = null;
+            deleteList = new List<(CourseRail rail, CourseRail.CourseRailPoint point)>();
 
             if (!ScreenshotMode)
             {
@@ -2304,15 +2372,15 @@ namespace Fushigi.ui.widgets
                     {
                         if (mEditContext.GetSelectedObjects<CourseRail.CourseRailPoint>().ToArray().Length > 1)
                         {
-                            var rails = mEditContext.GetSelectedObjects<CourseRail.CourseRailPoint>().ToArray();
-                            var batchAction = mEditContext.BeginBatchAction();
-
-                                foreach (var point in rails)
+                            var railPoints = mEditContext.GetSelectedObjects<CourseRail.CourseRailPoint>().ToArray();
+                            multiRailDelete = true;
+                                foreach (var point in railPoints)
                                 {
-                                    var revertible = rail.mPoints.RevertableRemove(point);
-                                    mEditContext.CommitAction(revertible);
+                                    if (rail.mPoints.Contains(point))
+                                    {
+                                        deleteList.Add((rail, point));
+                                    }
                                 }
-                                batchAction.Commit($"{IconUtil.ICON_TRASH} Delete Rail Points");
                         }
                         else
                         {
@@ -2337,7 +2405,7 @@ namespace Fushigi.ui.widgets
                         Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
 
                         var index = rail.mPoints.IndexOf(selectedPoint);
-                        var newPoint = new CourseRail.CourseRailPoint(selectedPoint);
+                        var newPoint = new CourseRail.CourseRailPoint(selectedPoint, rail);
                         //if (UserSettings.GetEnableHalfTile())
                         //{
                             newPoint.mTranslate = new(
@@ -2368,7 +2436,7 @@ namespace Fushigi.ui.widgets
                     {
                         Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
 
-                        var newPoint = new CourseRail.CourseRailPoint(rail.mType);
+                        var newPoint = new CourseRail.CourseRailPoint(rail.mType, rail);
                         //if (UserSettings.GetEnableHalfTile())
                         //{
                             newPoint.mTranslate = new(
@@ -2394,8 +2462,25 @@ namespace Fushigi.ui.widgets
                     }
                 }
 
-                if (!ScreenshotMode)
+                if (multiRailDelete)
                 {
+                    Console.WriteLine("Batch deleting " + deleteList.Count + " rail points");
+                    var batch = mEditContext.BeginBatchAction();
+
+                    foreach (var (rail, point) in deleteList)
+                    {
+                        var revertible = rail.mPoints.RevertableRemove(point);
+                        mEditContext.CommitAction(revertible);
+                    }
+
+                    batch.Commit($"{IconUtil.ICON_TRASH} Delete Rail Points");
+                    multiRailDelete = false;
+                    deleteList.Clear();
+                }
+
+                if (!ScreenshotMode && ShowRails)
+                {
+                    mDrawList.Flags &= ~ImDrawListFlags.AntiAliasedLines;
                     foreach (CourseRail rail in mArea.mRailHolder.mRails)
                     {
 
@@ -2463,7 +2548,7 @@ namespace Fushigi.ui.widgets
                             mDrawList.PathBezierCubicCurveTo(cpOutA2D, cpInB2D, posB2D);
                         }
 
-                        float thickness = newHoveredObject == rail ? 3f : 2.5f;
+                        float thickness = newHoveredObject == rail ? 4f : 3.5f;
 
                         mDrawList.PathStroke(rail_color, ImDrawFlags.None, thickness);
                         float closestDist = float.MaxValue;
@@ -2527,10 +2612,11 @@ namespace Fushigi.ui.widgets
                         }
 
                     }
+                    mDrawList.Flags |= ImDrawListFlags.AntiAliasedLines;
                 }
             }
-            
-           if(cursor != null)
+
+            if (cursor != null)
            {
                 var cursorPos2D = this.WorldToScreen(new(cursor.mTranslate.X, cursor.mTranslate.Y, cursor.mTranslate.Z));
                 Vector2 pnt = new(cursorPos2D.X, cursorPos2D.Y);

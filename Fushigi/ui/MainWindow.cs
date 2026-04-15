@@ -104,7 +104,6 @@ namespace Fushigi.ui
                         _gl = GL.GetApi(mWindow);
                         FushigiIcon = GLTexture2D.Load(_gl, "res/icon_menu.png");
 
-
                         IntPtr hwnd = native.Win32!.Value.Hwnd;
 
                         uint dpi = GetDpiForWindow(hwnd);

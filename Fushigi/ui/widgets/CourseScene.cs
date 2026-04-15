@@ -88,7 +88,7 @@ namespace Fushigi.ui.widgets
         public static uint oldCourseInfoSize;
         public static uint courseInfoSize;
         public Vector2 sizeToUse = new Vector2(0, 0);
-        static Dictionary<string, List<ulong>> mCopiedLinks = [];
+        public static Dictionary<string, List<ulong>> mCopiedLinks = [];
         public string previousWord = "";
         public static bool refreshTranslation = false;
         private ImmutableList<string> filteredActors = ImmutableList<string>.Empty;
@@ -763,7 +763,14 @@ namespace Fushigi.ui.widgets
                                     if (!BackgroundLayerTypes.Contains(layer))
                                         mLayersVisibility[layer] = viewport.ShowActors;
                             }
-                            ImGui.SetItemTooltip("Hide/Show Play Areas");
+
+                            ImGui.SameLine();
+
+                            if (ImguiHelper.DrawTextToggle(IconUtil.ICON_LONG_ARROW_ALT_UP, viewport.ShowRails, icon_size))
+                            {
+                                viewport.ShowRails = !viewport.ShowRails;
+                            }
+                            ImGui.SetItemTooltip("Hide/Show Play Rails");
 
                             ImGui.SameLine();
 
@@ -1252,7 +1259,27 @@ namespace Fushigi.ui.widgets
             return prefabActors.mActors;
         }
 
+        public List<CourseRail> CreatePrefabRail(NumVec location, string prefab)
+        {
+            var areaLinks = selectedArea.mLinkHolder;
 
+            NumVec placement;
+
+            placement.X = MathF.Round(location.X * 2, MidpointRounding.AwayFromZero) / 2;
+            placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
+            placement.Z = 0.0f;
+
+            string prefabFolder = Path.Combine(UserSettings.SettingsDir, "prefabs");
+            string prefabPath = Path.Combine(prefabFolder, $"{prefab}.bcett.byml.zs");
+            byte[] levelBytes = FileUtil.DecompressFile(prefabPath);
+
+            var railsArray = selectedArea.LoadPrefabRails(prefab, levelBytes);
+
+            var prefabRails = new CourseRailHolder(railsArray);
+            return prefabRails.mRails;
+
+
+        }
         public async void LoadPrefab(string prefab)
         {
             var viewport = activeViewport;
@@ -1296,6 +1323,20 @@ namespace Fushigi.ui.widgets
                     ctx.AddActor(actor);
                     AddLayerFromFile();
                 }
+
+                //var prefabRails = CreatePrefabRail(posVec, prefab);
+                //foreach (var rail in prefabRails)
+                //{
+                //    //var i = 0;
+                //    //do
+                //    //{
+                //    //    i++;
+                //    //} while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
+                //    //actor.mName = $"{actor.mPackName}{i}";
+                //    //mSelectedLayer = actor.mLayer;
+                //    ctx.AddRail(rail);
+                //    //AddLayerFromFile();
+                //}
                 batch.Commit($"{IconUtil.ICON_PASTE} Added {prefab} Prefab");
             }
 
@@ -1946,7 +1987,7 @@ namespace Fushigi.ui.widgets
                 {
                     CourseActor pickActor = editContext.GetSelectedObjects<CourseActor>().ToArray()[0];
                     //Credits to https://github.com/aurelionshole/aurelionshole.github.io for ActorRing code
-                    ImGui.Text("Wing Ding Ring Generator");
+                    ImGui.Text("Actor Ring Generator");
                     ImGui.Separator();
 
                     ImGui.Text("Points:");
@@ -1981,8 +2022,9 @@ namespace Fushigi.ui.widgets
 
                         float ringAngle = 360 / count;
                         float angle = offset % ringAngle;
-                        if (ImGui.Button("Create Actors!"))
+                        if (ImGui.Button("Create Actors"))
                         {
+                            var batchAction = editContext.BeginBatchAction();
                             CourseActor newActor = null;
                             for (int i = 0; i < count; i++)
                             {
@@ -2001,6 +2043,7 @@ namespace Fushigi.ui.widgets
                                 editContext.AddActor(newActor);
                                 angle = (angle + ringAngle) % 360f;
                             }
+                            batchAction.Commit($"{IconUtil.ICON_PLUS_CIRCLE} Placed Actor Ring");
                         }
                     }
                 }
@@ -2027,10 +2070,10 @@ namespace Fushigi.ui.widgets
                     if (previousDelta != cursor.delta && run)
                     {
                         float deltaAngle = cursor.delta - previousDelta;
-
-                        foreach (CourseActor actor in editContext.GetSelectedObjects<CourseActor>())
+                        activeViewport.applyRotation = true;
+                        activeViewport.pivotedActors = editContext.GetSelectedObjects<CourseActor>().ToArray();
+                        foreach (CourseActor actor in activeViewport.pivotedActors)
                         {
-
                             actor.mRotation = actor.mStartingRot;
                             actor.mTranslation = actor.mStartingTrans;
 

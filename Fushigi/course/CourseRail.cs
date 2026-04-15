@@ -1,6 +1,7 @@
 ﻿using Fushigi.Byml;
 using Fushigi.param;
 using Fushigi.util;
+using Microsoft.Msagl.Layout.LargeGraphLayout;
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
@@ -201,11 +202,13 @@ namespace Fushigi.course
 
         public class CourseRailPoint
         {
-            public CourseRailPoint(string type)
+            public CourseRailPoint(string type, CourseRail rail)
             {
                 this.mHash = RandomUtil.GetRandom();
                 this.mTranslate = new System.Numerics.Vector3();
                 this.mControl = new(this, mTranslate);
+                this.mParent = rail;
+
                 IDictionary<string, ParamDB.ComponentParam> comp;
 
                 if (ParamDB.TryGetRailPointComponent(type, out var componentName))
@@ -221,11 +224,12 @@ namespace Fushigi.course
             }
 
 
-            public CourseRailPoint(CourseRailPoint point)
+            public CourseRailPoint(CourseRailPoint point, CourseRail rail)
             {
                 this.mHash = RandomUtil.GetRandom();
                 this.mTranslate = point.mTranslate;
                 this.mControl = new(this, point.mControl.mTranslate);
+                this.mParent = rail;
                 foreach (var param in point.mParameters)
                     this.mParameters.Add(param.Key, param.Value);
             }
@@ -317,6 +321,7 @@ namespace Fushigi.course
             public System.Numerics.Vector3 mStartingTrans;
             public System.Numerics.Vector3 mTranslate;
             public CourseRailPointControl mControl;
+            public CourseRail mParent;
             public bool mIsCurve;
         }
         public class CourseRailPointControl
@@ -361,6 +366,18 @@ namespace Fushigi.course
                 return rail!;
             }
         }
+        public BymlArrayNode SerializePrefab(List<CourseRail> prefabRail)
+        {
+            BymlArrayNode node = new((uint)prefabRail.Count);
+
+            foreach (CourseRail rail in prefabRail)
+            {
+                node.AddNodeToArray(rail.BuildNode());
+            }
+
+            return node;
+        }
+    
 
         public BymlArrayNode SerializeToArray()
         {

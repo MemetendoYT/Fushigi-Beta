@@ -231,6 +231,20 @@ namespace Fushigi.course
             return actorsArray;
 
         }
+
+        public BymlArrayNode LoadPrefabRails(string prefabName, byte[] levelBytes)
+        {
+            var byml = new Byml.Byml(new MemoryStream(levelBytes));
+
+            BymlHashTable? root = byml.Root as BymlHashTable;
+            BymlArrayNode railsArray = null;
+            if (root.ContainsKey("Rails"))
+            {
+                railsArray = (BymlArrayNode)root["Rails"];
+            }
+            return railsArray;
+
+        }
         public CourseActor? GetActorByHash(ulong hash)
         {
             return mActorHolder.mActors.FirstOrDefault(a => a.mHash == hash);
@@ -354,6 +368,7 @@ namespace Fushigi.course
             BymlHashTable root = new();
             root.AddNode(BymlNodeId.Array, mActorHolder.SerializePrefab(copiedActors, mLinkHolder), "Actors");
             root.AddNode(BymlNodeId.Array, mLinkHolder.SerializePrefab(actors), "Links");
+            //root.AddNode(BymlNodeId.Array, mRailHolder.SerializePrefab(rails), "Rails");
 
             var byml = new Byml.Byml(root);
             var mem = new MemoryStream();

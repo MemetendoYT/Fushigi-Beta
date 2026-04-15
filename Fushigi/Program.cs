@@ -11,7 +11,7 @@ using FuzzySharp;
 
 internal class Program
 {
-    public const string Version = "v1.8.0 Beta 2";
+    public const string Version = "v1.8.0 Pre-release 1";
 
     public static MainWindow MainWindow { get; private set; }
 
