@@ -772,7 +772,7 @@ namespace Fushigi.ui.widgets
                             {
                                 viewport.ShowRails = !viewport.ShowRails;
                             }
-                            ImGui.SetItemTooltip("Hide/Show Play Rails");
+                            ImGui.SetItemTooltip("Hide/Show Rails");
 
                             ImGui.SameLine();
 
