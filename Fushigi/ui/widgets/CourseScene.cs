@@ -22,12 +22,14 @@ using Microsoft.Msagl.Layout.LargeGraphLayout;
 using Silk.NET.GLFW;
 using Silk.NET.OpenGL;
 using Silk.NET.SDL;
+using System;
 using System.Collections;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -1228,16 +1230,15 @@ namespace Fushigi.ui.widgets
             var actorsArray = selectedArea.LoadPrefab(prefab, levelBytes);
             var linksArray = selectedArea.LoadPrefabLinks(prefab, levelBytes);
 
-            var prefabActors = new CourseActorHolder(actorsArray);
+            prefabActors = new CourseActorHolder(actorsArray);
             var prefabLinks = new CourseLinkHolder(linksArray);
 
-            Dictionary<ulong, ulong> hashMap = new();
             foreach (CourseActor actor in prefabActors.mActors)
             {
                 ulong oldHash = actor.mHash;
                 ulong newHash = RandomUtil.GetRandom();
 
-                hashMap[oldHash] = newHash;
+                hashMapActors[oldHash] = newHash;
                 actor.mHash = newHash;
                 actor.mAreaHash = areaHash;
                 actor.mTranslation += placement;
@@ -1246,10 +1247,10 @@ namespace Fushigi.ui.widgets
             var links = selectedArea.mLinkHolder.mLinks;
             foreach (CourseLink link in prefabLinks.mLinks)
             {
-                if (hashMap.TryGetValue(link.mSource, out ulong newSrc))
+                if (hashMapActors.TryGetValue(link.mSource, out ulong newSrc))
                     link.mSource = newSrc;
 
-                if (hashMap.TryGetValue(link.mDest, out ulong newDst))
+                if (hashMapActors.TryGetValue(link.mDest, out ulong newDst))
                     link.mDest = newDst;
 
                 links.Add(link);
@@ -1261,6 +1262,7 @@ namespace Fushigi.ui.widgets
 
         public List<CourseRail> CreatePrefabRail(NumVec location, string prefab)
         {
+            var areaHash = selectedArea.mRootHash;
             var areaLinks = selectedArea.mLinkHolder;
 
             NumVec placement;
@@ -1276,8 +1278,58 @@ namespace Fushigi.ui.widgets
             var railsArray = selectedArea.LoadPrefabRails(prefab, levelBytes);
 
             var prefabRails = new CourseRailHolder(railsArray);
-            return prefabRails.mRails;
+            var railLinksArray = selectedArea.LoadPrefabRailLinks(prefab, levelBytes);
+            var prefabRailLinks = new CourseActorToRailLinksHolder(railLinksArray, prefabActors, prefabRails);
+            Dictionary<ulong, ulong> hashMap = new();
+            Dictionary<ulong, ulong> hashMapPoint = new();
+            foreach (CourseRail rail in prefabRails.mRails)
+            {
+                ulong oldHash = rail.mHash;
+                ulong newHash = RandomUtil.GetRandom();
 
+                hashMap[oldHash] = newHash;
+                rail.mHash = newHash;
+                rail.mAreaHash = areaHash;
+                foreach(var point in rail.mPoints)
+                {
+                    ulong oldHashPoint = point.mHash;
+                    ulong newHashPoint = RandomUtil.GetRandom();
+                    hashMapPoint[oldHashPoint] = newHashPoint;
+
+                    point.mHash = newHashPoint;
+                    point.mTranslate.X += placement.X;
+                    point.mTranslate.Y += placement.Y;
+
+                    if(point.mIsCurve)
+                    {
+                        point.mControl.mTranslate.X += placement.X;
+                        point.mControl.mTranslate.Y += placement.Y;
+                    }
+                }
+            }
+
+
+            var links = selectedArea.mRailLinksHolder.mLinks;
+            foreach (CourseActorToRailLink link in prefabRailLinks.mLinks)
+            {
+
+                if (hashMapActors.TryGetValue(link.mSourceActor, out ulong newSrc))
+                    link.mSourceActor = newSrc;
+
+                if (hashMap.TryGetValue(link.mDestRail, out ulong newDst))
+                {
+                    link.mDestRail = newDst;
+
+                }
+
+
+                if (hashMapPoint.TryGetValue(link.mDestPoint, out ulong newPointDst))
+                    link.mDestPoint = newPointDst;
+
+                links.Add(link);
+            }
+
+            return prefabRails.mRails;
 
         }
         public async void LoadPrefab(string prefab)
@@ -1308,6 +1360,7 @@ namespace Fushigi.ui.widgets
                     return;
                 }
 
+                ctx.DeselectAll();
                 var prefabActors = CreatePrefab(posVec, prefab);
 
                 var batch = ctx.BeginBatchAction();
@@ -1324,19 +1377,19 @@ namespace Fushigi.ui.widgets
                     AddLayerFromFile();
                 }
 
-                //var prefabRails = CreatePrefabRail(posVec, prefab);
-                //foreach (var rail in prefabRails)
-                //{
-                //    //var i = 0;
-                //    //do
-                //    //{
-                //    //    i++;
-                //    //} while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
-                //    //actor.mName = $"{actor.mPackName}{i}";
-                //    //mSelectedLayer = actor.mLayer;
-                //    ctx.AddRail(rail);
-                //    //AddLayerFromFile();
-                //}
+                var prefabRails = CreatePrefabRail(posVec, prefab);
+                foreach (var rail in prefabRails)
+                {
+                    //var i = 0;
+                    //do
+                    //{
+                    //    i++;
+                    //} while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
+                    //actor.mName = $"{actor.mPackName}{i}";
+                    //mSelectedLayer = actor.mLayer;
+                    ctx.AddRail(rail);
+                    //AddLayerFromFile();
+                }
                 batch.Commit($"{IconUtil.ICON_PASTE} Added {prefab} Prefab");
             }
 
@@ -3120,13 +3173,27 @@ namespace Fushigi.ui.widgets
                         ImGui.Text("Curve Control");
 
                         ImGui.TableNextColumn();
+
+                        bool priorCurve = mSelectedRailPoint.mIsCurve;
                         ImGui.Checkbox("##Curved", ref mSelectedRailPoint.mIsCurve);
+
+                        if(priorCurve != mSelectedRailPoint.mIsCurve)
+                            activeViewport.undoPointToggleMethod(mSelectedRailPoint, priorCurve);
+
                         ImGui.SameLine();
 
                         ImGui.BeginDisabled(!mSelectedRailPoint.mIsCurve);
 
                         ImGui.PushItemWidth(ImGui.GetColumnWidth() - ImGui.GetStyle().ScrollbarSize);
                         ImGui.DragFloat3("##Control", ref mSelectedRailPoint.mControl.mTranslate, 0.25f);
+                        //if (mSelectedRailPoint.mControl.mTranslate != mSelectedRailPoint.mControl.mStartingTrans && !ImGui.IsMouseDragging(ImGuiMouseButton.Left) && mSelectedRailPoint.mIsCurve)
+                        //{
+                        //    editContext.CommitAction(new PropertyFieldsSetUndo(
+                        //       mSelectedRailPoint.mControl,
+                        //        [("mTranslate", mSelectedRailPoint.mControl.GetFieldValue("mStartingTrans"))],
+                        //        $"{IconUtil.ICON_ARROWS_ALT} Move Rail Point Control"));
+                        //}
+
                         ImGui.PopItemWidth();
 
                         ImGui.EndDisabled();
@@ -3922,6 +3989,9 @@ namespace Fushigi.ui.widgets
         private LevelViewport oldViewport;
         private bool reverseGlobalLink;
         private float previousDelta;
+        private BymlArrayNode actorsArray;
+        private CourseActorHolder prefabActors;
+        private Dictionary<ulong, ulong> hashMapActors = new();
 
         private void PrefabsView()
         {

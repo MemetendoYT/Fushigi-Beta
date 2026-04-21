@@ -206,6 +206,18 @@ namespace Fushigi.course
                 mUnitHolder = new();
             }
         }
+        public BymlArrayNode LoadPrefabRailLinks(string prefabName, byte[] levelBytes)
+        {
+            var byml = new Byml.Byml(new MemoryStream(levelBytes));
+            BymlHashTable? root = byml.Root as BymlHashTable;
+            BymlArrayNode linksArray = null;
+            if (root.ContainsKey("ActorToRailLinks"))
+            {
+                linksArray = (BymlArrayNode)root["ActorToRailLinks"];
+            }
+            return linksArray;
+
+        }
         public BymlArrayNode LoadPrefabLinks(string prefabName, byte[] levelBytes)
         {
             var byml = new Byml.Byml(new MemoryStream(levelBytes));
@@ -358,7 +370,7 @@ namespace Fushigi.course
                 }
             }
         }
-        public void SaveActorsToPrefab(List<CourseActor> copiedActors, List<CourseActor> actors, string prefabName)
+        public void SaveActorsToPrefab(List<CourseActor> copiedActors, List<CourseActor> actors, string prefabName, List<CourseRail> copiedRails, List<CourseRail> rails)
         {
             string prefabFolder = Path.Combine(UserSettings.SettingsDir, "prefabs");
 
@@ -368,7 +380,8 @@ namespace Fushigi.course
             BymlHashTable root = new();
             root.AddNode(BymlNodeId.Array, mActorHolder.SerializePrefab(copiedActors, mLinkHolder), "Actors");
             root.AddNode(BymlNodeId.Array, mLinkHolder.SerializePrefab(actors), "Links");
-            //root.AddNode(BymlNodeId.Array, mRailHolder.SerializePrefab(rails), "Rails");
+            root.AddNode(BymlNodeId.Array, mRailHolder.SerializePrefab(copiedRails), "Rails");
+            root.AddNode(BymlNodeId.Array, mRailLinksHolder.SerializePrefab(actors, rails), "ActorToRailLinks");
 
             var byml = new Byml.Byml(root);
             var mem = new MemoryStream();

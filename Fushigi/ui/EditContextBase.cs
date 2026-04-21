@@ -51,7 +51,7 @@ namespace Fushigi.ui
                 return;
             }
             mUndoHandler.AddToUndo(action);
-            //Update?.Invoke();
+            Update?.Invoke();
         }
 
         public void Deselect(object obj)

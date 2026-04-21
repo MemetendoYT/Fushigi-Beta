@@ -43,7 +43,7 @@ namespace Fushigi.ui.widgets
                 //    ImGui.EndTabBar();
                 //}
 
-                Viewport.DrawSimple(size, deltaSeconds);
+                //Viewport.DrawSimple(size, deltaSeconds);
             }
 
             ImGui.End();        

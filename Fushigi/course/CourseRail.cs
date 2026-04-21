@@ -1,6 +1,8 @@
-﻿using Fushigi.Byml;
+﻿using Fasterflect;
+using Fushigi.Byml;
 using Fushigi.param;
 using Fushigi.util;
+using Microsoft.Msagl.Drawing;
 using Microsoft.Msagl.Layout.LargeGraphLayout;
 using Silk.NET.Maths;
 using System;
@@ -8,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection.Metadata.Ecma335;
@@ -95,8 +98,28 @@ namespace Fushigi.course
 
             foreach(BymlHashTable rail in railArray.Array)
             {
-                mPoints.Add(new CourseRailPoint(rail, mType));
+                mPoints.Add(new CourseRailPoint(rail, mType, this));
             }
+        }
+
+        public CourseRail CloneRail(CourseArea areaTo)
+        {
+            CourseRail cloned = new(mAreaHash, mType)
+            {
+                mType = mType,
+                mAreaHash = mAreaHash,
+                mRailParam = mRailParam,
+                mIsClosed = mIsClosed,
+                mParameters = mParameters
+            };
+            cloned.mHash = mHash;
+            cloned.mAreaHash = areaTo.mRootHash;
+            foreach (var point in mPoints)
+            {
+                cloned.mPoints.Add(point.ClonePoint(point, this));
+            }
+           
+            return cloned;
         }
 
         public static CourseRail fetchIndex(CourseRailHolder railHolder, CourseRailPoint mSelectedRailPoint)
@@ -234,12 +257,12 @@ namespace Fushigi.course
                     this.mParameters.Add(param.Key, param.Value);
             }
 
-            public CourseRailPoint(BymlHashTable node, string pointParam)
+            public CourseRailPoint(BymlHashTable node, string pointParam, CourseRail rail)
             {
                 mHash = BymlUtil.GetNodeData<ulong>(node["Hash"]);
                 mTranslate = BymlUtil.GetVector3FromArray(node["Translate"] as BymlArrayNode);
                 mControl = new(this, mTranslate);
-
+                mParent = rail;
                 IDictionary<string, ParamDB.ComponentParam> comp;
                 if (ParamDB.TryGetRailPointComponent(pointParam, out var componentName))
                     comp = ParamDB.GetRailComponentParams(componentName);
@@ -280,6 +303,15 @@ namespace Fushigi.course
                 }
             }
 
+            public CourseRailPoint ClonePoint(CourseRailPoint point, CourseRail rail)
+            {
+                CourseRailPoint cloned = new(point, rail);
+                cloned.mIsCurve = point.mIsCurve;
+                cloned.mParent = rail;
+                cloned.mHash = mHash;
+
+                return cloned;
+            }
             public BymlHashTable BuildNode()
             {
                 BymlHashTable tbl = new();
@@ -481,6 +513,37 @@ namespace Fushigi.course
 
             return link is not null;
         }
+
+        public BymlArrayNode SerializePrefab(List<CourseActor> selectedActors, List<CourseRail> selectedRails)
+        {
+            BymlArrayNode node = new();
+            HashSet<CourseActorToRailLink> added = new();
+
+            HashSet<ulong> selectedActorHashes = selectedActors
+                .Select(a => a.mHash)
+                .ToHashSet();
+
+            HashSet<ulong> selectedRailHashes = selectedRails
+              .Select(r => r.mHash)
+              .ToHashSet();
+
+
+            foreach (var link in mLinks)
+            {
+                bool sourceSelected = selectedActorHashes.Contains(link.mSourceActor);
+                bool destSelected = selectedRailHashes.Contains(link.mDestRail);
+
+                if (sourceSelected && destSelected)
+                {
+                    if (added.Add(link))
+                        node.AddNodeToArray(link.BuildNode());
+                }
+            }
+
+            return node;
+        }
+
+   
 
         public BymlArrayNode SerializeToArray()
         {

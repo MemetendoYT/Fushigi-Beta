@@ -782,21 +782,23 @@ namespace Fushigi.ui.widgets
             {
                 List<CourseActor> actors = ctx.GetSelectedObjects<CourseActor>().ToList();
                 List<CourseActor> copiedActors = new List<CourseActor>();
-                
-               // List<CourseRail.CourseRailPoint> courseRailPoints = ctx.GetSelectedObjects<CourseRail.CourseRailPoint>().ToList();
-               // List<CourseRail> courseRails = new List<CourseRail>();
-                    
-               //foreach(var point in courseRailPoints)
-               // {
-               //     if(courseRails.Contains(point.mParent))
-               //     courseRails.Add(point.mParent);
-               // }
-    
 
-                //Console.WriteLine(courseRails.Count());
+                List<CourseRail.CourseRailPoint> courseRailPoints = ctx.GetSelectedObjects<CourseRail.CourseRailPoint>().ToList();
+                List<CourseRail> courseRails = new List<CourseRail>();
+                List<CourseRail> courseRailsClone = new List<CourseRail>();
+                foreach (var point in courseRailPoints)
+                {
+                    if (!courseRails.Contains(point.mParent))
+                        courseRails.Add(point.mParent);
+                }
+
 
                 foreach (var actor in actors)
                     copiedActors.Add(actor.ClonePrefab(mArea));
+
+                foreach (var rail in courseRails) { 
+                    courseRailsClone.Add(rail.CloneRail(mArea));
+                }
 
                 foreach (CourseActor actor in copiedActors)
                     median += actor.mTranslation;
@@ -809,142 +811,147 @@ namespace Fushigi.ui.widgets
                     actor.mTranslation.Y -= median.Y;
                 }
 
-                //foreach (var rail in courseRails)
-                //{
-                //    foreach (var point in rail.mPoints)
-                //    {
-      
-                //        point.mTranslate.X -= median.X;
-                //        point.mTranslate.Y -= median.Y;
-                //    }
-                //}
+                foreach (var rail in courseRailsClone)
+                {
+                    foreach (var point in rail.mPoints)
+                    {
+                        point.mTranslate.X -= median.X;
+                        point.mTranslate.Y -= median.Y;
 
-                mArea.SaveActorsToPrefab(copiedActors, actors, prefabName);
+                        if(point.mIsCurve)
+                        {
+                            point.mControl.mTranslate.X -= median.X;
+                            point.mControl.mTranslate.Y -= median.Y;
+                        }
+                    }
+                }
+
+                mArea.SaveActorsToPrefab(copiedActors, actors, prefabName, courseRailsClone, courseRails);
             }
         }
 
-        public void DrawSimple(Vector2 size, double deltaSeconds)
-        {
-            var io = ImGui.GetIO();
+        //public void DrawSimple(Vector2 size, double deltaSeconds)
+        //{
+        //    var io = ImGui.GetIO();
 
-            if (size.X * size.Y == 0)
-                return;
-
-
-            mTopLeft = ImGui.GetCursorScreenPos();
-
-            ImGui.InvisibleButton("canvas", size,
-                ImGuiButtonFlags.MouseButtonLeft | ImGuiButtonFlags.MouseButtonRight | ImGuiButtonFlags.MouseButtonMiddle);
-
-            IsViewportHovered = ImGui.IsItemHovered();
-            IsViewportActive = ImGui.IsItemActive();
-
-            KeyboardModifier modifiers = KeyboardModifier.None;
-
-            if (ImGui.GetIO().KeyShift)
-                modifiers |= KeyboardModifier.Shift;
-            if (ImGui.GetIO().KeyAlt)
-                modifiers |= KeyboardModifier.Alt;
-            if (OperatingSystem.IsMacOS() ? ImGui.GetIO().KeySuper : ImGui.GetIO().KeyCtrl)
-                modifiers |= KeyboardModifier.CtrlCmd;
-
-            mSize = size;
-            mDrawList = ImGui.GetWindowDrawList();
-
-            ImGui.PushClipRect(mTopLeft, mTopLeft + size, true);
-
-            HandleCameraControls(deltaSeconds);
-
-            if (Camera.Width != mSize.X || Camera.Height != mSize.Y)
-            {
-                Camera.Width = mSize.X;
-                Camera.Height = mSize.Y;
-            }
-
-            if (!Camera.UpdateMatrices())
-                return;
-
-            this.DrawScene3D(size, null);
-
-            if (ShowGrid)
-                DrawGrid();
-            DrawAreaContent();
+        //    if (size.X * size.Y == 0)
+        //        return;
 
 
-            if (!IsViewportHovered)
-                mHoveredObject = null;
+        //    mTopLeft = ImGui.GetCursorScreenPos();
+
+        //    ImGui.InvisibleButton("canvas", size,
+        //        ImGuiButtonFlags.MouseButtonLeft | ImGuiButtonFlags.MouseButtonRight | ImGuiButtonFlags.MouseButtonMiddle);
+
+        //    IsViewportHovered = ImGui.IsItemHovered();
+        //    IsViewportActive = ImGui.IsItemActive();
+
+        //    KeyboardModifier modifiers = KeyboardModifier.None;
+
+        //    if (ImGui.GetIO().KeyShift)
+        //        modifiers |= KeyboardModifier.Shift;
+        //    if (ImGui.GetIO().KeyAlt)
+        //        modifiers |= KeyboardModifier.Alt;
+        //    if (OperatingSystem.IsMacOS() ? ImGui.GetIO().KeySuper : ImGui.GetIO().KeyCtrl)
+        //        modifiers |= KeyboardModifier.CtrlCmd;
+
+        //    mSize = size;
+        //    mDrawList = ImGui.GetWindowDrawList();
+
+        //    ImGui.PushClipRect(mTopLeft, mTopLeft + size, true);
+
+        //    HandleCameraControls(deltaSeconds);
+
+        //    if (Camera.Width != mSize.X || Camera.Height != mSize.Y)
+        //    {
+        //        Camera.Width = mSize.X;
+        //        Camera.Height = mSize.Y;
+        //    }
+
+        //    if (!Camera.UpdateMatrices())
+        //        return;
+
+        //    this.DrawScene3D(size, null);
+
+        //    if (ShowGrid)
+        //        DrawGrid();
+        //    DrawAreaContent();
 
 
-            CourseActor? hoveredActor = mHoveredObject as CourseActor;
-            CourseRail? hoveredRail = mHoveredObject as CourseRail;
-            string actorName;
-            if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
-            {
-                actorName = hoveredActor.mPackName;
-                if (UserSettings.GetEnableTranslation())
-                    actorName = Translate.FetchTranslatedName(actorName);
-
-                ImGui.SetTooltip($"{actorName}\n{hoveredActor.mName}");
-            }
+        //    if (!IsViewportHovered)
+        //        mHoveredObject = null;
 
 
-            if (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == KeyboardModifier.CtrlCmd)
-            {
-                mEditContext.Undo();
-            }
-            if ((ImGui.IsKeyPressed(ImGuiKey.Y) && modifiers == KeyboardModifier.CtrlCmd) ||
-                (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == (KeyboardModifier.Shift | KeyboardModifier.CtrlCmd)))
-            {
-                mEditContext.Redo();
-            }
+        //    CourseActor? hoveredActor = mHoveredObject as CourseActor;
+        //    CourseRail? hoveredRail = mHoveredObject as CourseRail;
+        //    string actorName;
+        //    if (hoveredActor != null && mObjectPickingRequest == null && mPositionPickingRequest == null)
+        //    {
+        //        actorName = hoveredActor.mPackName;
+        //        if (UserSettings.GetEnableTranslation())
+        //            actorName = Translate.FetchTranslatedName(actorName);
 
-            CourseActor[] selectedActors = areaScene.EditContext.GetSelectedObjects<CourseActor>().ToArray();
-
-            if (selectedActors.Length != 0 &&
-                ((ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd) || copyContext))
-            {
-                CopiedMedianPosition = Vector3.Zero;
-                foreach (CourseActor actor in selectedActors)
-                {
-                    CopiedMedianPosition += actor.mTranslation;
-                }
-                CopiedMedianPosition /= selectedActors.Length;
-
-                CopiedObjects = new CourseActor[selectedActors.Length];
-                for (int i = 0; i < CopiedObjects.Length; i++)
-                {
-                    CopiedObjects[i] = selectedActors[i].Clone(mArea);
-                }
-                copyContext = false;
-            }
-            bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
-            bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
-            if (CopiedObjects.Length != 0 && IsViewportHovered &&
-                ((ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift) || pasteContext))
-            {
-                DoPaste(freshCopy: ctrlAndShift);
-                pasteContext = false;
-            }
-
-            if (CopiedObjects.Length == 0)
-            {
-                pasteContext = false;
-            }
-
-            if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
-            {
-                mMultiSelecting = false;
-                mMultiSelectStartPos = null;
-                mMultiSelectCurrentPos = null;
-                mMultiSelectEnded = true;
-            }
-
-            if (IsViewportHovered || IsViewportActive)
-                InteractionWithFocus(modifiers);
+        //        ImGui.SetTooltip($"{actorName}\n{hoveredActor.mName}");
+        //    }
 
 
-            ImGui.PopClipRect();
-        }
+        //    if (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == KeyboardModifier.CtrlCmd)
+        //    {
+        //        mEditContext.Undo();
+        //    }
+        //    if ((ImGui.IsKeyPressed(ImGuiKey.Y) && modifiers == KeyboardModifier.CtrlCmd) ||
+        //        (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == (KeyboardModifier.Shift | KeyboardModifier.CtrlCmd)))
+        //    {
+        //        mEditContext.Redo();
+        //    }
+
+        //    CourseActor[] selectedActors = areaScene.EditContext.GetSelectedObjects<CourseActor>().ToArray();
+
+        //    if (selectedActors.Length != 0 &&
+        //        ((ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd) || copyContext))
+        //    {
+        //        CopiedMedianPosition = Vector3.Zero;
+        //        foreach (CourseActor actor in selectedActors)
+        //        {
+        //            CopiedMedianPosition += actor.mTranslation;
+        //        }
+        //        CopiedMedianPosition /= selectedActors.Length;
+
+        //        CopiedObjects = new CourseActor[selectedActors.Length];
+        //        for (int i = 0; i < CopiedObjects.Length; i++)
+        //        {
+        //            CopiedObjects[i] = selectedActors[i].Clone(mArea);
+        //        }
+        //        copyContext = false;
+        //    }
+        //    bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
+        //    bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
+        //    if (CopiedObjects.Length != 0 && IsViewportHovered &&
+        //        ((ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift) || pasteContext))
+        //    {
+        //        DoPaste(freshCopy: ctrlAndShift);
+        //        pasteContext = false;
+        //    }
+
+        //    if (CopiedObjects.Length == 0)
+        //    {
+        //        pasteContext = false;
+        //    }
+
+        //    if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+        //    {
+        //        mMultiSelecting = false;
+        //        mMultiSelectStartPos = null;
+        //        mMultiSelectCurrentPos = null;
+        //        mMultiSelectEnded = true;
+        //    }
+
+        //    if (IsViewportHovered || IsViewportActive)
+        //        InteractionWithFocus(modifiers);
+
+
+        //    ImGui.PopClipRect();
+        //}
         public void Draw(Vector2 size, double deltaSeconds, IDictionary<string, bool> layersVisibility)
         {
             var io = ImGui.GetIO();
@@ -1715,8 +1722,6 @@ namespace Fushigi.ui.widgets
                                     else
                                         mEditContext.Deselect(railPoint);
                                 }
-
-
                             }
 
                             foreach (var actor in actors)
@@ -1739,7 +1744,7 @@ namespace Fushigi.ui.widgets
                 if (!mMultiSelecting && mEditContext.IsAnySelected<CourseActor>())
                 {
                     primaryActor = mEditContext.GetSelectedObjects<CourseActor>()
-    .FirstOrDefault(actor => actor.mStartingTrans == selectedMedianStartPos.GetValueOrDefault());
+                      .FirstOrDefault(actor => actor.mStartingTrans == selectedMedianStartPos.GetValueOrDefault());
 
                     if (primaryActor != null)
                     {
@@ -1773,6 +1778,7 @@ namespace Fushigi.ui.widgets
 
                             if (p.mIsCurve)
                             {
+
                                 Vector3 relativePosCtrl = p.mControl.mStartingTrans - p.mStartingTrans;
                                 p.mControl.mTranslate.X = p.mTranslate.X + relativePosCtrl.X;
                                 p.mControl.mTranslate.Y = p.mTranslate.Y + relativePosCtrl.Y;
@@ -1828,7 +1834,7 @@ namespace Fushigi.ui.widgets
                 if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPointControl? railCont))
                 {
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
-
+           
                     if (ImGui.GetIO().KeyShift)
                     {
                         railCont.mTranslate = posVec;
@@ -1840,6 +1846,7 @@ namespace Fushigi.ui.widgets
                         posVec.Z = railCont.mTranslate.Z;
                         railCont.mTranslate = posVec;
                     }
+
                 }
                 if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out FushigiCursor? cursor))
                 {
@@ -1981,15 +1988,33 @@ namespace Fushigi.ui.widgets
                         IViewportSelectable.DefaultSelect(mEditContext, mHoveredObject);
                     }
                 }
-                if (primaryActor != null)
+
+                ICommittable? mainBatch = null;
+                bool bypassActor = false;
+                if (primaryActor == null && mEditContext.IsAnySelected<CourseActor>() && primaryPoint != null)
+                {
+                    bypassActor = true;
+                    mainBatch = mEditContext.BeginBatchAction();
+                }
+
+                bool bypassRail = false;
+                if ((mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>()) && primaryActor != null)
+                {
+                    bypassRail = true;
+                    mainBatch = mEditContext.BeginBatchAction();
+                }
+
+                if (bypassActor || primaryActor != null)
                 {
                     var movedActors = mEditContext
                     .GetSelectedObjects<CourseActor>()
                     .Where(x => x.mTranslation != x.mStartingTrans)
                     .ToList();
 
+                    objectCount = movedActors.Count;
 
-                    if (primaryActor.mTranslation != primaryActor.mStartingTrans)
+
+                    if (bypassActor || primaryActor.mTranslation != primaryActor.mStartingTrans)
                     {
                         if (mEditContext.IsSingleObjectSelected(out CourseActor? single))
                         {
@@ -2000,7 +2025,9 @@ namespace Fushigi.ui.widgets
                         }
                         else
                         {
-                            var batch = mEditContext.BeginBatchAction();
+                            ICommittable? batch = null;
+                            if(!bypassActor)
+                            batch = mEditContext.BeginBatchAction();
 
                             foreach (var actor in movedActors)
                             {
@@ -2009,22 +2036,30 @@ namespace Fushigi.ui.widgets
                                     [("mTranslation", actor.GetFieldValue("mStartingTrans"))],
                                     $"{IconUtil.ICON_ARROWS_ALT} Move {actor.mName}"));
                             }
+                            if(!bypassActor)
                             batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {movedActors.Count} Actors");
                         }
                         primaryActor = null;
                     }
                 }
-                else if (mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() && primaryPoint != null)
+
+
+                if (mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() && primaryPoint != null || bypassRail)
                 {
                     var movedPoints = mEditContext
-                     .GetSelectedObjects <CourseRail.CourseRailPoint>()
+                     .GetSelectedObjects<CourseRail.CourseRailPoint>()
                      .Where(x => x.mTranslate != x.mStartingTrans)
                      .ToList();
 
-                    if (primaryPoint.mTranslate != primaryPoint.mStartingTrans)
+                    objectCount += movedPoints.Count;
+
+                    if ((bypassRail || bypassActor) || primaryPoint.mTranslate != primaryPoint.mStartingTrans)
                     {
                         if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? single))
                         {
+                            ICommittable? batch = null;
+                            if (!bypassRail && !bypassActor)
+                                batch = mEditContext.BeginBatchAction();
                             if (single.mTranslate != single.mStartingTrans)
                             {
 
@@ -2033,10 +2068,22 @@ namespace Fushigi.ui.widgets
                                     [("mTranslate", single.GetFieldValue("mStartingTrans"))],
                                     $"{IconUtil.ICON_ARROWS_ALT} Move Rail Point"));
                             }
+
+                            if(single.mIsCurve && single.mControl.mTranslate != single.mControl.mStartingTrans)
+                            {
+                                mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                                    single.mControl,
+                                    [("mTranslate", single.mControl.GetFieldValue("mStartingTrans"))],
+                                    $"{IconUtil.ICON_ARROWS_ALT} Move Rail Point Control"));
+                            }
+                            if(!bypassRail && !bypassActor)
+                                batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move Rail Point");
                         }
                         else
                         {
-                            var batch = mEditContext.BeginBatchAction();
+                            ICommittable? batch = null;
+                            if(!bypassRail && !bypassActor)
+                                batch = mEditContext.BeginBatchAction();
 
                             foreach (var railPoint in movedPoints)
                             {
@@ -2044,14 +2091,36 @@ namespace Fushigi.ui.widgets
                                     railPoint,
                                     [("mTranslate", railPoint.GetFieldValue("mStartingTrans"))],
                                     $"{IconUtil.ICON_ARROWS_ALT} Move Rail"));
+
+                                if (railPoint.mIsCurve && railPoint.mControl.mTranslate != railPoint.mControl.mStartingTrans)
+                                {
+                                    mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                                        railPoint.mControl,
+                                        [("mTranslate", railPoint.mControl.GetFieldValue("mStartingTrans"))],
+                                        $"{IconUtil.ICON_ARROWS_ALT} Move Rail Point Control"));
+                                }
+
                             }
-                            batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {movedPoints.Count} Rail Points");
+                            if(!bypassRail && !bypassActor)
+                                batch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {movedPoints.Count} Rail Points");
                         }
                         primaryPoint = null;
                     }
                 }
+                if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPointControl? singleControl))
+                {
+                    if (singleControl.mTranslate != singleControl.mStartingTrans)
+                    {
+                        mEditContext.CommitAction(new PropertyFieldsSetUndo(
+                            singleControl,
+                            [("mTranslate", singleControl.GetFieldValue("mStartingTrans"))],
+                            $"{IconUtil.ICON_ARROWS_ALT} Move Rail Point Control"));
+                    }
+                }
 
-                    dragRelease = false;
+                dragRelease = false;
+                if(bypassActor || bypassRail)
+                    mainBatch.Commit($"{IconUtil.ICON_ARROWS_ALT} Move {objectCount} Objects");
             }
 
             if (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace)) || deleteContext)
@@ -2073,17 +2142,29 @@ namespace Fushigi.ui.widgets
 
             }
 
-                if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? point) &&
-                mHoveredObject == point &&
-                ImGui.IsMouseDoubleClicked(0))
+            if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? point) &&
+            mHoveredObject == point &&
+            ImGui.IsMouseDoubleClicked(0))
             {
+                bool oldValue = point.mIsCurve;
                 point.mIsCurve = !point.mIsCurve;
+                undoPointToggleMethod(point, oldValue);
+                point.mControl.mStartingTrans = point.mControl.mTranslate;
             }
 
-            if (ImGui.IsKeyPressed(ImGuiKey.Escape))
+                if (ImGui.IsKeyPressed(ImGuiKey.Escape))
                 mEditContext.DeselectAll();
 
-
+        }
+        public void undoPointToggleMethod(CourseRail.CourseRailPoint point, bool oldValue)
+        {
+            mEditContext.CommitAction(
+               new PropertyFieldsSetUndo(
+                   point,
+                   [("mIsCurve", oldValue)],
+                   $"{IconUtil.ICON_ARROWS_ALT} Toggled Curve Control"
+               )
+           );
         }
 
         void DrawGrid()
@@ -2173,6 +2254,7 @@ namespace Fushigi.ui.widgets
         private bool multiRailDelete;
         public bool applyRotation;
         public CourseActor[] pivotedActors;
+        private int objectCount;
 
         public void DrawComments()
         {
@@ -2292,7 +2374,7 @@ namespace Fushigi.ui.widgets
         }
         void DrawAreaContent()
         {
-            const float pointSize = 3.0f;
+            const float pointSize = 8.0f;
             Vector3? newHoveredPoint = null;
             object? newHoveredObject = null;
             deleteList = new List<(CourseRail rail, CourseRail.CourseRailPoint point)>();
@@ -2504,7 +2586,7 @@ namespace Fushigi.ui.widgets
 
                             Vector2 pos2D = WorldToScreen(pos);
 
-                            mDrawList.AddCircleFilled(pos2D, 5, ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)));
+                            mDrawList.AddCircleFilled(pos2D, pointSize, ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)));
 
                             continue;
                         }
