@@ -792,7 +792,6 @@ namespace Fushigi.ui.widgets
                         courseRails.Add(point.mParent);
                 }
 
-
                 foreach (var actor in actors)
                     copiedActors.Add(actor.ClonePrefab(mArea));
 
