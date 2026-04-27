@@ -10,7 +10,8 @@ namespace Fushigi.ui.widgets
         public enum DialogResult
         {
             Yes,
-            No
+            No,
+            AutoDelete
         }
 
         public static async Task<DialogResult> ShowDialog(IPopupModalHost modalHost)
@@ -27,10 +28,10 @@ namespace Fushigi.ui.widgets
 
         public void DrawModalContent(Promise<DialogResult> promise)
         {
-            ImGui.Text("Your level contains empty rails, which can cause it to crash. \nAre you sure you want to save?");
+            ImGui.Text("Your level contains empty rails, which can cause it to crash. \nDo you want to delete them and save?");
             ImGui.NewLine();
 
-            float centerXButtons = (ImGui.GetWindowWidth() - ImGui.CalcTextSize("Yes No").X) * 0.4f;
+            float centerXButtons = (ImGui.GetWindowWidth() - ImGui.CalcTextSize("Yes No").X) * 0.45f;
             ImGui.SetCursorPosX(centerXButtons);
             if (ImGui.Button("Yes"))
                 promise.SetResult(DialogResult.Yes);
@@ -38,6 +39,15 @@ namespace Fushigi.ui.widgets
             ImGui.SameLine();
             if (ImGui.Button("No"))
                 promise.SetResult(DialogResult.No);
+
+            bool deleteEmptyRails = UserSettings.GetDeleteEmptyRails();
+            if (ImGui.Checkbox("Auto Delete Empty Rails on Save", ref deleteEmptyRails))
+            {
+                UserSettings.SetDeleteEmptyRails(deleteEmptyRails);
+                promise.SetResult(DialogResult.AutoDelete);
+            }
+
+            Tooltip.Show("Automatically deletes empty rails when saving a level.");
         }
     }
 }

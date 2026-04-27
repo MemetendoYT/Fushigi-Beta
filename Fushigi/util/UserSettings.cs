@@ -36,6 +36,7 @@ namespace Fushigi.util
             public bool ClickDuplicate;
             public bool dpiOverride = false;
             public float dpiVal = 1.0f;
+            public bool DeleteEmptyRails;
 
             public Settings()
             {
@@ -58,6 +59,7 @@ namespace Fushigi.util
                 ClickDuplicate = false;
                 dpiOverride = false;
                 dpiVal = 1.0f;
+                DeleteEmptyRails = false;
             }
         }
 
@@ -275,6 +277,18 @@ namespace Fushigi.util
             AppSettings.dpiOverride = value;
             Save();
         }
+
+        public static bool GetDeleteEmptyRails()
+        {
+            return AppSettings.DeleteEmptyRails;
+        }
+
+        public static void SetDeleteEmptyRails(bool value)
+        {
+            AppSettings.DeleteEmptyRails = value;
+            Save();
+        }
+
 
         public static void AppendRecentCourse(string courseName)
         {

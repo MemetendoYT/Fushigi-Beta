@@ -70,6 +70,7 @@ namespace Fushigi.ui.widgets
             var enableHalfTile = UserSettings.GetEnableHalfTile();
             var enableTranslation = UserSettings.GetEnableTranslation();
             var backupFreqMinutes = UserSettings.GetBackupFreqMinutes();
+            var deleteEmptyRails = UserSettings.GetDeleteEmptyRails();
             curTheme = UserSettings.GetTheme();
             switch (curTheme)
             {
@@ -133,7 +134,7 @@ namespace Fushigi.ui.widgets
 
             }
 
-            Tooltip.Show("The save output where to save modified romfs files");
+            Tooltip.Show("The save output where to save modified romfs files.");
 
             if (modRomfsTouched && string.IsNullOrEmpty(mod))
             {
@@ -151,7 +152,7 @@ namespace Fushigi.ui.widgets
             if (ImGui.Checkbox("Enable Half Tile Editing", ref enableHalfTile))
                 UserSettings.SetEnableHalfTile(enableHalfTile);
 
-            Tooltip.Show("Enable half tile editng for BGUnits, also affects the placement of rails as well.");
+            Tooltip.Show("Enable half tile editing for terrain.");
 
             if (ImGui.Checkbox("Enable Actor Translation", ref enableTranslation))
             {
@@ -159,7 +160,14 @@ namespace Fushigi.ui.widgets
                 CourseScene.refreshTranslation = true;
             }
 
-            Tooltip.Show("Translates all the actor names to English");
+            Tooltip.Show("Translates all the actor names to English.");
+
+            if (ImGui.Checkbox("Delete Empty Rails on Save", ref deleteEmptyRails))
+            {
+                UserSettings.SetDeleteEmptyRails(deleteEmptyRails);
+            }
+
+            Tooltip.Show("Automatically deletes empty rails when saving a level.");
 
             if (ImGui.InputFloat("Backup Frequency (in minutes)", ref backupFreqMinutes))
                 UserSettings.SetBackupFreqMinutes(backupFreqMinutes);

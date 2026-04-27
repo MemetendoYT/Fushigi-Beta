@@ -107,7 +107,7 @@ namespace Fushigi.ui.widgets
         private int count = 0;
         private float offset = 0;
         private float radius = 0;
-
+        private bool doRotate = true;
 
         string mActorSearchText = "";
 
@@ -765,6 +765,8 @@ namespace Fushigi.ui.widgets
                                     if (!BackgroundLayerTypes.Contains(layer))
                                         mLayersVisibility[layer] = viewport.ShowActors;
                             }
+                            ImGui.SetItemTooltip("Hide/Show Foreground Actors");
+
 
                             ImGui.SameLine();
 
@@ -939,6 +941,31 @@ namespace Fushigi.ui.widgets
                 }
             }
             return false;
+        }
+
+        public void deleteEmptyRails()
+        {
+            var ctx = areaScenes[selectedArea].EditContext;
+            var batchAction = ctx.BeginBatchAction();
+            var toDelete = new List<CourseRail>();
+            foreach (var area in course.GetAreas())
+            {
+                var rails = area.mRailHolder.mRails;
+                foreach (CourseRail rail in rails)
+                {
+                    if (rail.mPoints.Count == 0)
+                    {
+                        if (rail.mPoints.Count == 0)
+                            toDelete.Add(rail);
+                    }
+                }
+            }
+
+            foreach (var rail in toDelete)
+            {
+                ctx.DeleteRail(rail);
+            }
+            batchAction.Commit($"{IconUtil.ICON_TRASH} Deleted Empty Rails");
         }
         public void Save(bool backup = false, string backupFolder = "")
         {
@@ -1396,7 +1423,7 @@ namespace Fushigi.ui.widgets
         }
         private void SelectActorAndLayerPanel()
         {
-            ImGui.Begin("Actors and Layers");
+            ImGui.Begin("Actors, Layers, and Prefabs");
 
             ImGui.BeginTabBar("SelectActorAndLayerWindow");
 
@@ -2055,6 +2082,9 @@ namespace Fushigi.ui.widgets
                     ImGui.Text("Radius:");
                     ImGui.InputFloat($"##Radius", ref radius, 1);
 
+                    ImGui.Dummy(new Vector2(0, 10));
+                    ImGui.Checkbox("Rotate Actors", ref doRotate);
+
                     if (count != 0)
                     {
                         //CourseActor pickActor = null;
@@ -2084,7 +2114,8 @@ namespace Fushigi.ui.widgets
                                 newActor = new CourseActor(pickActor.mPackName, selectedArea.mRootHash, pickActor.mLayer);
                                 newActor.mTranslation.X = (float)(cursor.mTranslate.X - radius * Math.Sin(angle * (Math.PI / 180)));
                                 newActor.mTranslation.Y = (float)(cursor.mTranslate.Y + radius * Math.Cos(angle * (Math.PI / 180)));
-                                newActor.mRotation.Z = angle * (MathF.PI / 180f);
+                                if(doRotate) 
+                                    newActor.mRotation.Z = angle * (MathF.PI / 180f);
 
                                 var j = 0;
                                 do
@@ -2102,11 +2133,15 @@ namespace Fushigi.ui.widgets
                 }
                 if (editContext.GetSelectedObjects<CourseActor>().ToList().Count >= 1)
                 {
+                    ImGui.Dummy(new Vector2(0, 50));
                     bool run = false;
 
                     string pivotText = "0";
-                    ImGui.Text("Pivot Actors: Enter number in degrees");
 
+                    ImGui.Text("Pivot Actors");
+                    ImGui.Separator();
+
+                    ImGui.Text("Pivot Angle: Enter angle in degrees");
                     if (ImGui.InputText("##Pivot", ref pivotText, 32))
                     {
                         if (pivotText == "")

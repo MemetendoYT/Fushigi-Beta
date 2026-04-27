@@ -231,6 +231,11 @@ namespace Fushigi.ui
                 {
                     return true;
                 }
+                else if (result == RailConfirmationDialog.DialogResult.AutoDelete)
+                { 
+                    mSelectedCourseScene.deleteEmptyRails();
+                    return true;
+                }
                 else
                     return false;
             }
@@ -571,21 +576,21 @@ namespace Fushigi.ui
                         //Ensure the romfs path is set for saving
                         if (!string.IsNullOrEmpty(UserSettings.GetModRomFSPath()))
                         {
-                            if(mSelectedCourseScene.attemptSave())
+                            if (mSelectedCourseScene.attemptSave() && !UserSettings.GetDeleteEmptyRails())
                             {
                                 Task.Run(async () =>
                                 {
                                     if (await TrySaveCourse())
-                                    {
                                         mSelectedCourseScene.Save();
-                                    }
                                     else
-                                    {
                                         return;
-                                    }
-                                }).ConfigureAwait(false); 
+                                }).ConfigureAwait(false);
                             }
-                            mSelectedCourseScene.Save();
+                            else if (UserSettings.GetDeleteEmptyRails())
+                            {
+                                mSelectedCourseScene.deleteEmptyRails();
+                            }
+                                mSelectedCourseScene.Save();
                         }
                         else //Else configure the mod path
                         {

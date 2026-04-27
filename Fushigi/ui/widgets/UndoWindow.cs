@@ -12,6 +12,7 @@ namespace Fushigi.ui.widgets
 {
     internal class UndoWindow
     {
+        public static bool scrollToBottom = false;
         public void Render(CourseAreaEditContext context)
         {
             if (ImGui.Begin("History"))
@@ -66,6 +67,11 @@ namespace Fushigi.ui.widgets
                     }
                     ImGui.PopID();
                     ImGui.PopStyleColor();
+                }
+                if (scrollToBottom)
+                {
+                   ImGui.SetScrollHereY(1.0f);
+                   scrollToBottom = false;
                 }
                 ImGui.End();
             }
