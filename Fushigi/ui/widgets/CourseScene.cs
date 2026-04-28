@@ -222,29 +222,33 @@ namespace Fushigi.ui.widgets
 
         public class LayerSorter : IComparer<string>
         {
+            private static readonly Regex NumberRegex = new Regex(@"\d+$");
+
             public int Compare(string x, string y)
             {
-                var idX = layerSortTypes.IndexOf(NumberRegex.Replace(x, ""));
-                var idY = layerSortTypes.IndexOf(NumberRegex.Replace(y, ""));
-                if (idX != -1)
-                {
-                    int result = idY == -1 ? 1 : idX.CompareTo(idY);
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                    else
-                    {
-                        result = x.Length.CompareTo(x.Length);
-                        return result != 0 ? result : x.CompareTo(y);
-                    }
-                }
-                else
-                {
-                    return idY != -1 ? -1 : 0;
-                }
+                string baseX = NumberRegex.Replace(x, "");
+                string baseY = NumberRegex.Replace(y, "");
+
+                int idX = layerSortTypes.IndexOf(baseX);
+                int idY = layerSortTypes.IndexOf(baseY);
+
+                int typeCompare = idX.CompareTo(idY);
+                if (typeCompare != 0)
+                    return typeCompare;
+
+                int numX = ExtractNumber(x);
+                int numY = ExtractNumber(y);
+
+                return numX.CompareTo(numY);
+            }
+
+            private int ExtractNumber(string s)
+            {
+                var match = NumberRegex.Match(s);
+                return match.Success ? int.Parse(match.Value) : 0;
             }
         }
+
         readonly LayerSorter layerSort = new();
 
         public async Task RebuildAreaData(GLTaskScheduler scheduler)
@@ -1420,7 +1424,7 @@ namespace Fushigi.ui.widgets
         }
         private void SelectActorAndLayerPanel()
         {
-            ImGui.Begin("Actors, Layers, and Prefabs");
+            ImGui.Begin("Actors and Layers");
 
             ImGui.BeginTabBar("SelectActorAndLayerWindow");
 
@@ -2067,6 +2071,11 @@ namespace Fushigi.ui.widgets
                 if (cursor == null)
                     return;
 
+                ImGui.Text("Select both an actor along with the cursor.");
+                ImGui.Text("You can also press 'R' to pivot.");
+
+                ImGui.Dummy(new Vector2(0, 10));
+
                 if (editContext.GetSelectedObjects<CourseActor>().ToList().Count == 1)
                 {
                     CourseActor pickActor = editContext.GetSelectedObjects<CourseActor>().ToArray()[0];
@@ -2140,7 +2149,7 @@ namespace Fushigi.ui.widgets
                     ImGui.Dummy(new Vector2(0, 50));
                     bool run = false;
 
-                    string pivotText = "0";
+                    string pivotText = cursor.delta.ToString();
 
                     ImGui.Text("Pivot Actors");
                     ImGui.Separator();
@@ -4325,11 +4334,11 @@ namespace Fushigi.ui.widgets
             ImGui.PushClipRect(wcMin, wcMax - new Vector2(margin, 0), true);
 
             bool isSearch = !string.IsNullOrWhiteSpace(mActorSearchText);
-            //var sortedLayers = mLayersVisibility.Keys.ToList();
-            //sortedLayers.Sort(layerSort);
+            var sortedLayers = mLayersVisibility.Keys.ToList();
+            sortedLayers.Sort(layerSort);
 
             ImGui.Spacing();
-            foreach (string layer in mLayersVisibility.Keys) //Use sortedLayers if you think the sorting code is good
+            foreach (string layer in sortedLayers) //Use sortedLayers if you think the sorting code is good
             {
                 ImGui.PushID(layer);
                 cp = ImGui.GetCursorScreenPos();
