@@ -300,6 +300,7 @@ namespace Fushigi.ui.widgets
 
                 if (!ImGui.GetIO().KeyCtrl)
                 {
+                    if(!draggingComment && !panOverride)
                     Camera.Distance *= MathF.Pow(2, -ImGui.GetIO().MouseWheel / 10);
                 }
                 else if (ImGui.IsMouseDragging(ImGuiMouseButton.Middle))
@@ -308,8 +309,8 @@ namespace Fushigi.ui.widgets
                     Camera.Distance *= MathF.Pow(2, delta.Y / 200f);
                 }
 
-                    // Default camera distance is 10, so speed is constant until 0.5 at 20
-                    const float baseCameraSpeed = 0.25f * 60;
+                 // Default camera distance is 10, so speed is constant until 0.5 at 20
+                const float baseCameraSpeed = 0.25f * 60;
                 const float scalingRate = 10.0f;
                 var zoomSpeedFactor = Math.Max(Camera.Distance / scalingRate, 1);
                 var zoomedCameraSpeed = MathF.Floor(zoomSpeedFactor) * baseCameraSpeed;
@@ -778,7 +779,7 @@ namespace Fushigi.ui.widgets
             var median = System.Numerics.Vector3.Zero;
 
             var ctx = mEditContext;
-            if (ctx.GetSelectedObjects<CourseActor>().Count() != 1)
+            if (ctx.GetSelectedObjects<CourseActor>().Count() > 0 || ctx.GetSelectedObjects<CourseRail.CourseRailPoint>().Count() > 0)
             {
                 List<CourseActor> actors = ctx.GetSelectedObjects<CourseActor>().ToList();
                 List<CourseActor> copiedActors = new List<CourseActor>();
@@ -1236,6 +1237,7 @@ namespace Fushigi.ui.widgets
                         }
                         ImGui.EndMenu();
                     }
+                        ImGui.Separator();
                     if (ImGui.MenuItem("Save as Prefab"))
                     {
                         PrefabPopup();
@@ -1412,7 +1414,10 @@ namespace Fushigi.ui.widgets
         private void AddComment()
         {
             var comment = new CourseComment();
-            comment.mTranslation = this.ScreenToWorld(ImGui.GetMousePos());
+            var pos = ScreenToWorld(storedMousePos);
+            comment.mTranslation.X = MathF.Round(pos.X * 2, MidpointRounding.AwayFromZero) / 2;
+            comment.mTranslation.Y = MathF.Round(pos.Y * 2, MidpointRounding.AwayFromZero) / 2;
+            comment.mTranslation.Z = 0.0f;
             mEditContext.AddComment(comment);
         }
 
@@ -1856,7 +1861,6 @@ namespace Fushigi.ui.widgets
                 }
                 if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out FushigiCursor? cursor))
                 {
-
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
 
                     if (ImGui.GetIO().KeyShift)
@@ -2261,20 +2265,20 @@ namespace Fushigi.ui.widgets
         public bool applyRotation;
         public CourseActor[] pivotedActors;
         private int objectCount;
+        private CourseComment commentToDelete;
+        private int commentVal;
 
         public void DrawComments()
         {
             int i = 0;
-
             foreach (CourseComment comment in mArea.GetComments())
             {
                 i++;
-
                 Vector2 pos = WorldToScreen(comment.mTranslation);
-                Vector2 iconPos = new Vector2(pos.X - 20, pos.Y - 20);
-
-                // ICON CHILD
+                Vector2 iconPos = new Vector2(pos.X - 30, pos.Y - 20);
                 ImGui.SetCursorScreenPos(iconPos);
+
+
                 ImGui.BeginChild(
                     $"CommentIcon{i}",
                     new Vector2(40 * MainWindow.dpiScale, 40 * MainWindow.dpiScale),
@@ -2282,33 +2286,45 @@ namespace Fushigi.ui.widgets
                     ImGuiWindowFlags.NoDecoration |
                     ImGuiWindowFlags.NoScrollbar |
                     ImGuiWindowFlags.NoScrollWithMouse |
-                    ImGuiWindowFlags.NoBackground
+                    ImGuiWindowFlags.NoBackground 
                 );
 
+
                 ImGui.SetCursorPos(Vector2.Zero);
+             
 
                 if (ImGui.Button(IconUtil.ICON_MAIL_BULK, new Vector2(40 * MainWindow.dpiScale, 40 * MainWindow.dpiScale)))
+                    {
+                        if (!draggingCommentIcon)
+                            comment.mOpened = !comment.mOpened;
+            
+                    }
+
+                if (!comment.mOpened &&
+                  ImGui.IsItemActive() &&
+                  ImGui.IsMouseDragging(ImGuiMouseButton.Left))
                 {
-                    if (!draggingCommentIcon)
-                        comment.mOpened = !comment.mOpened;
+                    draggingCommentIcon = true;
+                    if (mEditContext.GetSelectedObjects<object>().Count() > 1)
+                    {
+                        mEditContext.DeselectAll();
+                    }
+                    mEditContext.Select(comment);
+
+    
+
+                    if (!comment.mOpened && ImGui.IsItemActive() && ImGui.IsKeyPressed(ImGuiKey.Delete))     
+                    {            
+                            commentToDelete = comment;
+                            commentVal = i;
+                    }
                 }
+
 
                 bool iconHovered = ImGui.IsItemHovered();
 
                 if (iconHovered)
                     panOverride = true;
-
-                if (!comment.mOpened &&
-                    ImGui.IsItemActive() &&
-                    ImGui.IsMouseDragging(ImGuiMouseButton.Left))
-                {
-                    draggingCommentIcon = true;
-
-                    if (mEditContext.GetSelectedObjects<object>().Count() > 1)
-                        mEditContext.DeselectAll();
-
-                    mEditContext.Select(comment);
-                }
 
                 if (iconHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
@@ -2318,58 +2334,73 @@ namespace Fushigi.ui.widgets
                     mEditContext.Select(comment);
                 }
 
-                ImGui.EndChild(); // <-- correct
+
+                ImGui.EndChild();
 
                 if (!comment.mOpened)
                     continue;
 
-                // COMMENT WINDOW
-                ImGui.SetCursorScreenPos(pos);
-                ImGui.BeginChild(
-                    $"CommentWindow{i}",
-                    new Vector2(200 * MainWindow.dpiScale, 100 * MainWindow.dpiScale),
-                    ImGuiChildFlags.None,
-                    ImGuiWindowFlags.NoDecoration |
-                    ImGuiWindowFlags.NoScrollbar |
-                    ImGuiWindowFlags.NoScrollWithMouse
-                );
+                    ImGui.SetCursorScreenPos(pos);
 
                 ref string text = ref comment.mText;
+                ImGui.BeginChild(
+                  $"CommentWindow{i}",
+                  new Vector2(200 * MainWindow.dpiScale, 100 * MainWindow.dpiScale),
+                  ImGuiChildFlags.None,
+                  ImGuiWindowFlags.NoDecoration |
+                  ImGuiWindowFlags.NoScrollbar |
+                  ImGuiWindowFlags.NoScrollWithMouse
+                 );
 
                 ImGui.InputTextMultiline(
                     $"##Comment{i}",
                     ref text,
                     1024,
-                    new Vector2(-1, -1)
+                    new Vector2(200 * MainWindow.dpiScale, 100 * MainWindow.dpiScale)
                 );
 
-                bool textActive = ImGui.IsItemActive();
-                bool textFocused = ImGui.IsItemFocused();
-                bool textHovered = ImGui.IsItemHovered();
+
+                    bool textActive = ImGui.IsItemActive();
+                    bool textFocused = ImGui.IsItemFocused();
+                    bool textHovered = ImGui.IsItemHovered();
 
                 if (textHovered)
-                    panOverride = true;
-
-                if (textActive || textFocused)
                 {
-                    draggingComment = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-
-                    if (mEditContext.GetSelectedObjects<object>().Count() > 1)
-                        mEditContext.DeselectAll();
-
-                    mEditContext.Select(comment);
+                    panOverride = true;
                 }
 
-                ImGui.EndChild(); // <-- correct
+
+                    if (textActive || textFocused)
+                    {
+                        draggingComment = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
+                            if (mEditContext.GetSelectedObjects<object>().Count() > 1)
+                        {
+                            mEditContext.DeselectAll();
+                        }
+                        mEditContext.Select(comment);
+                        if (ImGui.IsKeyPressed(ImGuiKey.Delete))
+                        {
+                            commentToDelete = comment;
+                            commentVal = i;
+                        }
+                }
+                    ImGui.EndChild();
+
+    
             }
 
             if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 draggingCommentIcon = false;
 
-            if (!CourseScene.insideViewport)
+            if(!CourseScene.insideViewport)
                 panOverride = false;
-        }
 
+            if(commentToDelete != null)
+            {
+              mEditContext.RemoveComment(commentToDelete, commentVal);
+              commentToDelete = null;
+            }
+        }
         void DrawAreaContent()
         {
             const float pointSize = 8.0f;

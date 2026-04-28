@@ -209,46 +209,43 @@ namespace Fushigi.ui.widgets
 
         public static readonly Regex NumberRegex = new(@"\d+");
 
-        // This code sorts the layer order on the layer panel.
-        // You can look through it before deciding if it's optimized enough to include.
-        // Just uncomment all of this if it is.
-        // public static List<string> layerSortTypes = [
-        //     "DvScreen",
-        //     "DvNear",
-        //     "DecoAreaFront",
-        //     "PlayArea", 
-        //     "DvPlayArea",
-        //     "DecoArea",
-        //     "DvMiddle",
-        //     "DvFar"
-        // ];
+         public static List<string> layerSortTypes = [
+             "DvScreen",
+             "DvNear",
+             "DecoAreaFront",
+             "PlayArea",
+             "DvPlayArea",
+             "DecoArea",
+             "DvMiddle",
+             "DvFar"
+         ];
 
-        // public class LayerSorter : IComparer<string>
-        // {
-        //     public int Compare(string x, string y)
-        //     {
-        //         var idX = layerSortTypes.IndexOf(NumberRegex.Replace(x, ""));
-        //         var idY = layerSortTypes.IndexOf(NumberRegex.Replace(y, ""));
-        //         if(idX != -1)
-        //         {
-        //                 int result = idY == -1 ? 1:idX.CompareTo(idY);
-        //                 if (result != 0)
-        //                 {
-        //                     return result;
-        //                 }
-        //                 else
-        //                 {
-        //                     result = x.Length.CompareTo(x.Length);
-        //                     return result != 0 ? result:x.CompareTo(y);
-        //                 }
-        //         }
-        //         else
-        //         {
-        //                 return idY != -1 ? -1:0;
-        //         }
-        //     }
-        // }
-        // readonly LayerSorter layerSort = new();
+        public class LayerSorter : IComparer<string>
+        {
+            public int Compare(string x, string y)
+            {
+                var idX = layerSortTypes.IndexOf(NumberRegex.Replace(x, ""));
+                var idY = layerSortTypes.IndexOf(NumberRegex.Replace(y, ""));
+                if (idX != -1)
+                {
+                    int result = idY == -1 ? 1 : idX.CompareTo(idY);
+                    if (result != 0)
+                    {
+                        return result;
+                    }
+                    else
+                    {
+                        result = x.Length.CompareTo(x.Length);
+                        return result != 0 ? result : x.CompareTo(y);
+                    }
+                }
+                else
+                {
+                    return idY != -1 ? -1 : 0;
+                }
+            }
+        }
+        readonly LayerSorter layerSort = new();
 
         public async Task RebuildAreaData(GLTaskScheduler scheduler)
         {
@@ -2058,7 +2055,14 @@ namespace Fushigi.ui.widgets
             }
             if (editContext.IsAnySelected<FushigiCursor>())
             {
+
                 var cursor = activeViewport.cursor;
+
+
+                if (ImGui.IsKeyPressed(ImGuiKey.Delete))
+                {
+                    activeViewport.cursor = null;
+                }
 
                 if (cursor == null)
                     return;
