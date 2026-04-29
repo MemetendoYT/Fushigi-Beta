@@ -253,14 +253,14 @@ namespace Fushigi.course
                 string folder = Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit");
                 bool backup = (backupDir != "");
                 if (backup)
-                    folder = backupDir;
+                    folder = Path.Combine(backupDir, "BancMapUnit");
 
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
 
-                //string levelPath = Path.Combine(folder, $"{mCourseName}.bcett.byml.zs");
+                string levelPath = Path.Combine(folder, $"{mCourseName}.bcett.byml.zs");
 
-                //File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
+                File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
 
                 SaveAreas(resource_table, backup, backupDir);
                 // SaveAreas(resource_table);

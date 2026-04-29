@@ -172,7 +172,7 @@ namespace Fushigi.ui.widgets
             if (ImGui.InputFloat("Backup Frequency (in minutes)", ref backupFreqMinutes))
                 UserSettings.SetBackupFreqMinutes(backupFreqMinutes);
 
-            Tooltip.Show("How long between each backup, in minutes.\nBackups are stored wherever Fushigi is installed to.");
+            Tooltip.Show("How long between each backup, in minutes.\nBackups are stored in Fushigi's appdata folder.");
 
 
             if (ImGui.BeginCombo("Themes", curTheme))
