@@ -115,8 +115,9 @@ namespace Fushigi.Bfres
             var _optionIndices = reader.ReadCustom(() =>
                     reader.ReadSbytes((int)shaderInfoHeader.NumOptions), (uint)shaderInfoHeader.OptionIndicesOffset);
 
-            //Option key list
-            var _optionKeys = reader.ReadDictionary<ResString>(shaderAssignHeader.OptionsDictOffset);
+            _optionIndices = null; // Fixes shaders on custom models??? What the actual fuck
+           //Option key list
+           var _optionKeys = reader.ReadDictionary<ResString>(shaderAssignHeader.OptionsDictOffset);
 
             List<string> choices = new List<string>();
             for (int i = 0; i < _optionBooleans.Length; i++)
