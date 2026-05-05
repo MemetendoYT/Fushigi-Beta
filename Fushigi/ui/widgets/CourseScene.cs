@@ -1240,7 +1240,7 @@ namespace Fushigi.ui.widgets
         private string mAddLayerSearchQuery = "";
 
 
-        public List<CourseActor> CreatePrefab(NumVec location, string prefab)
+        public List<CourseActor> CreatePrefab(NumVec location, string prefab, string prefabFolder)
         {
             var areaHash = selectedArea.mRootHash;
             var areaLinks = selectedArea.mLinkHolder;
@@ -1251,7 +1251,6 @@ namespace Fushigi.ui.widgets
             placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
             placement.Z = 0.0f;
 
-            string prefabFolder = Path.Combine(UserSettings.SettingsDir, "prefabs");
             string prefabPath = Path.Combine(prefabFolder, $"{prefab}.bcett.byml.zs");
             byte[] levelBytes = FileUtil.DecompressFile(prefabPath);
 
@@ -1288,7 +1287,7 @@ namespace Fushigi.ui.widgets
             return prefabActors.mActors;
         }
 
-        public List<CourseRail> CreatePrefabRail(NumVec location, string prefab)
+        public List<CourseRail> CreatePrefabRail(NumVec location, string prefab, string prefabFolder)
         {
             var areaHash = selectedArea.mRootHash;
             var areaLinks = selectedArea.mLinkHolder;
@@ -1299,7 +1298,6 @@ namespace Fushigi.ui.widgets
             placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
             placement.Z = 0.0f;
 
-            string prefabFolder = Path.Combine(UserSettings.SettingsDir, "prefabs");
             string prefabPath = Path.Combine(prefabFolder, $"{prefab}.bcett.byml.zs");
             byte[] levelBytes = FileUtil.DecompressFile(prefabPath);
 
@@ -1360,7 +1358,7 @@ namespace Fushigi.ui.widgets
             return prefabRails.mRails;
 
         }
-        public async void LoadPrefab(string prefab)
+        public async void LoadPrefab(string prefab, string directory)
         {
             var viewport = activeViewport;
             var area = selectedArea;
@@ -1389,7 +1387,7 @@ namespace Fushigi.ui.widgets
                 }
 
                 ctx.DeselectAll();
-                var prefabActors = CreatePrefab(posVec, prefab);
+                var prefabActors = CreatePrefab(posVec, prefab, directory);
 
                 var batch = ctx.BeginBatchAction();
                 foreach (var actor in prefabActors)
@@ -1405,7 +1403,7 @@ namespace Fushigi.ui.widgets
                     AddLayerFromFile();
                 }
 
-                var prefabRails = CreatePrefabRail(posVec, prefab);
+                var prefabRails = CreatePrefabRail(posVec, prefab, directory);
                 foreach (var rail in prefabRails)
                 {
                     //var i = 0;
@@ -4043,22 +4041,23 @@ namespace Fushigi.ui.widgets
 
         private void PrefabsView()
         {
-            string path = Path.Combine(UserSettings.SettingsDir, "prefabs");
+            string appDataPath = Path.Combine(UserSettings.SettingsDir, "prefabs");
+            string resPath = "res/prefabs";
+            string[] resPrefab = Directory.GetFiles(resPath, "*.bcett*");
 
-            if (!Directory.Exists(path))
+            prefabList(resPrefab, false, resPath);
+
+            if (Directory.Exists(appDataPath))
             {
-                ImGui.Text("No prefabs found");
-                return;
+                string[] files = Directory.GetFiles(appDataPath, "*.bcett*");
+                prefabList(files, true, appDataPath);
             }
 
-            string[] files = Directory.GetFiles(path, "*.bcett*");
 
-            if (files.Length == 0)
-            {
-                ImGui.Text("No prefabs found");
-                return;
-            }
+        }
 
+        public void prefabList(string[] files, bool canDelete, string directory)
+        {
             float rowHeight = ImGui.GetFrameHeight();
             float deleteButtonWidth = rowHeight * 1.6f;
 
@@ -4077,7 +4076,7 @@ namespace Fushigi.ui.widgets
 
                 if (ImGui.Selectable(prefab, false, ImGuiSelectableFlags.None, new Vector2(nameWidth, rowHeight)))
                 {
-                    LoadPrefab(prefab);
+                    LoadPrefab(prefab, directory);
                 }
 
                 ImGui.PopItemWidth();
@@ -4088,28 +4087,32 @@ namespace Fushigi.ui.widgets
                 Vector2 deletePos = ImGui.GetCursorScreenPos();
                 bool clicked = ImGui.InvisibleButton("##delete", new Vector2(deleteButtonWidth, rowHeight));
 
-                string deleteIcon = IconUtil.ICON_TRASH_ALT;
-                Vector2 iconSize = ImGui.CalcTextSize(deleteIcon);
-                Vector2 iconPos = deletePos + new Vector2(
-                    (deleteButtonWidth - iconSize.X) * 0.5f,
-                    (rowHeight - iconSize.Y) * 0.5f
-                );
-
-                uint color = ImGui.GetColorU32(ImGuiCol.Text);
-                if (!ImGui.IsItemHovered())
-                    color = (color & 0xFFFFFF) | ((uint)((color >> 24) * 0.5f) << 24);
-
-                ImGui.GetWindowDrawList().AddText(iconPos, color, deleteIcon);
-                ImGui.SetItemTooltip("Delete Prefab");
-
-                if (clicked)
+                if (canDelete)
                 {
-                    DeletePrefabPopup(file);
-                }
+                    string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                    Vector2 iconSize = ImGui.CalcTextSize(deleteIcon);
+                    Vector2 iconPos = deletePos + new Vector2(
+                        (deleteButtonWidth - iconSize.X) * 0.5f,
+                        (rowHeight - iconSize.Y) * 0.5f
+                    );
 
-                ImGui.PopID();
+
+                    uint color = ImGui.GetColorU32(ImGuiCol.Text);
+                    if (!ImGui.IsItemHovered())
+                        color = (color & 0xFFFFFF) | ((uint)((color >> 24) * 0.5f) << 24);
+
+                    ImGui.GetWindowDrawList().AddText(iconPos, color, deleteIcon);
+                    ImGui.SetItemTooltip("Delete Prefab");
+
+                    if (clicked)
+                    {
+                        DeletePrefabPopup(file);
+                    }
+
+                    ImGui.PopID();
+                }
             }
-        }
+         }
         public async Task DeletePrefabPopup(string file)
         {
             var result = await RemoveAreaConfirmationDialog.ShowDialog(MainWindow.mModalHost, "Remove Prefab", "Do you want to remove this prefab?\nThis action cannot be undone!");

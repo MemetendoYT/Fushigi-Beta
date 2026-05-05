@@ -1729,8 +1729,12 @@ namespace Fushigi.ui.widgets
 
                             foreach (var rail in rails)
                             {
+                                if (!ShowRails)
+                                    continue;
+
                                 foreach (var railPoint in rail.mPoints)
                                 {
+
                                     float pointX = railPoint.mTranslate.X;
                                     float pointY = railPoint.mTranslate.Y;
 
@@ -2373,6 +2377,7 @@ namespace Fushigi.ui.widgets
         private CourseComment commentToDelete;
         private int commentVal;
         private bool forceHistory;
+        private bool canAddPoint;
 
         public void DrawComments()
         {
@@ -2614,7 +2619,7 @@ namespace Fushigi.ui.widgets
                         //     rail.mPoints.Remove(selectedPoint);
                     }
 
-                    bool add_point = ImGui.IsMouseClicked(0) && ImGui.IsMouseDown(0) && ImGui.GetIO().KeyAlt;
+                    bool add_point = ImGui.IsMouseClicked(0) && ImGui.IsMouseDown(0) && ImGui.GetIO().KeyAlt && canAddPoint;
 
                     //Insert point to selected
                     if (selectedPoint != null && add_point)
@@ -2802,8 +2807,9 @@ namespace Fushigi.ui.widgets
 
                             pointsList.Add(pos2D);
 
-                            if (pnt == closestSelected && ImGui.GetIO().KeyAlt && !ImGui.IsMouseDragging(ImGuiMouseButton.Left))
+                            if (pnt == closestSelected && ImGui.GetIO().KeyAlt && !ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !mEditContext.IsAnySelected<CourseActor>())
                             {
+                                canAddPoint = true;
                                 Vector3 previewPos = ScreenToWorld(mouse);
 
                                 previewPos.X = MathF.Round(previewPos.X * 2) / 2;

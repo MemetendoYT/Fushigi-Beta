@@ -53,6 +53,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="res\prefabs\End Goal Setup.bcett.byml.zs">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
     <None Update="res\Voicelines.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
