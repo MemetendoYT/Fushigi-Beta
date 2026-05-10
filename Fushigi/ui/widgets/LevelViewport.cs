@@ -1512,11 +1512,9 @@ namespace Fushigi.ui.widgets
 
         private void AddLayer(string layer)
         {
-            string[] Layers = CourseScene.LayerTypes
-                      .Except(mLayersVisibility.Keys)
-                      .ToArray();
+            string[] Layers = mLayersVisibility.Keys.ToArray();
 
-            if (!Layers.Contains(layer))
+            if (Layers.Contains(layer))
                 return;
 
             var oldDict = new Dictionary<string, bool>(mLayersVisibility);
@@ -1729,6 +1727,9 @@ namespace Fushigi.ui.widgets
 
                             foreach (var rail in rails)
                             {
+                                if (!ShowRails)
+                                    continue;
+
                                 foreach (var railPoint in rail.mPoints)
                                 {
                                     float pointX = railPoint.mTranslate.X;
@@ -1766,6 +1767,9 @@ namespace Fushigi.ui.widgets
                 forceHistory = false;
                 if (!mMultiSelecting && mEditContext.IsAnySelected<FushigiCursor>())
                 {
+                    if(cursor == null)
+                        return;
+                    
                     forceHistory = true;
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
                     posVec -= ScreenToWorld(ImGui.GetIO().MouseClickedPos[0]) - cursor.mStartingTrans;
@@ -1864,13 +1868,17 @@ namespace Fushigi.ui.widgets
                         {
                             posVec.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
                             posVec.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
-                            if (!ImGui.GetIO().KeyAlt)
-                            {
-                                posVec.X += primaryPoint.mStartingTrans.X - MathF.Round(primaryPoint.mStartingTrans.X * 2, MidpointRounding.AwayFromZero) / 2;
-                                posVec.Y += primaryPoint.mStartingTrans.Y - MathF.Round(primaryPoint.mStartingTrans.Y * 2, MidpointRounding.AwayFromZero) / 2;
-                            }
+                            posVec.X += primaryPoint.mStartingTrans.X - MathF.Round(primaryPoint.mStartingTrans.X * 2, MidpointRounding.AwayFromZero) / 2;
+                            posVec.Y += primaryPoint.mStartingTrans.Y - MathF.Round(primaryPoint.mStartingTrans.Y * 2, MidpointRounding.AwayFromZero) / 2;
+
                         }
-                        primaryPoint.mTranslate.X = posVec.X;
+                        else if (ImGui.GetIO().KeyAlt)
+                        {
+                            posVec.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
+                            posVec.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                        }
+                            
+                            primaryPoint.mTranslate.X = posVec.X;
                         primaryPoint.mTranslate.Y = posVec.Y;
 
                         if(mEditContext.IsAnySelected<FushigiCursor>())
@@ -2614,68 +2622,70 @@ namespace Fushigi.ui.widgets
                         //     rail.mPoints.Remove(selectedPoint);
                     }
 
-                    bool add_point = ImGui.IsMouseClicked(0) && ImGui.IsMouseDown(0) && ImGui.GetIO().KeyAlt;
-
-                    //Insert point to selected
-                    if (selectedPoint != null && add_point)
+                    bool add_point = ImGui.IsMouseClicked(0) && ImGui.IsMouseDown(0) && ImGui.GetIO().KeyAlt && !ImGui.GetIO().KeyShift;
+                    if (!mEditContext.IsAnySelected<CourseActor>())
                     {
-                        Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
+                        //Insert point to selected
+                        if (selectedPoint != null && add_point)
+                        {
+                            Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
 
-                        var index = rail.mPoints.IndexOf(selectedPoint);
-                        var newPoint = new CourseRail.CourseRailPoint(selectedPoint, rail);
-                        //if (UserSettings.GetEnableHalfTile())
-                        //{
+                            var index = rail.mPoints.IndexOf(selectedPoint);
+                            var newPoint = new CourseRail.CourseRailPoint(selectedPoint, rail);
+                            //if (UserSettings.GetEnableHalfTile())
+                            //{
                             newPoint.mTranslate = new(
                                 MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2,
                                 MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2,
                                 selectedPoint.mTranslate.Z);
-                        //}
-                        //else
-                        //{
-                        //    newPoint.mTranslate = new(
-                        //        MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
-                        //        MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
-                        //        selectedPoint.mTranslate.Z);
-                        //}
+                            //}
+                            //else
+                            //{
+                            //    newPoint.mTranslate = new(
+                            //        MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
+                            //        MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
+                            //        selectedPoint.mTranslate.Z);
+                            //}
 
-                        newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
+                            newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
 
-                        if (rail.mPoints.Count - 1 == index)
-                            mEditContext.AddRailPoint(rail, newPoint);
-                        else
-                            mEditContext.InsertRailPoint(rail, newPoint, index);
+                            if (rail.mPoints.Count - 1 == index)
+                                mEditContext.AddRailPoint(rail, newPoint);
+                            else
+                                mEditContext.InsertRailPoint(rail, newPoint, index);
 
-                        this.mEditContext.DeselectAll();
-                        this.mEditContext.Select(newPoint);
-                        newHoveredObject = newPoint;
-                    }
-                    else if (rail_selected && add_point)
-                    {
-                        Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
+                            this.mEditContext.DeselectAll();
+                            this.mEditContext.Select(newPoint);
+                            newHoveredObject = newPoint;
+                        }
+                        else if (rail_selected && add_point)
+                        {
+                            Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
 
-                        var newPoint = new CourseRail.CourseRailPoint(rail.mType, rail);
-                        //if (UserSettings.GetEnableHalfTile())
-                        //{
+                            var newPoint = new CourseRail.CourseRailPoint(rail.mType, rail);
+                            //if (UserSettings.GetEnableHalfTile())
+                            //{
                             newPoint.mTranslate = new(
                             MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2,
                             MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2,
                             0);
-                        //}
-                        //else
-                        //{
-                        //    newPoint.mTranslate = new(
-                        //        MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
-                        //        MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
-                        //        0);
-                        //}
+                            //}
+                            //else
+                            //{
+                            //    newPoint.mTranslate = new(
+                            //        MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
+                            //        MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
+                            //        0);
+                            //}
 
-                        newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
+                            newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
 
-                        mEditContext.AddRailPoint(rail, newPoint);
+                            mEditContext.AddRailPoint(rail, newPoint);
 
-                        this.mEditContext.DeselectAll();
-                        this.mEditContext.Select(newPoint);
-                        newHoveredObject = newPoint;
+                            this.mEditContext.DeselectAll();
+                            this.mEditContext.Select(newPoint);
+                            newHoveredObject = newPoint;
+                        }
                     }
                 }
 
@@ -2703,7 +2713,7 @@ namespace Fushigi.ui.widgets
 
                         bool selected = mEditContext.IsSelected(rail);
 
-                        if (selected && rail.mPoints.Count == 0 && ImGui.GetIO().KeyAlt)
+                        if (selected && rail.mPoints.Count == 0 && ImGui.GetIO().KeyAlt && !ImGui.GetIO().KeyShift)
                         {
                             Vector3 pos = ScreenToWorld(ImGui.GetMousePos());
 
@@ -2802,7 +2812,7 @@ namespace Fushigi.ui.widgets
 
                             pointsList.Add(pos2D);
 
-                            if (pnt == closestSelected && ImGui.GetIO().KeyAlt && !ImGui.IsMouseDragging(ImGuiMouseButton.Left))
+                            if (pnt == closestSelected && ImGui.GetIO().KeyAlt && !ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !ImGui.GetIO().KeyShift && !mEditContext.IsAnySelected<CourseActor>())
                             {
                                 Vector3 previewPos = ScreenToWorld(mouse);
 

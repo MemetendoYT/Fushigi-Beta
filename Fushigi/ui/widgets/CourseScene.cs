@@ -209,8 +209,8 @@ namespace Fushigi.ui.widgets
 
         public static readonly Regex NumberRegex = new(@"\d+");
 
-         public static List<string> layerSortTypes = [
-             "DvScreen",
+        public static List<string> layerSortTypes = [
+            "DvScreen",
              "DvNear",
              "DecoAreaFront",
              "PlayArea",
@@ -218,7 +218,7 @@ namespace Fushigi.ui.widgets
              "DecoArea",
              "DvMiddle",
              "DvFar"
-         ];
+        ];
 
         public class LayerSorter : IComparer<string>
         {
@@ -549,7 +549,10 @@ namespace Fushigi.ui.widgets
             }
 
             if (showTalkingFlower)
-                TalkingFlower.Draw(ref showTalkingFlower, mPopupModalHost);
+            {
+                var ctx = areaScenes[selectedArea].EditContext;
+                TalkingFlower.Draw(ref showTalkingFlower, mPopupModalHost, ctx);
+            }
 
             if (showPaletteWindow)
                 envPaletteWindow.Draw(ref showPaletteWindow, mPopupModalHost);
@@ -946,27 +949,26 @@ namespace Fushigi.ui.widgets
 
         public void deleteEmptyRails()
         {
-            var ctx = areaScenes[selectedArea].EditContext;
-            var batchAction = ctx.BeginBatchAction();
-            var toDelete = new List<CourseRail>();
+            CourseAreaEditContext ctx;
+            var toDelete = new List<(CourseArea area, CourseRail rail)>();
+
+
             foreach (var area in course.GetAreas())
             {
                 var rails = area.mRailHolder.mRails;
                 foreach (CourseRail rail in rails)
                 {
                     if (rail.mPoints.Count == 0)
-                    {
-                        if (rail.mPoints.Count == 0)
-                            toDelete.Add(rail);
-                    }
+                        toDelete.Add((area, rail));
                 }
             }
 
-            foreach (var rail in toDelete)
+
+            foreach (var (area, rail) in toDelete)
             {
+                ctx = areaScenes[area].EditContext;
                 ctx.DeleteRail(rail);
             }
-            batchAction.Commit($"{IconUtil.ICON_TRASH} Deleted Empty Rails");
         }
         public void Save(bool backup = false, string backupFolder = "")
         {
@@ -1240,7 +1242,7 @@ namespace Fushigi.ui.widgets
         private string mAddLayerSearchQuery = "";
 
 
-        public List<CourseActor> CreatePrefab(NumVec location, string prefab)
+        public List<CourseActor> CreatePrefab(NumVec location, string prefab, string prefabFolder)
         {
             var areaHash = selectedArea.mRootHash;
             var areaLinks = selectedArea.mLinkHolder;
@@ -1251,7 +1253,6 @@ namespace Fushigi.ui.widgets
             placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
             placement.Z = 0.0f;
 
-            string prefabFolder = Path.Combine(UserSettings.SettingsDir, "prefabs");
             string prefabPath = Path.Combine(prefabFolder, $"{prefab}.bcett.byml.zs");
             byte[] levelBytes = FileUtil.DecompressFile(prefabPath);
 
@@ -1288,7 +1289,7 @@ namespace Fushigi.ui.widgets
             return prefabActors.mActors;
         }
 
-        public List<CourseRail> CreatePrefabRail(NumVec location, string prefab)
+        public List<CourseRail> CreatePrefabRail(NumVec location, string prefab, string prefabFolder)
         {
             var areaHash = selectedArea.mRootHash;
             var areaLinks = selectedArea.mLinkHolder;
@@ -1299,7 +1300,6 @@ namespace Fushigi.ui.widgets
             placement.Y = MathF.Round(location.Y * 2, MidpointRounding.AwayFromZero) / 2;
             placement.Z = 0.0f;
 
-            string prefabFolder = Path.Combine(UserSettings.SettingsDir, "prefabs");
             string prefabPath = Path.Combine(prefabFolder, $"{prefab}.bcett.byml.zs");
             byte[] levelBytes = FileUtil.DecompressFile(prefabPath);
 
@@ -1318,7 +1318,7 @@ namespace Fushigi.ui.widgets
                 hashMap[oldHash] = newHash;
                 rail.mHash = newHash;
                 rail.mAreaHash = areaHash;
-                foreach(var point in rail.mPoints)
+                foreach (var point in rail.mPoints)
                 {
                     ulong oldHashPoint = point.mHash;
                     ulong newHashPoint = RandomUtil.GetRandom();
@@ -1328,7 +1328,7 @@ namespace Fushigi.ui.widgets
                     point.mTranslate.X += placement.X;
                     point.mTranslate.Y += placement.Y;
 
-                    if(point.mIsCurve)
+                    if (point.mIsCurve)
                     {
                         point.mControl.mTranslate.X += placement.X;
                         point.mControl.mTranslate.Y += placement.Y;
@@ -1360,7 +1360,7 @@ namespace Fushigi.ui.widgets
             return prefabRails.mRails;
 
         }
-        public async void LoadPrefab(string prefab)
+        public async void LoadPrefab(string prefab, string directory)
         {
             var viewport = activeViewport;
             var area = selectedArea;
@@ -1389,7 +1389,7 @@ namespace Fushigi.ui.widgets
                 }
 
                 ctx.DeselectAll();
-                var prefabActors = CreatePrefab(posVec, prefab);
+                var prefabActors = CreatePrefab(posVec, prefab, directory);
 
                 var batch = ctx.BeginBatchAction();
                 foreach (var actor in prefabActors)
@@ -1405,18 +1405,25 @@ namespace Fushigi.ui.widgets
                     AddLayerFromFile();
                 }
 
-                var prefabRails = CreatePrefabRail(posVec, prefab);
-                foreach (var rail in prefabRails)
+                string prefabPath = Path.Combine(directory, $"{prefab}.bcett.byml.zs");
+                byte[] levelBytes = FileUtil.DecompressFile(prefabPath);
+                var byml = new Byml.Byml(new MemoryStream(levelBytes));
+                BymlHashTable? root = byml.Root as BymlHashTable;
+                if (root.ContainsKey("Rails"))
                 {
-                    //var i = 0;
-                    //do
-                    //{
-                    //    i++;
-                    //} while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
-                    //actor.mName = $"{actor.mPackName}{i}";
-                    //mSelectedLayer = actor.mLayer;
-                    ctx.AddRail(rail);
-                    //AddLayerFromFile();
+                    var prefabRails = CreatePrefabRail(posVec, prefab, directory);
+                    foreach (var rail in prefabRails)
+                    {
+                        //var i = 0;
+                        //do
+                        //{
+                        //    i++;
+                        //} while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
+                        //actor.mName = $"{actor.mPackName}{i}";
+                        //mSelectedLayer = actor.mLayer;
+                        ctx.AddRail(rail);
+                        //AddLayerFromFile();
+                    }
                 }
                 batch.Commit($"{IconUtil.ICON_PASTE} Added {prefab} Prefab");
             }
@@ -1730,14 +1737,11 @@ namespace Fushigi.ui.widgets
 
         private void AddLayerFromFile()
         {
-            string[] Layers = LayerTypes
-                      .Except(mLayersVisibility.Keys)
-                      .ToArray();
+            string[] Layers = mLayersVisibility.Keys.ToArray();
 
-
-            if (!Layers.Contains(mSelectedLayer))
+            
+            if (Layers.Contains(mSelectedLayer))
                 return;
-
 
             var ctx = areaScenes[selectedArea].EditContext;
             ctx.CommitAction(new PropertyFieldsSetUndo(
@@ -2127,7 +2131,7 @@ namespace Fushigi.ui.widgets
                                 newActor = new CourseActor(pickActor.mPackName, selectedArea.mRootHash, pickActor.mLayer);
                                 newActor.mTranslation.X = (float)(cursor.mTranslate.X - radius * Math.Sin(angle * (Math.PI / 180)));
                                 newActor.mTranslation.Y = (float)(cursor.mTranslate.Y + radius * Math.Cos(angle * (Math.PI / 180)));
-                                if(doRotate) 
+                                if (doRotate)
                                     newActor.mRotation.Z = angle * (MathF.PI / 180f);
 
                                 var j = 0;
@@ -3225,7 +3229,7 @@ namespace Fushigi.ui.widgets
                         bool priorCurve = mSelectedRailPoint.mIsCurve;
                         ImGui.Checkbox("##Curved", ref mSelectedRailPoint.mIsCurve);
 
-                        if(priorCurve != mSelectedRailPoint.mIsCurve)
+                        if (priorCurve != mSelectedRailPoint.mIsCurve)
                             activeViewport.undoPointToggleMethod(mSelectedRailPoint, priorCurve);
 
                         ImGui.SameLine();
@@ -4043,25 +4047,42 @@ namespace Fushigi.ui.widgets
 
         private void PrefabsView()
         {
-            string path = Path.Combine(UserSettings.SettingsDir, "prefabs");
+            string appDataPath = Path.Combine(UserSettings.SettingsDir, "prefabs");
+            string resPath = "res/prefabs";
+            string[] resPrefab = Directory.GetFiles(resPath, "*.bcett*");
 
-            if (!Directory.Exists(path))
+            if (ImGui.BeginTabBar("PrefabTabs"))
             {
-                ImGui.Text("No prefabs found");
-                return;
+                if (ImGui.BeginTabItem("User Prefabs"))
+                {
+                    if (Directory.Exists(appDataPath))
+                    {
+                        string[] files = Directory.GetFiles(appDataPath, "*.bcett*");
+                        prefabList(files, true, appDataPath);
+                    }
+                        ImGui.EndTabItem();
+                }
+
+                if (ImGui.BeginTabItem("Default Prefabs"))
+                {
+                    prefabList(resPrefab, false, resPath);
+                    ImGui.EndTabItem();
+                }
+
+                ImGui.EndTabBar();
             }
+        }
 
-            string[] files = Directory.GetFiles(path, "*.bcett*");
-
-            if (files.Length == 0)
-            {
-                ImGui.Text("No prefabs found");
-                return;
-            }
-
+        public void prefabList(string[] files, bool canDelete, string directory)
+        {
+            ImGui.BeginChild("ActorScroll", ImGui.GetContentRegionAvail());
             float rowHeight = ImGui.GetFrameHeight();
             float deleteButtonWidth = rowHeight * 1.6f;
 
+            if(directory.Contains("AppData") && files.Length == 0)
+            {
+                ImGui.Text("You have no saved prefabs. \nYou can save a prefab by selecting multiple actors,\nright clicking and selecting 'Save as Prefab'. ");
+            }
             foreach (string file in files)
             {
 
@@ -4077,7 +4098,7 @@ namespace Fushigi.ui.widgets
 
                 if (ImGui.Selectable(prefab, false, ImGuiSelectableFlags.None, new Vector2(nameWidth, rowHeight)))
                 {
-                    LoadPrefab(prefab);
+                    LoadPrefab(prefab, directory);
                 }
 
                 ImGui.PopItemWidth();
@@ -4088,27 +4109,32 @@ namespace Fushigi.ui.widgets
                 Vector2 deletePos = ImGui.GetCursorScreenPos();
                 bool clicked = ImGui.InvisibleButton("##delete", new Vector2(deleteButtonWidth, rowHeight));
 
-                string deleteIcon = IconUtil.ICON_TRASH_ALT;
-                Vector2 iconSize = ImGui.CalcTextSize(deleteIcon);
-                Vector2 iconPos = deletePos + new Vector2(
-                    (deleteButtonWidth - iconSize.X) * 0.5f,
-                    (rowHeight - iconSize.Y) * 0.5f
-                );
-
-                uint color = ImGui.GetColorU32(ImGuiCol.Text);
-                if (!ImGui.IsItemHovered())
-                    color = (color & 0xFFFFFF) | ((uint)((color >> 24) * 0.5f) << 24);
-
-                ImGui.GetWindowDrawList().AddText(iconPos, color, deleteIcon);
-                ImGui.SetItemTooltip("Delete Prefab");
-
-                if (clicked)
+                if (canDelete)
                 {
-                    DeletePrefabPopup(file);
-                }
+                    string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                    Vector2 iconSize = ImGui.CalcTextSize(deleteIcon);
+                    Vector2 iconPos = deletePos + new Vector2(
+                        (deleteButtonWidth - iconSize.X) * 0.5f,
+                        (rowHeight - iconSize.Y) * 0.5f
+                    );
 
-                ImGui.PopID();
+
+                    uint color = ImGui.GetColorU32(ImGuiCol.Text);
+                    if (!ImGui.IsItemHovered())
+                        color = (color & 0xFFFFFF) | ((uint)((color >> 24) * 0.5f) << 24);
+
+                    ImGui.GetWindowDrawList().AddText(iconPos, color, deleteIcon);
+                    ImGui.SetItemTooltip("Delete Prefab");
+
+                    if (clicked)
+                    {
+                        DeletePrefabPopup(file);
+                    }
+
+                    ImGui.PopID();
+                }
             }
+            ImGui.EndChild();
         }
         public async Task DeletePrefabPopup(string file)
         {
@@ -5118,5 +5144,3 @@ namespace Fushigi.ui.widgets
         }
     }
 }
-
-

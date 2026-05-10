@@ -223,7 +223,7 @@ namespace Fushigi.ui.widgets
                 UserSettings.SetRenderCustomModels(renderCustomModels);
             }
 
-            Tooltip.Show("Uses the models from the mod directory. WARNING: Rendering of custom models using game shaders is broken.");
+            Tooltip.Show("Uses the models from the mod directory.");
 
             if (ImGui.Checkbox("Use Astc Texture Cache", ref useAstcTextureCache))
             {
@@ -258,34 +258,34 @@ namespace Fushigi.ui.widgets
                 UserSettings.SetPrivateDRPC(privateDRPC);
 
 
-                int shaderSettings = UserSettings.GetShaders();
+            //    int shaderSettings = UserSettings.GetShaders();
 
-            if (ImGui.BeginCombo("Shader Settings [EXPERIMENTAL]", ShaderDescriptions[shaderSettings]))
-            {
-                if (ImGui.Selectable(ShaderDescriptions[0]))
-                {
-                    UserSettings.SetShaders(0);
-                }
-                if (ImGui.Selectable(ShaderDescriptions[1]))
-                {
-                    UserSettings.SetShaders(1);
-                }
-                if (ImGui.Selectable(ShaderDescriptions[2]))
-                {
-                    UserSettings.SetShaders(2);
-                }
-                if (ImGui.Selectable(ShaderDescriptions[3]))
-                {
-                    UserSettings.SetShaders(3);
-                }
-                if (ImGui.Selectable(ShaderDescriptions[4]))
-                {
-                    UserSettings.SetShaders(4);
-                }
+            //if (ImGui.BeginCombo("Shader Settings [Deprecated]", ShaderDescriptions[shaderSettings]))
+            //{
+            //    if (ImGui.Selectable(ShaderDescriptions[0]))
+            //    {
+            //        UserSettings.SetShaders(0);
+            //    }
+            //    if (ImGui.Selectable(ShaderDescriptions[1]))
+            //    {
+            //        UserSettings.SetShaders(1);
+            //    }
+            //    if (ImGui.Selectable(ShaderDescriptions[2]))
+            //    {
+            //        UserSettings.SetShaders(2);
+            //    }
+            //    if (ImGui.Selectable(ShaderDescriptions[3]))
+            //    {
+            //        UserSettings.SetShaders(3);
+            //    }
+            //    if (ImGui.Selectable(ShaderDescriptions[4]))
+            //    {
+            //        UserSettings.SetShaders(4);
+            //    }
 
-                ImGui.EndCombo();
-            }
-            Tooltip.Show("Disable custom shaders on custom actors. NOTE: This only works on new custom actors and not model swaps");
+            //    ImGui.EndCombo();
+            //}
+            //Tooltip.Show("Disable custom shaders on custom actors. NOTE: This only works on new custom actors and not model swaps");
 
 
             if (ImGui.Checkbox("DPI Override", ref dpiToggle))

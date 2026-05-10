@@ -30,7 +30,7 @@ namespace Fushigi.util
             public bool EnableTranslation;
             public bool PrivateDRPC;
             public string Theme;
-            public int ShaderSettings;
+            //public int ShaderSettings;
             public bool romfsReload;
             public bool allowRomfsReload;
             public bool ClickDuplicate;
@@ -53,7 +53,7 @@ namespace Fushigi.util
                 EnableHalfTile = false;
                 EnableTranslation = true;
                 Theme = "Theme";
-                ShaderSettings = 0;
+                //ShaderSettings = 0;
                 romfsReload = false;
                 allowRomfsReload = true;
                 ClickDuplicate = false;
@@ -221,10 +221,10 @@ namespace Fushigi.util
             AppSettings.Theme = theme;
             Save();
         }
-        public static int GetShaders()
-        {
-            return AppSettings.ShaderSettings;
-        }
+        //public static int GetShaders()
+        //{
+        //    return AppSettings.ShaderSettings;
+        //}
 
         public static void SetRomfsReload(bool status)
         {
@@ -234,11 +234,11 @@ namespace Fushigi.util
         {
             return AppSettings.romfsReload;
         }
-        public static void SetShaders(int selectedShaderSetting)
-        {
-            AppSettings.ShaderSettings = selectedShaderSetting;
-            Save();
-        }
+        //public static void SetShaders(int selectedShaderSetting)
+        //{
+        //    AppSettings.ShaderSettings = selectedShaderSetting;
+        //    Save();
+        //}
         public static bool GetAllowRomfsReload()
         {
             return AppSettings.allowRomfsReload;
